@@ -1,0 +1,86 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row">
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>150</h3>
+                <p>Total Assessments</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>53</h3>
+                <p>Completed</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>44</h3>
+                <p>Pending Review</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>65</h3>
+                <p>Overdue</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Welcome to Smart Assessment Feedback System</h3>
+            </div>
+            <div class="card-body">
+                <p>This is your dashboard where you can manage assessments and view feedback.</p>
+                
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info"></i> Admin Panel</h5>
+                        You have administrator privileges. You can manage users and system settings.
+                    </div>
+                }
+                
+                @if (User.IsInRole("Lecturer"))
+                {
+                    <div class="alert alert-success">
+                        <h5><i class="icon fas fa-check"></i> Lecturer Dashboard</h5>
+                        You can create and manage assessments for your courses.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
