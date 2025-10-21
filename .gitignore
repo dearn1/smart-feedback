@@ -1,0 +1,224 @@
+# Created for ASP.NET MVC / Visual Studio
+
+# =========================
+# User-specific files
+# =========================
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# =========================
+# Visual Studio cache/options
+# =========================
+.vs/
+.vscode/
+*.vc.db
+*.VC.db
+*.opensdf
+*.sdf
+*.cachefile
+
+# =========================
+# Build results
+# =========================
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# ASP.NET temp
+AppPackages/
+project.lock.json
+project.fragment.lock.json
+
+# IIS Express
+.iisexpress/
+iisexpress.sqllite
+IISExpress.log
+/.vs/config/applicationhost.config
+
+# =========================
+# NuGet
+# =========================
+*.nupkg
+# Packages folder can be restored
+packages/
+!packages/build/
+!packages/repositories.config
+.nuget/NuGet.Config
+.nuget/NuGet.exe
+.nuget/packages.config
+
+# NuGet v3
+*.snupkg
+# global packages folder (usually under %userprofile%/.nuget), not in repo
+# Just in case someone mapped it locally:
+.nuget/packages/
+
+# =========================
+# MSBuild & intermediate
+# =========================
+*.pidb
+*.obj
+*.pdb
+*.ipch
+*.iobj
+*.ilk
+*.rsp
+*.sbr
+*.tlh
+*.tli
+*.tmp
+*.tmp_proj
+*.log
+*.tlog
+*.lastcodeanalysissucceeded
+
+# =========================
+# Test results
+# =========================
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+*.cov
+*.opencover.xml
+*.nunit.xml
+
+# =========================
+# Entity Framework
+# =========================
+Migrations/obj/
+*_i.cxx
+*_p.cxx
+*_h.h
+*.dbmdl
+
+# LocalDB / SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# =========================
+# Web artifacts
+# =========================
+# Published output
+[Pp]ublish*/ 
+**/Properties/PublishProfiles/*.pubxml
+**/Properties/PublishProfiles/*.publishproj
+*.pubxml.user
+
+# Bundles, compiled/minified assets (if generated)
+*.bundle
+*.min.css.map
+*.min.js.map
+
+# Node (if using frontend tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Bower (legacy)
+bower_components/
+
+# =========================
+# Resharper / Rider / Code style
+# =========================
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+*.sln.iml
+
+# =========================
+# Azure
+# =========================
+.csx/
+*.build.csdef
+ecf/
+rcf/
+PublishScripts/
+
+# Functions/Serverless local settings
+local.settings.json
+
+# =========================
+# Coverage tools
+# =========================
+.coverage/
+.coverage/*
+.cache/
+.lcov
+lcov.info
+
+# =========================
+# OS-specific
+# =========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# =========================
+# Misc
+# =========================
+*.swp
+*.swo
+*.orig
+*.bak
+
+# =========================
+# Rider/JetBrains caches
+# =========================
+.idea/
+*.ipr
+*.iws
+out/
+
+# =========================
+# ASP.NET Scaffolding
+# =========================
+ScaffoldingReadMe.txt
+
+# =========================
+# StyleCop/Analyzers
+# =========================
+StyleCop.Cache
+
+# =========================
+# VS Code settings (user-specific)
+# =========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# =========================
+# Static site generators (optional)
+# =========================
+_wwwroot/
+wwwroot/lib/
