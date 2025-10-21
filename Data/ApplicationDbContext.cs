@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using smart_feedback.Models;
 
 namespace smart_feedback.Data
 {
@@ -9,5 +10,6 @@ namespace smart_feedback.Data
             : base(options)
         {
         }
+        public DbSet<smart_feedback.Models.Student> Student { get; set; } = default!;
     }
 }

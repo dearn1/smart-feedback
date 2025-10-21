@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "/iR2jiTaKIt7y6HN/SyoBhC968uXjA6iziTaV0SbFlY=",
+  "Hash": "bk9AWwxxP9yDj831qJ2MQx4KOy93e6Ci6rhUn2GjwEQ=",
   "Source": "smart-feedback",
   "BasePath": "_content/smart-feedback",
   "Mode": "Default",
@@ -73,8 +73,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "hco7ke2prc",
-      "Integrity": "/5xHMAvghsLZKP0r3l52fryoptxzSLd/aQmuHvqWCgE=",
+      "Fingerprint": "4ctyyw9jua",
+      "Integrity": "/AQP724kPdbd+IvxUbk62fsD4bbXbzu8vaDV4fto6pQ=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\site.css"
@@ -2581,6 +2581,51 @@
   ],
   "Endpoints": [
     {
+      "Route": "css/site.4ctyyw9jua.css",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1688"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/AQP724kPdbd+IvxUbk62fsD4bbXbzu8vaDV4fto6pQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 20 Oct 2025 18:25:15 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "4ctyyw9jua"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/AQP724kPdbd+IvxUbk62fsD4bbXbzu8vaDV4fto6pQ="
+        }
+      ]
+    },
+    {
       "Route": "css/site.css",
       "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\css\\site.css",
       "Selectors": [],
@@ -2591,7 +2636,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1025"
+          "Value": "1688"
         },
         {
           "Name": "Content-Type",
@@ -2599,11 +2644,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"/5xHMAvghsLZKP0r3l52fryoptxzSLd/aQmuHvqWCgE=\""
+          "Value": "\"/AQP724kPdbd+IvxUbk62fsD4bbXbzu8vaDV4fto6pQ=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 17:26:14 GMT"
+          "Value": "Mon, 20 Oct 2025 18:25:15 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -2613,52 +2658,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-/5xHMAvghsLZKP0r3l52fryoptxzSLd/aQmuHvqWCgE="
-        }
-      ]
-    },
-    {
-      "Route": "css/site.hco7ke2prc.css",
-      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\css\\site.css",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1025"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"/5xHMAvghsLZKP0r3l52fryoptxzSLd/aQmuHvqWCgE=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 17:26:14 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "hco7ke2prc"
-        },
-        {
-          "Name": "label",
-          "Value": "css/site.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-/5xHMAvghsLZKP0r3l52fryoptxzSLd/aQmuHvqWCgE="
+          "Value": "sha256-/AQP724kPdbd+IvxUbk62fsD4bbXbzu8vaDV4fto6pQ="
         }
       ]
     },
@@ -9743,7 +9743,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 16:06:53 GMT"
+          "Value": "Mon, 20 Oct 2025 23:02:09 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -9780,7 +9780,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 16:06:53 GMT"
+          "Value": "Mon, 20 Oct 2025 23:02:09 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -9825,7 +9825,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 16:06:53 GMT"
+          "Value": "Mon, 20 Oct 2025 23:02:09 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -9870,7 +9870,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 13 Oct 2025 16:06:53 GMT"
+          "Value": "Mon, 20 Oct 2025 23:02:09 GMT"
         },
         {
           "Name": "Cache-Control",

@@ -86,56 +86,32 @@
 
                         @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
                         {
-                            <li class="nav-header">RUBRIC MANAGEMENT</li>
+                            <li class="nav-header">RUBRIC</li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-upload"></i>
-                                    <p>Upload Rubrics</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-bars"></i>
-                                    <p>View Rubrics</p>
+                                    <i class="nav-icon fas fa-puzzle-piece"></i>
+                                    <p>Rubrics Management</p>
                                 </a>
                             </li>
                         }
 
                         @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
                         {
-                            <li class="nav-header">STUDENT ASSESSMENTS</li>
+                            <li class="nav-header">ASSESSMENT</li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-upload"></i>
-                                    <p>Upload Assessments</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-edit"></i>
-                                    <p>Input Assessment</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-chart-pie"></i>
-                                    <p>Generate Feedback</p>
+                                    <i class="nav-icon fas fa-newspaper"></i>
+                                    <p>Student Assessments</p>
                                 </a>
                             </li>
                         }
 
                         @if (User.IsInRole("Moderator") || User.IsInRole("Admin"))
                         {
-                            <li class="nav-header">REPORT GENERATION</li>
+                            <li class="nav-header">REPORT</li>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-file"></i>
-                                    <p>Generate Report</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-copy"></i>
+                                    <i class="nav-icon fas fa-print"></i>
                                     <p>Batch Export</p>
                                 </a>
                             </li>
@@ -143,18 +119,14 @@
 
                         @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
                         {
-                            <li class="nav-header">DATA MANAGEMENT</li>
+                            <li class="nav-header">STUDENT</li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-upload"></i>
-                                    <p>Student Data Upload</p>
+                                <a href="/Views/Students/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-address-card"></i>
+                                    <p>Student Data</p>
                                 </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-edit"></i>
-                                    <p>Student Data Input</p>
-                                </a>
+                                <a asp-area="" asp-controller="Students" asp-action="Index" class="brand-link">
+                                    Student Data</a>
                             </li>
                         }
                     </ul>
