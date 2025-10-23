@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:controllers\\rubricscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\upload.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\upload.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -21,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -94,23 +94,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:1:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
             },
             {
               "$type": "Document",
@@ -120,56 +108,14 @@
               "RelativeDocumentMoniker": "Controllers\\RubricsController.cs",
               "ToolTip": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
               "RelativeToolTip": "Controllers\\RubricsController.cs",
-              "ViewState": "AgIAACgBAAAAAAAAAAAcwDcBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAIMAAAAAAAAAAAAUwL8AAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-22T19:19:29.252Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{c9c0ae26-aa77-11d2-b3f0-0000f87570ee}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Upload.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Upload.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Upload.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:33:56.899Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-23T06:53:40.098Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Delete.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Delete.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\Delete.cshtml",
@@ -177,8 +123,7 @@
               "RelativeToolTip": "Views\\Rubrics\\Delete.cshtml",
               "ViewState": "AgIAACYAAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-23T02:40:47.952Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-23T02:40:47.952Z"
             },
             {
               "$type": "Document",
@@ -190,12 +135,11 @@
               "RelativeToolTip": "Views\\Rubrics\\Details.cshtml",
               "ViewState": "AgIAADMAAAAAAAAAAAAowDMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:00:19.714Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T19:00:19.714Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "RubricDetailsViewModel.cs",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricDetailsViewModel.cs",
               "RelativeDocumentMoniker": "Models\\RubricDetailsViewModel.cs",
@@ -203,18 +147,17 @@
               "RelativeToolTip": "Models\\RubricDetailsViewModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-23T01:13:34.034Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-23T01:13:34.034Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 1,
               "Title": "RubricTask.cs",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricTask.cs",
               "RelativeDocumentMoniker": "Models\\RubricTask.cs",
               "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricTask.cs",
               "RelativeToolTip": "Models\\RubricTask.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAbAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-22T19:48:43.973Z",
               "EditorCaption": ""
@@ -229,8 +172,7 @@
               "RelativeToolTip": "Views\\Rubrics\\Index.cshtml",
               "ViewState": "AgIAACgAAAAAAAAAAAAAADAAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T18:53:24.057Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T18:53:24.057Z"
             },
             {
               "$type": "Document",
@@ -242,8 +184,35 @@
               "RelativeToolTip": "Models\\Rubrics.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwAwAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T18:54:45.033Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T18:54:45.033Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-23T06:53:40.098Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Upload.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
+              "RelativeDocumentMoniker": "Views\\Rubrics\\Upload.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
+              "RelativeToolTip": "Views\\Rubrics\\Upload.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-22T19:33:56.899Z"
             },
             {
               "$type": "Document",
@@ -255,8 +224,7 @@
               "RelativeToolTip": "Views\\Rubrics\\CreateTask.cshtml",
               "ViewState": "AgIAAAUAAAAAAAAAAAAcwAsAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:53:39.939Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T19:53:39.939Z"
             },
             {
               "$type": "Document",
@@ -268,8 +236,7 @@
               "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
               "ViewState": "AgIAAJkAAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T23:07:20.165Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T23:07:20.165Z"
             },
             {
               "$type": "Document",
@@ -281,8 +248,7 @@
               "RelativeToolTip": "Data\\ApplicationDbContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:50:08.21Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T19:50:08.21Z"
             },
             {
               "$type": "Document",
@@ -294,8 +260,7 @@
               "RelativeToolTip": "Views\\Rubrics\\Create.cshtml",
               "ViewState": "AgIAABQAAAAAAAAAAAAcwBwAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T18:55:03.765Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T18:55:03.765Z"
             },
             {
               "$type": "Document",
@@ -307,8 +272,7 @@
               "RelativeToolTip": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:37:55.437Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T19:37:55.437Z"
             },
             {
               "$type": "Document",
@@ -320,8 +284,7 @@
               "RelativeToolTip": "Views\\Rubrics\\Edit.cshtml",
               "ViewState": "AgIAACMAAAAAAAAAAAAcwDkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:35:08.962Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-22T19:35:08.962Z"
             },
             {
               "$type": "Document",
@@ -333,8 +296,7 @@
               "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Login.cshtml",
               "ViewState": "AgIAABcAAAAAAAAAAAAcwAgAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:31.96Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T19:56:31.96Z"
             },
             {
               "$type": "Document",
@@ -346,8 +308,7 @@
               "RelativeToolTip": "Views\\Shared\\_LoginLayout.cshtml",
               "ViewState": "AgIAAA4AAAAAAAAAAAAcwBQAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T20:00:29.336Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T20:00:29.336Z"
             },
             {
               "$type": "Document",
@@ -359,8 +320,7 @@
               "RelativeToolTip": "Areas\\Identity\\Pages\\_ViewStart.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:51.683Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T19:56:51.683Z"
             },
             {
               "$type": "Document",
@@ -372,8 +332,7 @@
               "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:57.978Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T19:56:57.978Z"
             },
             {
               "$type": "Document",
@@ -385,8 +344,7 @@
               "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Logout.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T22:43:08.556Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T22:43:08.556Z"
             },
             {
               "$type": "Document",
@@ -398,8 +356,27 @@
               "RelativeToolTip": "Areas\\Identity\\Pages\\_ViewImports.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:48.835Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T19:56:48.835Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{c9c0ae26-aa77-11d2-b3f0-0000f87570ee}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             }
           ]
         }

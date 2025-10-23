@@ -7251,7 +7251,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7288,7 +7288,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7333,7 +7333,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7378,7 +7378,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7415,7 +7415,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7452,7 +7452,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7467,6 +7467,88 @@
         {
           "Name": "label",
           "Value": "uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.0dqcqtp4vn.docx",
+      "AssetFile": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110723"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "0dqcqtp4vn"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110723"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso="
         }
       ]
     },
@@ -7497,7 +7579,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7534,7 +7616,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7579,7 +7661,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [
@@ -7616,7 +7698,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         }
       ],
       "EndpointProperties": [

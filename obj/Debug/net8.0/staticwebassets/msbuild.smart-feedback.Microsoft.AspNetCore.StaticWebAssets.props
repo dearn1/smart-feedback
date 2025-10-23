@@ -1152,6 +1152,24 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx'))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx'))">
+      <SourceType>Package</SourceType>
+      <SourceId>smart-feedback</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/smart-feedback</BasePath>
+      <RelativePath>uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>0dqcqtp4vn</Fingerprint>
+      <Integrity>jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx'))">
       <SourceType>Package</SourceType>
       <SourceId>smart-feedback</SourceId>

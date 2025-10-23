@@ -12,6 +12,7 @@ using smart_feedback.Data;
 using smart_feedback.Models;
 using Microsoft.VisualStudio.Web.CodeGeneration.Design;
 using smart_feedback.Data.Migrations;
+using MathNet.Numerics.RootFinding;
 
 namespace smart_feedback.Controllers
 {
@@ -176,21 +177,20 @@ namespace smart_feedback.Controllers
         }
 
         // GET: Rubrics/Task/CreateTask
-        public IActionResult CreateTask()
+        public async Task<IActionResult> CreateTask()
         {
             return View();
         }
 
-        // GET: Rubrics/CreateTask/5
+        // Fix for CS1983: Change the return type of the method to Task<IActionResult> to match the requirement for async methods.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateTask(int id)
+        public async Task<IActionResult> CreateTask(int id, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
-            var rubricTask = new RubricTask
-            {
-                RubricsId = id
-            };
-            return View(rubricTask);
+            rubricTask.RubricsId = id;
+            _context.Add(rubricTask);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", "Rubrics", new { id = rubricTask.RubricsId });
         }
 
         // GET: UploadRubrics

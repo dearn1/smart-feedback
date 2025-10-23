@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "TjhOJ8FGmRTLVWQN/XeGeKTff6OzPr0Af51LrFO7tfM=",
+  "Hash": "u5QTpbUMYAmUcJEj6SgdEucB6JsBDQ8C4I6+fkeFy7I=",
   "Source": "smart-feedback",
   "BasePath": "_content/smart-feedback",
   "Mode": "Default",
@@ -1380,6 +1380,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "0dqcqtp4vn",
+      "Integrity": "jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx"
     },
     {
       "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
@@ -10012,7 +10033,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10049,7 +10070,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10094,7 +10115,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10139,7 +10160,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10176,7 +10197,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10213,7 +10234,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10232,6 +10253,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.0dqcqtp4vn.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110723"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "0dqcqtp4vn"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\61170d44-8964-4e23-b79f-4394cd2de747_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110723"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-jHHrde0IUqrJhtouKv0YjxWR/6OXf0luh03JzOmcQso="
         }
       ]
     },
@@ -10258,7 +10361,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10295,7 +10398,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10340,7 +10443,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -10377,7 +10480,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+          "Value": "Thu, 23 Oct 2025 09:01:31 GMT"
         },
         {
           "Name": "Cache-Control",
