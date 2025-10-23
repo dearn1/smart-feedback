@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("smart-feedback")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+59809958cf7aaa74f70713d019de29de89550ea1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4ca60a720a19df4f7580beaadc3a2b0991d1c94")]
 [assembly: System.Reflection.AssemblyProductAttribute("smart-feedback")]
 [assembly: System.Reflection.AssemblyTitleAttribute("smart-feedback")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

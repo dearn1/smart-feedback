@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using smart_feedback.Data;
+using smart_feedback.Data.Migrations;
 using smart_feedback.Models;
 
 namespace smart_feedback.Controllers
@@ -71,7 +72,7 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName,TotalMarks,SourceFile")] Rubrics rubrics)
         {
-            rubrics.TotalMarks = 100; // Set default value for TotalMarks
+            rubrics.TotalMarks = 0; // Set default value for TotalMarks
             rubrics.SourceFile = ""; // Set default value for SourceFile
             //if (ModelState.IsValid)
             //{
@@ -194,13 +195,12 @@ namespace smart_feedback.Controllers
         // GET: Rubrics/CreateTask/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateTask(int id)
+        public async Task<IActionResult> CreateTask(int id, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
-            var rubricTask = new RubricTask
-            {
-                RubricsId = id
-            };
-            return View(rubricTask);
+            rubricTask.RubricsId = id;
+            _context.Add(rubricTask);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Details), new { id = rubricTask.RubricsId });
         }
 
         // GET: UploadRubrics
