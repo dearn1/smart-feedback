@@ -732,5 +732,65 @@
       <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"r2unopchl6"},{"Name":"integrity","Value":"sha256-/evpRYkNh2DGRrPu8Bncvg4Ejw4i\u002BBTSIwQXK1pHvOI="},{"Name":"label","Value":"_content/smart-feedback/smart-feedback.bundle.scp.css"}]]]></EndpointProperties>
       <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1132"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022/evpRYkNh2DGRrPu8Bncvg4Ejw4i\u002BBTSIwQXK1pHvOI=\u0022"},{"Name":"Last-Modified","Value":"Mon, 20 Oct 2025 23:02:09 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:06:46 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"yny9ssp1gj"},{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="},{"Name":"label","Value":"_content/smart-feedback/uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:06:46 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.7knsofeebe.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"7knsofeebe"},{"Name":"integrity","Value":"sha256-R3roxZgCx3N145ogz0g/knkCcq1\u002B6uRbDmMPAcnQKtU="},{"Name":"label","Value":"_content/smart-feedback/uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"110854"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022R3roxZgCx3N145ogz0g/knkCcq1\u002B6uRbDmMPAcnQKtU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 06:55:04 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-R3roxZgCx3N145ogz0g/knkCcq1\u002B6uRbDmMPAcnQKtU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"110854"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022R3roxZgCx3N145ogz0g/knkCcq1\u002B6uRbDmMPAcnQKtU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 06:55:04 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:19:37 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"yny9ssp1gj"},{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="},{"Name":"label","Value":"_content/smart-feedback/uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:19:37 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:33:04 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"yny9ssp1gj"},{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="},{"Name":"label","Value":"_content/smart-feedback/uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:33:04 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:43:03 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/smart-feedback/uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\rubrics\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"yny9ssp1gj"},{"Name":"integrity","Value":"sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="},{"Name":"label","Value":"_content/smart-feedback/uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"110922"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},{"Name":"ETag","Value":"\u0022QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\u0022"},{"Name":"Last-Modified","Value":"Thu, 23 Oct 2025 08:43:03 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
   </ItemGroup>
 </Project>

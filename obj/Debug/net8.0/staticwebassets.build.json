@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "bk9AWwxxP9yDj831qJ2MQx4KOy93e6Ci6rhUn2GjwEQ=",
+  "Hash": "TjhOJ8FGmRTLVWQN/XeGeKTff6OzPr0Af51LrFO7tfM=",
   "Source": "smart-feedback",
   "BasePath": "_content/smart-feedback",
   "Mode": "Default",
@@ -1317,6 +1317,111 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "yny9ssp1gj",
+      "Integrity": "QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "7knsofeebe",
+      "Integrity": "R3roxZgCx3N145ogz0g/knkCcq1+6uRbDmMPAcnQKtU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "yny9ssp1gj",
+      "Integrity": "QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "yny9ssp1gj",
+      "Integrity": "QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Identity": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx",
+      "SourceId": "smart-feedback",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Github_Repo\\smart-feedback\\wwwroot\\",
+      "BasePath": "_content/smart-feedback",
+      "RelativePath": "uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025#[.{fingerprint}]?.docx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "yny9ssp1gj",
+      "Integrity": "QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx"
     },
     {
       "Identity": "C:\\Users\\admin\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\8.0.15\\staticwebassets\\V5\\css\\site.css",
@@ -9881,6 +9986,416 @@
         {
           "Name": "integrity",
           "Value": "sha256-/evpRYkNh2DGRrPu8Bncvg4Ejw4i+BTSIwQXK1pHvOI="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:06:46 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yny9ssp1gj"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.7knsofeebe.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110854"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"R3roxZgCx3N145ogz0g/knkCcq1+6uRbDmMPAcnQKtU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "7knsofeebe"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-R3roxZgCx3N145ogz0g/knkCcq1+6uRbDmMPAcnQKtU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110854"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"R3roxZgCx3N145ogz0g/knkCcq1+6uRbDmMPAcnQKtU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 06:55:04 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-R3roxZgCx3N145ogz0g/knkCcq1+6uRbDmMPAcnQKtU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:19:37 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yny9ssp1gj"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:33:04 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yny9ssp1gj"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.yny9ssp1gj.docx",
+      "AssetFile": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "110922"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 23 Oct 2025 08:43:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yny9ssp1gj"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/rubrics/c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-QoyefGUzULXpFr8PGlSlNDyhrsNhkOpi6wLN8ZyG8FU="
         }
       ]
     }

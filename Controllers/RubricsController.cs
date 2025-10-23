@@ -7,8 +7,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NPOI.XWPF.UserModel;
 using smart_feedback.Data;
 using smart_feedback.Models;
+using Microsoft.VisualStudio.Web.CodeGeneration.Design;
+using smart_feedback.Data.Migrations;
 
 namespace smart_feedback.Controllers
 {
@@ -17,9 +20,10 @@ namespace smart_feedback.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public RubricsController(ApplicationDbContext context)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment)
         {
             _context = context;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         // GET: Rubrics
@@ -171,20 +175,6 @@ namespace smart_feedback.Controllers
             return _context.Rubrics.Any(e => e.RubricsId == id);
         }
 
-        // GET: Rubrics/Upload
-        public IActionResult Upload()
-        {
-            return View();
-        }
-
-        // POST: Rubrics/Upload
-        [HttpPost, ActionName("Upload")]
-        [ValidateAntiForgeryToken]
-        public IActionResult Upload(int? id)
-        {
-            return RedirectToAction(nameof(Upload));
-        }
-
         // GET: Rubrics/Task/CreateTask
         public IActionResult CreateTask()
         {
@@ -204,29 +194,20 @@ namespace smart_feedback.Controllers
         }
 
         // GET: UploadRubrics
-        public IActionResult UploadRubrics(int id)
+        public IActionResult Upload(int id)
         {
-            //var jobPosting = _context.JobPostings.Find(id);
-            //if (jobPosting == null)
-            //{
-            //    return NotFound();
-            //}
-
-            //ViewBag.JobPostingId = id;
-            //ViewBag.JobTitle = jobPosting.Title;
             return View();
         }
 
         // POST: UploadRubrics
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadRubrics(IFormFile rubricsFile)
+        public async Task<IActionResult> Upload(IFormFile rubricsFile)
         {
             if (rubricsFile == null || rubricsFile.Length == 0)
             {
                 ModelState.AddModelError("rubricsFile", "Please upload your Rubrics File.");
-                //ViewBag.JobPostingId = JobPostingId;
-                return View();
+                return RedirectToAction("Upload", "Rubrics");
             }
 
             // Check file extension
@@ -234,16 +215,14 @@ namespace smart_feedback.Controllers
             if (extension != ".doc" && extension != ".docx")
             {
                 ModelState.AddModelError("rubricsFile", "Only Word documents are allowed.");
-                //ViewBag.JobPostingId = JobPostingId;
-                return View();
+                return RedirectToAction("Upload", "Rubrics");
             }
 
             // Check file size (limit to 10MB)
             if (rubricsFile.Length > 10 * 1024 * 1024)
             {
                 ModelState.AddModelError("rubricsFile", "File size must be less than 10MB.");
-                //ViewBag.JobPostingId = JobPostingId;
-                return View();
+                return RedirectToAction("Upload", "Rubrics");
             }
 
             try
@@ -266,32 +245,128 @@ namespace smart_feedback.Controllers
                     await rubricsFile.CopyToAsync(fileStream);
                 }
 
-                // Create new rubrics
-                var rubric = new Rubrics
+                var rubric = new Rubrics();
+                List<string> rubricsParagraphs = new List<string>();
+                List<RubricTask> rubricTasks = new List<RubricTask>();
+                if (extension == ".docx")
                 {
-                    //JobPostingId = JobPostingId,
-                    //UserId = User.Identity.Name,
-                    //Status = "APPLIED",
-                    //AppliedDate = DateTime.Now,
-                    //CVFilePath = filePath,
-                    //CVFileName = cvFile.FileName,
-                    //CVFileType = extension
-                    SourceFile = filePath + rubricsFile.FileName + extension
-                };
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        XWPFDocument docx = new XWPFDocument(stream);
+
+                        // Extract rubrics paragraphs
+                        foreach (var para in docx.Paragraphs)
+                        {
+                            if (!string.IsNullOrWhiteSpace(para.ParagraphText))
+                            {
+                                rubricsParagraphs.Add(para.ParagraphText.Trim());
+                                if (rubricsParagraphs.Count >= 4)
+                                    break;
+                            }
+                        }
+
+                        // Extract rubric criteria from tables
+                        int tableIndex = 0;
+                        foreach (var table in docx.Tables)
+                        {
+                            
+                            // Extract rubric criteria from ONLY the first table
+                            if (docx.Tables.Count > 0)
+                            {                                
+                                if (tableIndex == 0)
+                                {
+                                    var firstTable = docx.Tables[tableIndex]; // Get only the first table
+                                    var rows = firstTable.Rows;
+
+                                    // Skip header row (index 0) and process data rows
+                                    for (int i = 1; i < rows.Count; i++)
+                                    {
+                                        var row = rows[i];
+                                        var cells = row.GetTableCells();
+
+                                        if (cells.Count >= 3) // Ensure we have at least 3 columns
+                                        {
+                                            var task = new RubricTask
+                                            {
+                                                TaskTitle = GetCellText(cells[0]),
+                                                TaskDescription = GetCellText(cells[1]),
+                                                MaxMarks = ParseMaxMarks(GetCellText(cells[2]))
+                                            };
+
+                                            // Only add if we have meaningful data
+                                            if (!string.IsNullOrWhiteSpace(task.TaskTitle))
+                                            {
+                                                rubricTasks.Add(task);
+                                            }
+                                        }
+                                    }
+                                }
+                                tableIndex++;
+                            }
+                            
+                        }
+                        string fullText = rubricsParagraphs.Count > 1 ? rubricsParagraphs[1] : "";
+                        int firstSpaceIndex = fullText.IndexOf(' ');
+
+                        rubric.Institution = "Auckland Institute of Studies";
+                        rubric.Programme = rubricsParagraphs[0];
+                        rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
+                        rubric.CourseName = firstSpaceIndex > 0 ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
+                        rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : ""; 
+                        rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
+                        rubric.SourceFile = filePath;
+                    }
+                }
 
                 _context.Add(rubric);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Your rubrics has been submitted successfully!";
-                return RedirectToAction("Index", "Rubrics");
+
+                // Save rubric tasks with the rubric ID
+                foreach (var task in rubricTasks)
+                {
+                    task.RubricsId = rubric.RubricsId;
+                    _context.RubricTask.Add(task);
+                }
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Your rubrics has been submitted successfully! {rubricTasks.Count} tasks extracted.";
+
+                return RedirectToAction("Details", "Rubrics", new { id = rubric.RubricsId });
             }
             catch (Exception ex)
+            
             {
-                ModelState.AddModelError("", "An error occurred while uploading your Rubrics. Please try again.");
-                //ViewBag.JobPostingId = JobPostingId;
+                ModelState.AddModelError("", $"An error occurred while uploading your Rubrics: {ex.Message}");
                 return View();
             }
         }
+
+        // Helper method to extract text from table cell
+        private string GetCellText(XWPFTableCell cell)
+        {
+            if (cell == null) return "";
+
+            var text = cell.GetText().Trim();
+            // Remove extra whitespace and line breaks
+            return System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ");
+        }
+
+        // Helper method to parse marks from text
+        private int ParseMaxMarks(string marksText)
+        {
+            if (string.IsNullOrWhiteSpace(marksText)) return 0;
+
+            // Try to extract numbers from the text
+            var numbers = System.Text.RegularExpressions.Regex.Matches(marksText, @"\d+");
+            if (numbers.Count > 0)
+            {
+                if (int.TryParse(numbers[0].Value, out int marks))
+                {
+                    return marks;
+                }
+            }
+
+            return 0;
+        }
     }
-
-
 }

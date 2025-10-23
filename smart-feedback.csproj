@@ -16,6 +16,12 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.15" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="NPOI" Version="2.7.5" />
+    <PackageReference Include="Xceed.Words.NET" Version="5.1.25458.6676" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\rubrics\" />
   </ItemGroup>
 
 </Project>

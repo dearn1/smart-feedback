@@ -245,6 +245,26 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx",
+      "PackagePath": "staticwebassets\\uploads\\rubrics\\329da5fc-3bc2-4530-9e9b-2fbafc6eac47_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Id": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx",
+      "PackagePath": "staticwebassets\\uploads\\rubrics\\3d25f23d-4109-4877-892a-eaa37eb712a0_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Id": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx",
+      "PackagePath": "staticwebassets\\uploads\\rubrics\\40fa6c4b-a45e-4db2-b87b-5cd7fc03258d_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Id": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx",
+      "PackagePath": "staticwebassets\\uploads\\rubrics\\96a2fab8-3c56-4e01-8f30-ca5894bbf53d_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
+      "Id": "C:\\Github_Repo\\smart-feedback\\wwwroot\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx",
+      "PackagePath": "staticwebassets\\uploads\\rubrics\\c37913d8-7bce-4682-9a09-a94ce3a43687_SOFT807 Assessment 1 T3 2025.docx"
+    },
+    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.smart-feedback.props",
       "PackagePath": "build\\smart-feedback.props"
     },
