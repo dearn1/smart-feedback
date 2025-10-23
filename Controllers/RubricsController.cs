@@ -43,7 +43,19 @@ namespace smart_feedback.Controllers
                 return NotFound();
             }
 
-            return View(rubrics);
+            // Get the related RubricTasks
+            var rubricTasks = await _context.RubricTask
+                .Where(rt => rt.RubricsId == id)
+                .ToListAsync();
+
+            // Create the ViewModel
+            var viewModel = new RubricDetailsViewModel
+            {
+                Rubric = rubrics,
+                RubricTasks = rubricTasks
+            };
+
+            return View(viewModel);
         }
 
         // GET: Rubrics/Create
@@ -179,17 +191,16 @@ namespace smart_feedback.Controllers
             return View();
         }
 
-        // POST: Rubrics/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateTask(int id, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
+        // GET: Rubrics/CreateTask/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateTask(int id)
         {
-            rubricTask.RubricsId = id;
-            _context.Add(rubricTask);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Details), new { id});
+            var rubricTask = new RubricTask
+            {
+                RubricsId = id
+            };
+            return View(rubricTask);
         }
 
         // GET: UploadRubrics

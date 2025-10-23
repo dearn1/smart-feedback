@@ -7,6 +7,18 @@
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:controllers\\rubricscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubrics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -21,14 +33,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -82,7 +86,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -94,31 +98,46 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "CreateTask.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\CreateTask.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\CreateTask.cshtml",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAcwAsAAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:53:39.939Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Upload.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Upload.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Upload.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAhAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:33:56.899Z"
+              "DocumentIndex": 0,
+              "Title": "RubricsController.cs",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\RubricsController.cs",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
+              "RelativeToolTip": "Controllers\\RubricsController.cs",
+              "ViewState": "AgIAALYAAAAAAAAAAAA3wMEAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-22T19:19:29.252Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
+              "RelativeDocumentMoniker": "Views\\Rubrics\\Details.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
+              "RelativeToolTip": "Views\\Rubrics\\Details.cshtml",
+              "ViewState": "AgIAADMAAAAAAAAAAAAowDMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-22T19:00:19.714Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RubricDetailsViewModel.cs",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricDetailsViewModel.cs",
+              "RelativeDocumentMoniker": "Models\\RubricDetailsViewModel.cs",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricDetailsViewModel.cs",
+              "RelativeToolTip": "Models\\RubricDetailsViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-23T01:13:34.034Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "Rubrics.cs",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\Rubrics.cs",
               "RelativeDocumentMoniker": "Models\\Rubrics.cs",
@@ -131,28 +150,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "RubricsController.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\RubricsController.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
-              "RelativeToolTip": "Controllers\\RubricsController.cs",
-              "ViewState": "AgIAAKoAAAAAAAAAAAAywL0AAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:19:29.252Z",
-              "EditorCaption": ""
+              "DocumentIndex": 6,
+              "Title": "Upload.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
+              "RelativeDocumentMoniker": "Views\\Rubrics\\Upload.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
+              "RelativeToolTip": "Views\\Rubrics\\Upload.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-22T19:33:56.899Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "Index.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Index.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\Index.cshtml",
               "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Index.cshtml",
               "RelativeToolTip": "Views\\Rubrics\\Index.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEEAAABGAAAAAAAAAA==",
+              "ViewState": "AgIAACgAAAAAAAAAAAAAADAAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T18:53:24.057Z"
+              "WhenOpened": "2025-10-21T18:53:24.057Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -160,7 +179,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
+              "Title": "CreateTask.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
+              "RelativeDocumentMoniker": "Views\\Rubrics\\CreateTask.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
+              "RelativeToolTip": "Views\\Rubrics\\CreateTask.cshtml",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAcwAsAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-22T19:53:39.939Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
@@ -172,19 +203,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Details.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Details.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Details.cshtml",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAcwDQAAAA/AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:00:19.714Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "RubricTask.cs",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricTask.cs",
               "RelativeDocumentMoniker": "Models\\RubricTask.cs",
@@ -192,11 +211,12 @@
               "RelativeToolTip": "Models\\RubricTask.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:48:43.973Z"
+              "WhenOpened": "2025-10-22T19:48:43.973Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "ApplicationDbContext.cs",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Data\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
@@ -208,7 +228,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "Create.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Create.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\Create.cshtml",
@@ -220,7 +240,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "_ValidationScriptsPartial.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_ValidationScriptsPartial.cshtml",
               "RelativeDocumentMoniker": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
@@ -232,7 +252,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "Edit.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Edit.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\Edit.cshtml",
@@ -244,7 +264,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "Login.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Login.cshtml",
               "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Login.cshtml",
@@ -256,7 +276,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "_LoginLayout.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_LoginLayout.cshtml",
               "RelativeDocumentMoniker": "Views\\Shared\\_LoginLayout.cshtml",
@@ -268,7 +288,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "_ViewStart.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewStart.cshtml",
               "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\_ViewStart.cshtml",
@@ -280,7 +300,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "_ViewImports.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
               "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
@@ -292,7 +312,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "Logout.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Logout.cshtml",
               "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Logout.cshtml",
@@ -304,7 +324,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "_ViewImports.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewImports.cshtml",
               "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\_ViewImports.cshtml",
