@@ -88,7 +88,7 @@
                         {
                             <li class="nav-header">RUBRIC</li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a asp-area="" asp-controller="Rubrics" asp-action="Index" class="nav-link">
                                     <i class="nav-icon fas fa-puzzle-piece"></i>
                                     <p>Rubrics Management</p>
                                 </a>
@@ -121,12 +121,10 @@
                         {
                             <li class="nav-header">STUDENT</li>
                             <li class="nav-item">
-                                <a href="/Views/Students/Index" class="nav-link">
+                                <a asp-area="" asp-controller="Students" asp-action="Index" class="nav-link">
                                     <i class="nav-icon fas fa-address-card"></i>
                                     <p>Student Data</p>
                                 </a>
-                                <a asp-area="" asp-controller="Students" asp-action="Index" class="brand-link">
-                                    Student Data</a>
                             </li>
                         }
                     </ul>
