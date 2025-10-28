@@ -4,18 +4,10 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
-
 <div>
     <h4>Rubrics</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.RubricName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rubric.RubricName)
-        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Rubric.Institution)
         </dt>
@@ -40,23 +32,34 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rubric.CourseName)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.TotalMarks)
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Rubric.RubricName)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rubric.TotalMarks)
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Rubric.RubricName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Rubric.TermName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Rubric.TermName)
         </dd>
     </dl>
 </div>
 
 <div>
     <a asp-action="Edit" asp-route-id="@Model.Rubric.RubricsId">Edit</a> |
-    <a asp-action="CreateTask" asp-route-id="@Model.Rubric.RubricsId">Add Criteria</a> |
+    <a asp-action="Delete" asp-route-id="@Model.Rubric.RubricsId">Delete</a> |
     <a asp-action="Index">Back to List</a>
 </div>
 
+<br />
+<br />
+<br />
 <h4>Tasks</h4>
-<hr />
+<div>
+    <a asp-action="CreateTask" asp-route-id="@Model.Rubric.RubricsId">Add Task</a>
+</div>
 
 @if (Model.RubricTasks.Any())
 {
@@ -77,16 +80,90 @@
                     <td>@Html.DisplayFor(modelItem => item.TaskDescription)</td>
                     <td>@Html.DisplayFor(modelItem => item.MaxMarks)</td>
                     <td>
-                        <a asp-action="EditTask" asp-route-id="@item.RubricTaskId">Edit</a> |
-                        <a asp-action="DeleteTask" asp-route-id="@item.RubricTaskId">Delete</a>
+                        <a asp-action="EditTask" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId">Edit</a> |
+                        <a asp-action="DeleteTask" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId">Delete</a>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+
+    var totalMarks = Model.RubricTasks.Where(x => x.RubricsId == Model.Rubric.RubricsId).Sum(x => x.MaxMarks);
+
+    <div class="alert alert-secondary">
+        <strong>Total Marks for this rubric: @totalMarks %</strong>
+    </div>
 }
 else
 {
     <p>No tasks have been added to this rubric yet.</p>
     <a asp-action="CreateTask" asp-route-id="@Model.Rubric.RubricsId" class="btn btn-primary">Add First Task</a>
+}
+
+
+@if (Model.RubricTasks.Any())
+{
+    @foreach (var item in Model.RubricTasks)
+    {
+        <br />
+        <br />
+        <hr />
+        <dt class="alert alert-primary">
+            @Html.DisplayFor(model => item.TaskTitle): @Html.DisplayFor(model => item.TaskDescription) [Point: @Html.DisplayFor(model => item.MaxMarks)]
+        </dt>
+        <div>
+            <a asp-action="CreateCriteria" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId">Add Task Criteria</a>
+        </div>
+        @if (Model.RubricCriterias.Any(x => x.RubricTaskId == item.RubricTaskId))
+        {
+            var firstCriteria = Model.RubricCriterias.FirstOrDefault(x => x.RubricTaskId == item.RubricTaskId);
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        <th>Weight</th>
+                        @foreach (var itemScore in Model.RubricCriteriaScores.Where(x => x.RubricCriteriaId == firstCriteria?.RubricCriteriaId))
+                        {
+                            <th>Score @itemScore.CriterionScore</th>
+                        }
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var itemCriteria in Model.RubricCriterias.Where(x => x.RubricTaskId == item.RubricTaskId))
+                    {
+                        <tr>
+                            <td>@Html.DisplayFor(modelItem => itemCriteria.CriterionTitle)</td>
+                            <td>@Html.DisplayFor(modelItem => itemCriteria.Weight) %</td>
+                            @foreach (var itemScore in Model.RubricCriteriaScores.Where(x => x.RubricCriteriaId == firstCriteria?.RubricCriteriaId))
+                            {
+                                <td>@Html.DisplayFor(modelItem => itemScore.ScoreDescription)</td>
+                            }
+                            <td>
+                                <a asp-action="EditCriteria" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId">Edit</a> |
+                                <a asp-action="DeleteCriteria" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            
+            
+            var totalWeight = Model.RubricCriterias.Where(x => x.RubricTaskId == item.RubricTaskId).Sum(x => x.Weight);
+            
+            <div class="alert alert-secondary">
+                <strong>Total Weight for this task: @totalWeight %</strong>
+            </div>
+        }
+        else
+        {
+            <p>No tasks have been added to this rubric yet.</p>
+            <a asp-action="CreateCriteria" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId" class="btn btn-primary">Add First Task Criteria</a>
+
+            <div class="alert alert-secondary">
+                <strong>Total Weight for this task: 0 %</strong>
+            </div>
+        }
+    }
 }

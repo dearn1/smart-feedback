@@ -9,6 +9,7 @@
         public string Programme { get; set; }
         public string CourseCode { get; set; }
         public string CourseName { get; set; }
+        public string TermName { get; set; }
         public int TotalMarks { get; set; }
         public string SourceFile { get; set; }
     }

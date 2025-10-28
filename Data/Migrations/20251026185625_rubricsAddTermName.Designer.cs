@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using smart_feedback.Data;
 
@@ -11,9 +12,11 @@ using smart_feedback.Data;
 namespace smart_feedback.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251026185625_rubricsAddTermName")]
+    partial class rubricsAddTermName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -222,55 +225,6 @@ namespace smart_feedback.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.RubricCriteria", b =>
-                {
-                    b.Property<int>("RubricCriteriaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RubricCriteriaId"));
-
-                    b.Property<string>("CriterionTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MaxScore")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RubricTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Weight")
-                        .HasColumnType("float");
-
-                    b.HasKey("RubricCriteriaId");
-
-                    b.ToTable("RubricCriteria");
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.RubricCriteriaScore", b =>
-                {
-                    b.Property<int>("RubricCriteriaScoreId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RubricCriteriaScoreId"));
-
-                    b.Property<int>("CriterionScore")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RubricCriteriaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ScoreDescription")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RubricCriteriaScoreId");
-
-                    b.ToTable("RubricCriteriaScore");
                 });
 
             modelBuilder.Entity("smart_feedback.Models.RubricTask", b =>
