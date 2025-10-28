@@ -17,6 +17,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 var app = builder.Build();
 
 // Seed roles and admin user

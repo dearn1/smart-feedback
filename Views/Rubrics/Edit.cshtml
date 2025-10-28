@@ -4,7 +4,6 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
 
 <h4>Rubrics</h4>
 <hr />
@@ -12,12 +11,7 @@
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="RubricsId" />
-            <div class="form-group">
-                <label asp-for="RubricName" class="control-label"></label>
-                <input asp-for="RubricName" class="form-control" />
-                <span asp-validation-for="RubricName" class="text-danger"></span>
-            </div>
+            <input type="hidden" asp-for="RubricsId" />            
             <div class="form-group">
                 <label asp-for="Institution" class="control-label"></label>
                 <input asp-for="Institution" class="form-control" />
@@ -39,14 +33,14 @@
                 <span asp-validation-for="CourseName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TotalMarks" class="control-label"></label>
-                <input asp-for="TotalMarks" class="form-control" />
-                <span asp-validation-for="TotalMarks" class="text-danger"></span>
+                <label asp-for="RubricName" class="control-label"></label>
+                <input asp-for="RubricName" class="form-control" />
+                <span asp-validation-for="RubricName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="SourceFile" class="control-label"></label>
-                <input asp-for="SourceFile" class="form-control" />
-                <span asp-validation-for="SourceFile" class="text-danger"></span>
+                <label asp-for="TermName" class="control-label"></label>
+                <input asp-for="TermName" class="form-control" />
+                <span asp-validation-for="TermName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

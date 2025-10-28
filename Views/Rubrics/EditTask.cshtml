@@ -1,16 +1,17 @@
 ﻿@model smart_feedback.Models.RubricTask
 
 @{
-    ViewData["Title"] = "Create Task";
+    ViewData["Title"] = "EditTask";
 }
-
 
 <h4>RubricTask</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="CreateTask">
+        <form asp-action="EditTask">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="RubricTaskId" />
+            <input type="hidden" asp-for="RubricsId" />
             <div class="form-group">
                 <label asp-for="TaskTitle" class="control-label"></label>
                 <input asp-for="TaskTitle" class="form-control" />
@@ -18,7 +19,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="TaskDescription" class="control-label"></label>
-                <textarea asp-for="TaskDescription" class="form-control"> </textarea>
+                <input asp-for="TaskDescription" class="form-control" />
                 <span asp-validation-for="TaskDescription" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -28,7 +29,7 @@
             </div>
             <div class="form-group">
                 <input type="hidden" name="rubricId" value="@ViewBag.RubricId" />
-                <input type="submit" value="CreateTask" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
     </div>

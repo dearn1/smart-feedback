@@ -13,5 +13,7 @@ namespace smart_feedback.Data
         public DbSet<smart_feedback.Models.Student> Student { get; set; } = default!;
         public DbSet<smart_feedback.Models.Rubrics> Rubrics { get; set; } = default!;
         public DbSet<smart_feedback.Models.RubricTask> RubricTask { get; set; } = default!;
+        public DbSet<smart_feedback.Models.RubricCriteria> RubricCriteria { get; set;} = default!;
+        public DbSet<smart_feedback.Models.RubricCriteriaScore> RubricCriteriaScore { get; set; } = default!;
     }
 }
