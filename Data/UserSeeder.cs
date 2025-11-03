@@ -137,7 +137,7 @@ namespace smart_feedback.Data
                 if (result.Succeeded)
                 {
                     // Assign Admin role to the admin user
-                    await userManager.AddToRoleAsync(moderatorUser, ApplicationRoles.Lecturer);
+                    await userManager.AddToRoleAsync(moderatorUser, ApplicationRoles.Moderator);
                     Console.WriteLine($"Moderator user created successfully: {moderatorEmail}");
                 }
                 else
@@ -147,10 +147,10 @@ namespace smart_feedback.Data
             }
             else
             {
-                // Ensure admin user has the Admin role
-                if (!await userManager.IsInRoleAsync(moderatorUser, ApplicationRoles.Lecturer))
+                // Ensure admin user has the Moderator role
+                if (!await userManager.IsInRoleAsync(moderatorUser, ApplicationRoles.Moderator))
                 {
-                    await userManager.AddToRoleAsync(moderatorUser, ApplicationRoles.Lecturer);
+                    await userManager.AddToRoleAsync(moderatorUser, ApplicationRoles.Moderator);
                     Console.WriteLine($"Moderator role assigned to existing user: {moderatorEmail}");
                 }
             }

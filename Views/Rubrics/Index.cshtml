@@ -15,13 +15,15 @@
     </div>
 </div>
 
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<p>
-    <a asp-action="Upload">Upload</a>
-</p>
+@if (!User.IsInRole("Moderator"))
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+    <p>
+        <a asp-action="Upload">Upload</a>
+    </p>
+}
 <table class="table">
     <thead>
         <tr>
@@ -47,30 +49,38 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Institution)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Programme)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CourseCode)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CourseName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.RubricName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TermName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RubricsId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RubricsId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RubricsId">Delete</a>
+        @foreach (var item in Model) {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Institution)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Programme)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CourseCode)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CourseName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RubricName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TermName)
+                </td>
+                <td>
+                    @if (!User.IsInRole("Moderator"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.RubricsId">Edit</a>
+                    }
+                    |
+                    <a asp-action="Details" asp-route-id="@item.RubricsId">Details</a> |
+                    @if (!User.IsInRole("Moderator"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.RubricsId">Delete</a>
+                    }
+
             </td>
         </tr>
 }

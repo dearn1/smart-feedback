@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Upload Course Roles CSV";
+}
+
+
+<form asp-action="Upload" enctype="multipart/form-data" method="post">
+    <div class="form-group">
+        <label for="csvFile">Select CSV file</label>
+        <input type="file" name="csvFile" id="csvFile" class="form-control" accept=".csv" required />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Upload</button>
+</form>
+
+@if (ViewBag.Message != null)
+{
+    <div class="alert alert-info mt-2">@ViewBag.Message</div>
+}

@@ -82,6 +82,12 @@
                                     <p>User Management</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a asp-area="" asp-controller="CourseRoles" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon fas fa-user"></i>
+                                    <p>Course Roles</p>
+                                </a>
+                            </li>
                         }
 
                         @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))

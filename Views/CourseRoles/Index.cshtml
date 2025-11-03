@@ -1,0 +1,60 @@
+﻿@model IEnumerable<smart_feedback.Models.CourseRoles>
+
+@{
+    ViewData["Title"] = "Course Roles";
+}
+
+<p>
+    <a asp-action="Upload">Upload CSV</a>
+</p>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CourseCode)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CourseName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TermName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RoleLecturer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RoleModerator)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CourseCode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CourseName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TermName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RoleLecturer)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RoleModerator)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CourseRolesId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CourseRolesId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CourseRolesId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
