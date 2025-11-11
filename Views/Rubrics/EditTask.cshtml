@@ -1,10 +1,12 @@
 ﻿@model smart_feedback.Models.RubricTask
 
 @{
-    ViewData["Title"] = "EditTask";
+    ViewData["Title"] = "Rubrics";
+    var courseId = ViewBag.CourseId as string;
+    var userRole = ViewBag.CurrentUserRole as string;
 }
 
-<h4>RubricTask</h4>
+<h4>Edit Task</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -12,30 +14,35 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="RubricTaskId" />
             <input type="hidden" asp-for="RubricsId" />
+            <input type="hidden" name="courseid" value="@courseId" />
+            <input type="hidden" name="role" value="@userRole" />
             <div class="form-group">
-                <label asp-for="TaskTitle" class="control-label"></label>
+                <label>Task Title</label>
                 <input asp-for="TaskTitle" class="form-control" />
                 <span asp-validation-for="TaskTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TaskDescription" class="control-label"></label>
+                <label>Task Description</label>
                 <input asp-for="TaskDescription" class="form-control" />
                 <span asp-validation-for="TaskDescription" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="MaxMarks" class="control-label"></label>
+                <label>Max Marks</label>
                 <input asp-for="MaxMarks" class="form-control" />
                 <span asp-validation-for="MaxMarks" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="d-flex gap-2 mb-3">
                 <input type="hidden" name="rubricId" value="@ViewBag.RubricId" />
                 <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Details"
+                   asp-route-id="@ViewBag.RubricId"
+                   asp-route-courseid="@courseId"
+                   asp-route-role="@userRole"
+                   class="btn btn-secondary btn-sm">
+                    Cancel
+                </a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Details" asp-route-id="@ViewBag.RubricId">Back to List</a>
 </div>
 

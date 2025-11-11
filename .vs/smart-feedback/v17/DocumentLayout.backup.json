@@ -3,8 +3,12 @@
   "WorkspaceRootPath": "C:\\Github_Repo\\smart-feedback\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\editcriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\editcriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\account\\manage\\_managenav.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\account\\manage\\_managenav.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\account\\manage\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\account\\manage\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\controllers\\rubricscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -15,104 +19,12 @@
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\createcriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\edittask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\edittask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\deletecriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\deletecriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubriccriteria.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubriccriteria.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\editcriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\editcriteria.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\deletetask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\deletetask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubrictask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\createtask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\createtask.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\delete.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubriccriteriascore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubriccriteriascore.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubrics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubrics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:models\\rubricdetailsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\rubrics\\upload.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\rubrics\\upload.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\shared\\_validationscriptspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\shared\\_validationscriptspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\account\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\account\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\views\\shared\\_loginlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:views\\shared\\_loginlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\account\\logout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\account\\logout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\account\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\account\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|c:\\github_repo\\smart-feedback\\areas\\identity\\pages\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B3274277-A567-499C-A868-072994C36A1F}|smart-feedback.csproj|solutionrelative:areas\\identity\\pages\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -122,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -130,341 +42,63 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "EditTask.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\EditTask.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\EditTask.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\EditTask.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\EditTask.cshtml",
-              "ViewState": "AgIAAAYAAAAAAAAAAAD4vwwAAAA6AAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "_ManageNav.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Manage\\_ManageNav.cshtml",
+              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Manage\\_ManageNav.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Manage\\_ManageNav.cshtml",
+              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Manage\\_ManageNav.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-28T07:50:44.852Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "DeleteCriteria.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\DeleteCriteria.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\DeleteCriteria.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\DeleteCriteria.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\DeleteCriteria.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACAAAABJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-27T23:40:26.245Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "RubricsController.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\RubricsController.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
-              "RelativeToolTip": "Controllers\\RubricsController.cs",
-              "ViewState": "AgIAAJcBAAAAAAAAAAAwwKoBAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:19:29.252Z",
+              "WhenOpened": "2025-11-11T04:50:22.712Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "CreateCriteria.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateCriteria.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\CreateCriteria.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateCriteria.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\CreateCriteria.cshtml",
-              "ViewState": "AgIAABMAAAAAAAAAAAD4vyIAAAAPAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Manage\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Manage\\_Layout.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Manage\\_Layout.cshtml",
+              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Manage\\_Layout.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-27T01:38:33.831Z"
+              "WhenOpened": "2025-11-11T04:50:04.243Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "EditCriteria.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\EditCriteria.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\EditCriteria.cshtml",
               "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\EditCriteria.cshtml",
               "RelativeToolTip": "Views\\Rubrics\\EditCriteria.cshtml",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAcwCEAAABRAAAAAAAAAA==",
+              "ViewState": "AgIAACcAAAAAAAAAAAAcwDYAAAB1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-28T08:40:45.582Z",
+              "WhenOpened": "2025-11-11T03:58:52.012Z",
               "EditorCaption": ""
             },
             {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 5,
               "Title": "Details.cshtml",
               "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
               "RelativeDocumentMoniker": "Views\\Rubrics\\Details.cshtml",
               "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Details.cshtml",
               "RelativeToolTip": "Views\\Rubrics\\Details.cshtml",
-              "ViewState": "AgIAAH0AAAAAAAAAAAAcwI8AAACXAAAAAAAAAA==",
+              "ViewState": "AgIAAKkAAAAAAAAAAAAcwMoAAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:00:19.714Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "RubricCriteria.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricCriteria.cs",
-              "RelativeDocumentMoniker": "Models\\RubricCriteria.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricCriteria.cs",
-              "RelativeToolTip": "Models\\RubricCriteria.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-26T23:25:51.527Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "RubricTask.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricTask.cs",
-              "RelativeDocumentMoniker": "Models\\RubricTask.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricTask.cs",
-              "RelativeToolTip": "Models\\RubricTask.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:48:43.973Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "DeleteTask.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\DeleteTask.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\DeleteTask.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\DeleteTask.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\DeleteTask.cshtml",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAcwB0AAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-28T08:34:27.473Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "Edit.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Edit.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Edit.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Edit.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Edit.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:35:08.962Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "CreateTask.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\CreateTask.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateTask.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\CreateTask.cshtml",
-              "ViewState": "AgIAABYAAAAAAAAAAAD4vyQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:53:39.939Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "Create.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Create.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Create.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Create.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Create.cshtml",
-              "ViewState": "AgIAABEAAAAAAAAAAAAcwCoAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T18:55:03.765Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Delete.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Delete.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Delete.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Delete.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Delete.cshtml",
-              "ViewState": "AgIAABcAAAAAAAAAAAAswB4AAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-23T02:40:47.952Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "Rubrics.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\Rubrics.cs",
-              "RelativeDocumentMoniker": "Models\\Rubrics.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\Rubrics.cs",
-              "RelativeToolTip": "Models\\Rubrics.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAUAAAAcAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T18:54:45.033Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "RubricCriteriaScore.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricCriteriaScore.cs",
-              "RelativeDocumentMoniker": "Models\\RubricCriteriaScore.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricCriteriaScore.cs",
-              "RelativeToolTip": "Models\\RubricCriteriaScore.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-26T23:28:50.48Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "Data\\ApplicationDbContext.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-22T19:50:08.21Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "RubricDetailsViewModel.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Models\\RubricDetailsViewModel.cs",
-              "RelativeDocumentMoniker": "Models\\RubricDetailsViewModel.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Models\\RubricDetailsViewModel.cs",
-              "RelativeToolTip": "Models\\RubricDetailsViewModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-23T01:13:34.034Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-10-26T18:52:30.745Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "Upload.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeDocumentMoniker": "Views\\Rubrics\\Upload.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\Upload.cshtml",
-              "RelativeToolTip": "Views\\Rubrics\\Upload.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:33:56.899Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-23T06:53:40.098Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAAJkAAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T23:07:20.165Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "_ValidationScriptsPartial.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_ValidationScriptsPartial.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_ValidationScriptsPartial.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_ValidationScriptsPartial.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-22T19:37:55.437Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "Login.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Login.cshtml",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Login.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Login.cshtml",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Login.cshtml",
-              "ViewState": "AgIAABcAAAAAAAAAAAAcwAgAAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:31.96Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "_LoginLayout.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_LoginLayout.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_LoginLayout.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Shared\\_LoginLayout.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_LoginLayout.cshtml",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAcwBQAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T20:00:29.336Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "_ViewStart.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewStart.cshtml",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\_ViewStart.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewStart.cshtml",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\_ViewStart.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:51.683Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 26,
-              "Title": "_ViewImports.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\_ViewImports.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:57.978Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "Logout.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Logout.cshtml",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\Account\\Logout.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\Account\\Logout.cshtml",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\Account\\Logout.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T22:43:08.556Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 27,
-              "Title": "_ViewImports.cshtml",
-              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewImports.cshtml",
-              "RelativeDocumentMoniker": "Areas\\Identity\\Pages\\_ViewImports.cshtml",
-              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Areas\\Identity\\Pages\\_ViewImports.cshtml",
-              "RelativeToolTip": "Areas\\Identity\\Pages\\_ViewImports.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-21T19:56:48.835Z"
+              "WhenOpened": "2025-11-11T03:53:22.478Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -472,11 +106,37 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+              "Name": "ST:0:0:{a80febb4-e7e0-4147-b476-21aaf2453969}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CreateCriteria.cshtml",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateCriteria.cshtml",
+              "RelativeDocumentMoniker": "Views\\Rubrics\\CreateCriteria.cshtml",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Views\\Rubrics\\CreateCriteria.cshtml",
+              "RelativeToolTip": "Views\\Rubrics\\CreateCriteria.cshtml",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAAEIAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-11-11T03:13:53.143Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RubricsController.cs",
+              "DocumentMoniker": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\RubricsController.cs",
+              "ToolTip": "C:\\Github_Repo\\smart-feedback\\Controllers\\RubricsController.cs",
+              "RelativeToolTip": "Controllers\\RubricsController.cs",
+              "ViewState": "AgIAAFgBAAAAAAAAAAAAAFgBAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-11T01:33:44.65Z",
+              "EditorCaption": ""
             }
           ]
         }

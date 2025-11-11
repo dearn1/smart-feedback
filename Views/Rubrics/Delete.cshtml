@@ -1,60 +1,59 @@
 ﻿@model smart_feedback.Models.Rubrics
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Rubrics";
+    var courseId = ViewBag.CourseId as string;
+    var userRole = ViewBag.CurrentUserRole as string;
 }
 
-<h1>Delete</h1>
-
-<h3>Are you sure you want to delete this?</h3>
+<h3>Are you sure you want to delete this rubric?</h3>
 <div>
-    <h4>Rubrics</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Institution)
+            Institution
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Institution)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Programme)
+            Programme
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Programme)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CourseCode)
+            Course Code
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.CourseCode)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CourseName)
+            Course Name
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.CourseName)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.RubricName)
+            Rubric Name
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.RubricName)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.TermName)
+            Term Name
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.TermName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalMarks)
+            Total Marks
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.TotalMarks)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SourceFile)
+            Source File
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.SourceFile)
@@ -63,7 +62,17 @@
     
     <form asp-action="Delete">
         <input type="hidden" asp-for="RubricsId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
+        <input type="hidden" name="courseId" value="@courseId" />
+        <input type="hidden" name="role" value="@userRole" />
+
+        <div class="d-flex gap-2 mb-3">
+            <input type="submit" value="Delete" class="btn btn-danger" /> |
+            <a asp-action="Index"
+               asp-route-courseId="@courseId"
+               asp-route-role="@userRole"
+               class="btn btn-secondary btn-sm">
+                Cancel
+            </a>
+        </div>
     </form>
 </div>

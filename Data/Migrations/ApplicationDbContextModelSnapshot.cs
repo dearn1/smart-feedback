@@ -240,6 +240,14 @@ namespace smart_feedback.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Institution")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Programme")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RoleLecturer")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -298,6 +306,10 @@ namespace smart_feedback.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ScoreDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ScoreTitle")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -395,9 +407,12 @@ namespace smart_feedback.Data.Migrations
 
                     b.Property<string>("StudentId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
 
                     b.ToTable("Student");
                 });

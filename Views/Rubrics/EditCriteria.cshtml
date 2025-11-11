@@ -1,12 +1,12 @@
 ﻿@model smart_feedback.Models.RubricCriteria
 
 @{
-    ViewData["Title"] = "EditCriteria";
+    ViewData["Title"] = "Rubrics";
+    var courseId = ViewBag.CourseId as string;
+    var userRole = ViewBag.CurrentUserRole as string;
 }
 
-<h1>EditCriteria</h1>
-
-<h4>RubricCriteria</h4>
+<h4>Edit Criteria</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -14,31 +14,76 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="RubricCriteriaId" />
             <input type="hidden" asp-for="RubricTaskId" />
+            <input type="hidden" name="courseid" value="@courseId" />
+            <input type="hidden" name="role" value="@userRole" />
+
             <div class="form-group">
-                <label asp-for="CriterionTitle" class="control-label"></label>
+                <label>Criterion Title</label>
                 <input asp-for="CriterionTitle" class="form-control" />
                 <span asp-validation-for="CriterionTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Weight" class="control-label"></label>
+                <label>Weight</label>
                 <input asp-for="Weight" class="form-control" />
                 <span asp-validation-for="Weight" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="MaxScore" class="control-label"></label>
+                <label>Max Score</label>
                 <input asp-for="MaxScore" class="form-control" type="number" min="1" max="10" readonly />
                 <span asp-validation-for="MaxScore" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <!-- Score Editing Section -->
+            @if (ViewBag.ExistingScores != null)
+            {
+                <div class="mt-4">
+                    <h5>Edit Scores</h5>
+                    <div class="row">
+                        @foreach (var score in (List<smart_feedback.Models.RubricCriteriaScore>)ViewBag.ExistingScores)
+                        {
+                            <div class="col-md-12 mb-3">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <span class="badge badge-primary" style="font-size: 1.2rem;">Score: @score.CriterionScore</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Score Title</label>
+                                            <input type="text" class="form-control" 
+                                                   name="ScoreTitle_@score.CriterionScore" 
+                                                   value="@score.ScoreTitle"
+                                                   placeholder="Enter title for score @score.CriterionScore" readonly/>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Score Description</label>
+                                            <textarea class="form-control" rows="3" 
+                                                      name="ScoreDescription_@score.CriterionScore" 
+                                                      placeholder="Enter description for score @score.CriterionScore">@score.ScoreDescription</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="d-flex gap-2 mb-3">
                 <input type="hidden" name="criteriaId" value="@Model.RubricCriteriaId" />
                 <input type="hidden" name="rubricId" value="@ViewBag.RubricId" />
                 <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Details"
+                   asp-route-id="@ViewBag.RubricId"
+                   asp-route-courseid="@courseId"
+                   asp-route-role="@userRole"
+                   class="btn btn-secondary btn-sm">
+                    Cancel
+                </a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Details" asp-route-id="@ViewBag.RubricId">Back to List</a>
-</div>
-
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

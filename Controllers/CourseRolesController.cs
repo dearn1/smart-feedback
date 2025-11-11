@@ -57,7 +57,7 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CourseRolesId,CourseCode,CourseName,TermName,RoleLecturer,RoleModerator")] CourseRoles courseRoles)
+        public async Task<IActionResult> Create([Bind("CourseRolesId,CourseCode,CourseName,TermName,Programme,Institution,RoleLecturer,RoleModerator")] CourseRoles courseRoles)
         {
             if (ModelState.IsValid)
             {
@@ -89,7 +89,7 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CourseRolesId,CourseCode,CourseName,TermName,RoleLecturer,RoleModerator")] CourseRoles courseRoles)
+        public async Task<IActionResult> Edit(int id, [Bind("CourseRolesId,CourseCode,CourseName,TermName,Programme,Institution,RoleLecturer,RoleModerator")] CourseRoles courseRoles)
         {
             if (id != courseRoles.CourseRolesId)
             {
@@ -187,6 +187,8 @@ namespace smart_feedback.Controllers
                         CourseCode = csv.GetField<string>("CourseCode"),
                         CourseName = csv.GetField<string>("CourseName"),
                         TermName = csv.GetField<string>("TermName"),
+                        Programme = csv.GetField<string>("Programme"),
+                        Institution = csv.GetField<string>("Institution"),
                         RoleLecturer = csv.GetField<string>("RoleLecturer"),
                         RoleModerator = csv.GetField<string>("RoleModerator")
                     };
