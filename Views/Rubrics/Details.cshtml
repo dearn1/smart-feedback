@@ -2,110 +2,117 @@
 
 @{
     ViewData["Title"] = "Details";
+    var courseId = ViewBag.CourseId as string;
+    var userRole = ViewBag.CurrentUserRole as string;
 }
 
+<form asp-action="Details">
+    <input type="hidden" name="courseId" value="@courseId" />
+    <input type="hidden" name="role" value="@userRole" />
+</form>
+
 <div>
-    <h4>Rubrics</h4>
+    <h4>Rubric Information</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.Institution)
+            Institution
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rubric.Institution)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.Programme)
+            Programme
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rubric.Programme)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.CourseCode)
+            Course Code
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rubric.CourseCode)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.CourseName)
+            Course Name
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rubric.CourseName)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.RubricName)
+            Rubric Name
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Rubric.RubricName)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Rubric.TermName)
+            Term Name
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Rubric.TermName)
         </dd>
+        <dt class="col-sm-2">
+            Role
+        </dt>
+        <dd class="col-sm-10">            
+            <span class="badge bg-info">@userRole</span>
+        </dd>
     </dl>
 </div>
 
-<div>
-    @if (!User.IsInRole("Moderator"))
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Rubric.RubricsId">Edit</a>
-    }
-    |
-    @if (!User.IsInRole("Moderator"))
-    {
-        <a asp-action="Delete" asp-route-id="@Model.Rubric.RubricsId">Delete</a>
-    }
-    |
-    <a asp-action="Index">Back to List</a>
+<div class="btn-group gap-2" role="group">  
+    <a asp-action="Index" 
+    asp-route-courseId="@courseId"
+    asp-route-role="@userRole" 
+    class="btn btn-secondary">Back to List</a>
 </div>
 
 <br />
 <br />
 <br />
-<h4>Tasks</h4>
-@if (!User.IsInRole("Moderator"))
-{
-    <div>
-        <a asp-action="CreateTask" asp-route-id="@Model.Rubric.RubricsId">Add Task</a>
-    </div>
-}
+<h4>Tasks Summary</h4>
+
 
 @if (Model.RubricTasks.Any())
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Task Title</th>
-                <th>Task Description</th>
-                <th>Max Marks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.RubricTasks)
-            {
+    @if (userRole != "Moderator")
+    {
+        <div>
+            <a asp-action="CreateTask" class="btn btn-primary" asp-route-id="@Model.Rubric.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Add Task</a>
+        </div>
+    }
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
                 <tr>
-                    <td>@Html.DisplayFor(modelItem => item.TaskTitle)</td>
-                    <td>@Html.DisplayFor(modelItem => item.TaskDescription)</td>
-                    <td>@Html.DisplayFor(modelItem => item.MaxMarks)</td>
-                    <td>
-                        @if (!User.IsInRole("Moderator"))
-                        {
-                            <a asp-action="EditTask" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId">Edit</a>
-                        }
-                        |
-                        @if (!User.IsInRole("Moderator"))
-                        {
-                            <a asp-action="DeleteTask" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId">Delete</a>
-                        }
-
-                    </td>
+                    <th>Task Title</th>
+                    <th>Task Description</th>
+                    <th>Max Marks</th>
+                    @if (userRole != "Moderator")
+                    {
+                        <th>Actions</th>
+                    }
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.RubricTasks)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.TaskTitle)</td>
+                        <td>@Html.DisplayFor(modelItem => item.TaskDescription)</td>
+                        <td>@Html.DisplayFor(modelItem => item.MaxMarks)</td>
+                        @if (userRole != "Moderator")
+                        {
+                            <td>
+                                <a asp-action="EditTask" class="btn btn-warning" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Edit</a>
+                                <a asp-action="DeleteTask" class="btn btn-danger" asp-route-id="@item.RubricTaskId" asp-route-rubricId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Delete</a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     var totalMarks = Model.RubricTasks.Where(x => x.RubricsId == Model.Rubric.RubricsId).Sum(x => x.MaxMarks);
 
@@ -116,9 +123,9 @@
 else
 {
     <p>No tasks have been added to this rubric yet.</p>
-    @if (!User.IsInRole("Moderator"))
+    @if (userRole != "Moderator")
     {
-        <a asp-action="CreateTask" asp-route-id="@Model.Rubric.RubricsId" class="btn btn-primary">Add First Task</a>
+        <a asp-action="CreateTask" class="btn btn-primary" asp-route-id="@Model.Rubric.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Add First Task</a>
     }
 
 }
@@ -131,58 +138,58 @@ else
         <br />
         <br />
         <hr />
-        <dt class="alert alert-primary">
+        <dt class="alert alert-info">
             @Html.DisplayFor(model => item.TaskTitle): @Html.DisplayFor(model => item.TaskDescription) [Point: @Html.DisplayFor(model => item.MaxMarks)]
         </dt>
-        <div>
-            @if (!User.IsInRole("Moderator"))
-            {
-                <a asp-action="CreateCriteria" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId">Add Task Criteria</a>
-            }
-
-        </div>
+        
         @if (Model.RubricCriterias.Any(x => x.RubricTaskId == item.RubricTaskId))
         {
             var firstCriteria = Model.RubricCriterias.FirstOrDefault(x => x.RubricTaskId == item.RubricTaskId);
+            <div>
+                @if (userRole != "Moderator")
+                {
+                    <a asp-action="CreateCriteria" class="btn btn-primary" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Add Task Criteria</a>
+                }
 
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Criteria</th>
-                        <th>Weight</th>
-                        @foreach (var itemScore in Model.RubricCriteriaScores.Where(x => x.RubricCriteriaId == firstCriteria?.RubricCriteriaId))
-                        {
-                            <th>Score @itemScore.CriterionScore</th>
-                        }
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var itemCriteria in Model.RubricCriterias.Where(x => x.RubricTaskId == item.RubricTaskId))
-                    {
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
                         <tr>
-                            <td>@Html.DisplayFor(modelItem => itemCriteria.CriterionTitle)</td>
-                            <td>@Html.DisplayFor(modelItem => itemCriteria.Weight) %</td>
+                            <th>Criteria</th>
+                            <th>Weight</th>
                             @foreach (var itemScore in Model.RubricCriteriaScores.Where(x => x.RubricCriteriaId == firstCriteria?.RubricCriteriaId))
                             {
-                                <td>@Html.DisplayFor(modelItem => itemScore.ScoreDescription)</td>
+                                <th>@itemScore.CriterionScore - @itemScore.ScoreTitle</th>
                             }
-                            <td>
-                                @if (!User.IsInRole("Moderator"))
-                                {
-                                    <a asp-action="EditCriteria" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId">Edit</a>
-                                }
-                                |
-                                @if (!User.IsInRole("Moderator"))
-                                {
-                                    <a asp-action="DeleteCriteria" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId">Delete</a>
-                                }
-
-                            </td>
+                            @if (userRole != "Moderator")
+                            {
+                                <th>Action</th>
+                            }
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var itemCriteria in Model.RubricCriterias.Where(x => x.RubricTaskId == item.RubricTaskId))
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => itemCriteria.CriterionTitle)</td>
+                                <td>@Html.DisplayFor(modelItem => itemCriteria.Weight) %</td>
+                                @foreach (var itemScore in Model.RubricCriteriaScores.Where(x => x.RubricCriteriaId == itemCriteria?.RubricCriteriaId))
+                                {
+                                    <td>@Html.DisplayFor(modelItem => itemScore.ScoreDescription)</td>
+                                }
+                                @if (userRole != "Moderator")
+                                {
+                                    <td>
+                                        <a asp-action="EditCriteria" class="btn btn-warning" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Edit</a>
+                                        <a asp-action="DeleteCriteria" class="btn btn-danger" asp-route-criteriaId="@itemCriteria.RubricCriteriaId" asp-route-rubricId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Delete</a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
 
 
             var totalWeight = Model.RubricCriterias.Where(x => x.RubricTaskId == item.RubricTaskId).Sum(x => x.Weight);
@@ -193,10 +200,10 @@ else
         }
         else
         {
-            <p>No tasks have been added to this rubric yet.</p>
-            @if (!User.IsInRole("Moderator"))
+            <p>No criterias have been added to this task yet.</p>
+            @if (userRole != "Moderator")
             {
-                <a asp-action="CreateCriteria" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId" class="btn btn-primary">Add First Task Criteria</a>
+                <a asp-action="CreateCriteria" class="btn btn-primary" asp-route-id="@item.RubricTaskId" asp-route-rubricsId="@item.RubricsId" asp-route-courseid="@courseId" asp-route-role="@userRole">Add First Task Criteria</a>
             }
 
 

@@ -1,5 +1,9 @@
-﻿namespace smart_feedback.Models
+﻿using Microsoft.EntityFrameworkCore; // Added this namespace for the Index attribute  
+
+
+namespace smart_feedback.Models
 {
+    [Index(nameof(StudentId), IsUnique = true)] // Moved Index attribute to class level  
     public class Student
     {
         public int Id { get; set; }

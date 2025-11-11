@@ -14,7 +14,7 @@
     <!-- Custom styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed sidebar-collapse">
     <div class="wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -44,7 +44,7 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a asp-area="" asp-controller="Home" asp-action="Index" class="brand-link">
-                <img src="https://adminlte.io/themes/v3/dist/img/AdminLTELogo.png" alt="SAFS Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <img src="~/images/logo_small.png" alt="SAFS Logo" class="brand-image img-circle">
                 <span class="brand-text font-weight-light">SAFS</span>
             </a>
 
@@ -63,78 +63,68 @@
                     </div>
                 }
 
-                <!-- Sidebar Menu -->
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link">
-                                <i class="nav-icon fas fa-home"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-header">ADMINISTRATION</li>
+                
+                    <!-- Sidebar Menu -->
+                    <nav class="mt-2">
+                        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-users"></i>
-                                    <p>User Management</p>
+                                <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon fas fa-home"></i>
+                                    <p>Dashboard</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a asp-area="" asp-controller="CourseRoles" asp-action="Index" class="nav-link">
-                                    <i class="nav-icon fas fa-user"></i>
-                                    <p>Course Roles</p>
-                                </a>
-                            </li>
-                        }
 
-                        @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-header">RUBRIC</li>
-                            <li class="nav-item">
-                                <a asp-area="" asp-controller="Rubrics" asp-action="Index" class="nav-link">
-                                    <i class="nav-icon fas fa-puzzle-piece"></i>
-                                    <p>Rubrics Management</p>
-                                </a>
-                            </li>
-                        }
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-header">ADMINISTRATION</li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Admin" asp-action="UserManagement" class="nav-link">
+                                        <i class="nav-icon fas fa-users"></i>
+                                        <p>User Management</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="CourseRoles" asp-action="Index" class="nav-link">
+                                        <i class="nav-icon fas fa-user"></i>
+                                        <p>Course Roles</p>
+                                    </a>
+                                </li>
 
-                        @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-header">ASSESSMENT</li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-newspaper"></i>
-                                    <p>Student Assessments</p>
-                                </a>
-                            </li>
-                        }
+                                <li class="nav-header">RUBRIC</li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Rubrics" asp-action="Index" class="nav-link">
+                                        <i class="nav-icon fas fa-puzzle-piece"></i>
+                                        <p>Rubrics Management</p>
+                                    </a>
+                                </li>
 
-                        @if (User.IsInRole("Moderator") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-header">REPORT</li>
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-print"></i>
-                                    <p>Batch Export</p>
-                                </a>
-                            </li>
-                        }
+                                <li class="nav-header">ASSESSMENT</li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-newspaper"></i>
+                                        <p>Student Assessments</p>
+                                    </a>
+                                </li>
 
-                        @if (User.IsInRole("Lecturer") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-header">STUDENT</li>
-                            <li class="nav-item">
-                                <a asp-area="" asp-controller="Students" asp-action="Index" class="nav-link">
-                                    <i class="nav-icon fas fa-address-card"></i>
-                                    <p>Student Data</p>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </nav>
+                                <li class="nav-header">REPORT</li>
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link">
+                                        <i class="nav-icon fas fa-print"></i>
+                                        <p>Batch Export</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-header">STUDENT</li>
+                                <li class="nav-item">
+                                    <a asp-area="" asp-controller="Students" asp-action="Index" class="nav-link">
+                                        <i class="nav-icon fas fa-address-card"></i>
+                                        <p>Student Data</p>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                
             </div>
         </aside>
 
