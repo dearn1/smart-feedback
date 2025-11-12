@@ -20,7 +20,7 @@ namespace smart_feedback.Models.ViewModels
         [Display(Name = "Email Address")]
         public string Email { get; set; }
 
-        [Display(Name = "Full Name (Optional)")]
+        [Display(Name = "Full Name")]
         public string FullName { get; set; }
     }
 }
