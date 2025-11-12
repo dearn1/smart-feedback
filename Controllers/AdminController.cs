@@ -33,7 +33,7 @@ namespace smart_feedback.Controllers
                 {
                     Id = user.Id,
                     Email = user.Email,
-                    UserName = user.UserName,
+                    UserName = user.Email,
                     EmailConfirmed = user.EmailConfirmed,
                     Roles = roles.ToList(),
                     LockoutEnd = user.LockoutEnd,
