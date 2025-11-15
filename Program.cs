@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using smart_feedback.Data;
 using Serilog;
+using smart_feedback.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
+builder.Services.AddScoped<IFeedbackGenerationService, MLFeedbackGenerationService>();
 var app = builder.Build();
 
 // Seed roles and admin user

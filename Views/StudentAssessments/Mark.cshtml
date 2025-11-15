@@ -1,0 +1,481 @@
+﻿@model smart_feedback.Models.ViewModels.AssessmentMarkingViewModel
+
+@{
+    ViewData["Title"] = "Mark Students";
+    var currentStudent = Model.Students.FirstOrDefault();
+    var hasNext = Model.CurrentStudentIndex < Model.TotalStudents - 1;
+    var hasPrevious = Model.CurrentStudentIndex > 0;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-clipboard-check"></i> Mark Students - @Model.Assessment.AssessmentName
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-success btn-sm" id="saveScores">
+                        <i class="fas fa-save"></i> Save Scores
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (currentStudent != null && Model.RubricCriterias.Any())
+                {
+                    <!-- Student Navigation -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <h4 class="mb-0">
+                                                <i class="fas fa-user"></i> @currentStudent.Name
+                                            </h4>
+                                            <p class="mb-0">ID: @currentStudent.StudentId</p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <h5 class="mb-0">Student @(Model.CurrentStudentIndex + 1) of @Model.TotalStudents</h5>
+                                            <div class="progress mt-2" style="height: 10px;">
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                     style="width: @(((double)(Model.CurrentStudentIndex + 1) / Model.TotalStudents) * 100)%"
+                                                     aria-valuenow="@(Model.CurrentStudentIndex + 1)"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="@Model.TotalStudents"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-right">
+                                            <div class="btn-group" role="group">
+                                                @if (hasPrevious)
+                                                {
+                                                    <a href="@Url.Action("Mark", new {
+                                                        id = Model.Assessment.AssessmentId,
+                                                        courseId = Model.CourseRolesId,
+                                                        role = Model.Role,
+                                                        studentIndex = Model.CurrentStudentIndex - 1 })"
+                                                       class="btn btn-outline-light">
+                                                        <i class="fas fa-chevron-left"></i> Previous
+                                                    </a>
+                                                }
+
+                                                <!-- Student Selection Dropdown -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-light dropdown-toggle" type="button"
+                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="fas fa-list"></i> Go To
+                                                    </button>
+                                                    <div class="dropdown-menu">
+                                                        @for (int i = 0; i < Model.AllStudents.Count; i++)
+                                                        {
+                                                            <a class="dropdown-item @(i == Model.CurrentStudentIndex ? "active" : "")"
+                                                               href="@Url.Action("Mark", new {
+                                                                   id = Model.Assessment.AssessmentId,
+                                                                   courseId = Model.CourseRolesId,
+                                                                   role = Model.Role,
+                                                                   studentIndex = i })">
+                                                                @(i + 1). @Model.AllStudents[i].Name
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                @if (hasNext)
+                                                {
+                                                    <a href="@Url.Action("Mark", new {
+                                                        id = Model.Assessment.AssessmentId,
+                                                        courseId = Model.CourseRolesId,
+                                                        role = Model.Role,
+                                                        studentIndex = Model.CurrentStudentIndex + 1 })"
+                                                       class="btn btn-outline-light">
+                                                        Next <i class="fas fa-chevron-right"></i>
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Criteria Marking Table -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list-alt"></i> Assessment Criteria
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover mb-0">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th style="width: 30%">Criteria</th>
+                                                    <th style="width: 15%" class="text-center">Task</th>
+                                                    <th style="width: 15%" class="text-center">Weight</th>
+                                                    <th style="width: 25%" class="text-center">Score</th>
+                                                    <th style="width: 15%" class="text-center">Weighted Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var task in Model.RubricTasks.OrderBy(t => t.TaskTitle))
+                                                {
+                                                    var taskCriterias = Model.RubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId).OrderBy(c => c.CriterionTitle);
+                                                    var isFirstRowForTask = true;
+                                                    var taskRowSpan = taskCriterias.Count();
+
+                                                    @foreach (var criteria in taskCriterias)
+                                                    {
+                                                        var maxScore = Model.CriteriaScores
+                                                        .Where(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId)
+                                                        .Max(cs => cs.CriterionScore);
+                                                        var currentScore = Model.StudentScores.ContainsKey(currentStudent.Id) &&
+                                                        Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
+                                                        ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].Score : 0;
+
+                                                        <tr>
+                                                            <!-- Criteria Name -->
+                                                            <td>
+                                                                <strong>@criteria.CriterionTitle</strong>
+                                                                @if (!string.IsNullOrEmpty(criteria.CriterionTitle))
+                                                                {
+                                                                    <br>
+
+                                                                    <small class="text-muted">@criteria.CriterionTitle</small>
+                                                                }
+                                                            </td>
+
+                                                            <!-- Task (with rowspan for first row of each task) -->
+                                                            @if (isFirstRowForTask)
+                                                            {
+                                                                <td rowspan="@taskRowSpan" class="text-center align-middle bg-light">
+                                                                    <strong>@task.TaskTitle</strong>
+                                                                    <br><small class="text-muted">(@task.MaxMarks marks)</small>
+                                                                </td>
+                                                                isFirstRowForTask = false;
+                                                            }
+
+                                                            <!-- Weight -->
+                                                            <td class="text-center align-middle">
+                                                                <span class="badge badge-info">@criteria.Weight%</span>
+                                                            </td>
+
+                                                            <!-- Score Selection -->
+                                                            <td class="text-center align-middle">
+                                                                <div class="score-selection"
+                                                                     data-student="@currentStudent.Id"
+                                                                     data-criteria="@criteria.RubricCriteriaId"
+                                                                     data-weight="@criteria.Weight"
+                                                                     data-max-score="@maxScore">
+
+                                                                    <div class="btn-group btn-group-sm" role="group">
+                                                                        @for (int i = 0; i <= maxScore; i++)
+                                                                        {
+                                                                            var scoreDescription = Model.CriteriaScores
+                                                                            .FirstOrDefault(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId && cs.CriterionScore == i)?.ScoreDescription;
+                                                                            var scoreTitle = Model.CriteriaScores
+                                                                            .FirstOrDefault(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId && cs.CriterionScore == i)?.ScoreTitle;
+
+                                                                            <input type="radio" class="btn-check score-radio"
+                                                                                   name="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)"
+                                                                                   id="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)_@i"
+                                                                                   value="@i"
+                                                                                   checked="@(currentScore == i)"
+                                                                                   data-student="@currentStudent.Id"
+                                                                                   data-criteria="@criteria.RubricCriteriaId"
+                                                                                   data-weight="@criteria.Weight">
+                                                                            <label class="btn btn-outline-primary"
+                                                                                   for="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)_@i"
+                                                                                   title="@scoreTitle: @scoreDescription">
+                                                                                @i
+                                                                            </label>
+                                                                        }
+                                                                    </div>
+                                                                    <div class="mt-1">
+                                                                        <small class="text-muted">Max: @maxScore</small>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+
+                                                            <!-- Weighted Score -->
+                                                            <td class="text-center align-middle bg-light">
+                                                                <h5 class="mb-0">
+                                                                    <span class="badge badge-success weighted-score"
+                                                                          data-student="@currentStudent.Id"
+                                                                          data-criteria="@criteria.RubricCriteriaId">
+                                                                        -
+                                                                    </span>
+                                                                </h5>
+                                                                <small class="text-muted">of @((criteria.Weight * maxScore / 100.0).ToString("F1"))</small>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                            </tbody>
+                                            <tfoot class="table-secondary">
+                                                <tr>
+                                                    <th colspan="4" class="text-right">
+                                                        <strong>Total Score:</strong>
+                                                    </th>
+                                                    <th class="text-center">
+                                                        <h4 class="mb-0">
+                                                            <span class="badge badge-primary student-weighted-total" data-student="@currentStudent.Id">-</span>
+                                                        </h4>
+                                                        <small class="text-muted">
+                                                            / @Model.RubricCriterias.Sum(rc => rc.Weight * rc.MaxScore / 100.0).ToString("F1")
+                                                        </small>
+                                                        <br>
+                                                        <small class="student-percentage text-success" data-student="@currentStudent.Id">-%</small>
+                                                    </th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-comments"></i> Additional Comments
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        @foreach (var criteria in Model.RubricCriterias.OrderBy(c => c.CriterionTitle))
+                                        {
+                                            var customComment = Model.StudentScores.ContainsKey(currentStudent.Id) &&
+                                            Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
+                                            ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].CustomComment : "";
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label font-weight-bold">@criteria.CriterionTitle</label>
+                                                <textarea name="comment_@(currentStudent.Id)_@(criteria.RubricCriteriaId)"
+                                                          class="form-control"
+                                                          rows="3"
+                                                          placeholder="Additional comments for @criteria.CriterionTitle">@customComment</textarea>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <button type="button" class="btn btn-success btn-lg" id="saveScores">
+                                <i class="fas fa-save"></i> Save Scores & Comments
+                            </button>
+                            <button type="button" class="btn btn-info btn-lg generate-feedback"
+                                    data-student="@currentStudent.Id">
+                                <i class="fas fa-comment-alt"></i> Generate Feedback
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        No students or rubric criteria found. Please ensure students are added to the system and the rubric has criteria defined.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add anti-forgery token for AJAX requests
+            $('body').append('<input type="hidden" name="__RequestVerificationToken" value="' + $('[name="__RequestVerificationToken"]').val() + '">');
+
+            // Calculate totals when scores change
+            $('.score-radio').on('change', function() {
+                var studentId = $(this).data('student');
+                calculateStudentTotal(studentId);
+            });
+
+            // Initial calculation
+        @if (currentStudent != null)
+        {
+            @:calculateStudentTotal(@currentStudent.Id);
+        }
+
+            // Save scores
+            $('#saveScores').on('click', function() {
+                saveScores();
+            });
+
+            // Generate feedback
+            $('.generate-feedback').on('click', function() {
+                var studentId = $(this).data('student');
+                var url = '@Url.Action("GenerateFeedback", "StudentAssessments")' +
+                         '?id=@Model.Assessment.AssessmentId&studentId=' + studentId +
+                         '&courseId=@Model.CourseRolesId&role=@Model.Role';
+                window.open(url, '_blank');
+            });
+
+            // Keyboard navigation
+            $(document).keydown(function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.which) {
+                        case 37: // Left arrow
+        @if (hasPrevious)
+        {
+            @:window.location.href = '@Url.Action("Mark", new
+                {
+                    id = Model.Assessment.AssessmentId,
+                    courseId = Model.CourseRolesId,
+                    role = Model.Role,
+                    studentIndex = Model.CurrentStudentIndex - 1
+                })';
+        }
+                            e.preventDefault();
+                            break;
+                        case 39: // Right arrow
+        @if (hasNext)
+        {
+            @:window.location.href = '@Url.Action("Mark", new
+                {
+                    id = Model.Assessment.AssessmentId,
+                    courseId = Model.CourseRolesId,
+                    role = Model.Role,
+                    studentIndex = Model.CurrentStudentIndex + 1
+                })';
+        }
+                            e.preventDefault();
+                            break;
+                        case 83: // S key
+                            saveScores();
+                            e.preventDefault();
+                            break;
+                    }
+                }
+            });
+        });
+
+        function calculateStudentTotal(studentId) {
+            var weightedTotal = 0;
+            var maxWeightedTotal = 0;
+
+            $('.score-radio:checked').each(function() {
+                var score = parseInt($(this).val()) || 0;
+                var weight = parseFloat($(this).data('weight')) || 0;
+                var maxScore = parseInt($(this).data('max-score')) || 0;
+
+                var weightedScore = (score * weight) / 100;
+                weightedTotal += weightedScore;
+                maxWeightedTotal += (maxScore * weight) / 100;
+
+                // Update individual weighted score display
+                var criteriaId = $(this).data('criteria');
+                $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
+                    .text(weightedScore.toFixed(1));
+            });
+
+            // Update total
+            $('.student-weighted-total[data-student="' + studentId + '"]').text(weightedTotal.toFixed(1));
+
+            // Calculate and display percentage
+            var percentage = maxWeightedTotal > 0 ? (weightedTotal / maxWeightedTotal * 100) : 0;
+            $('.student-percentage[data-student="' + studentId + '"]').text(percentage.toFixed(1) + '%');
+        }
+
+        function saveScores() {
+            var scores = {};
+            var comments = {};
+
+            // Collect scores
+            $('.score-radio:checked').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                scores[name] = value;
+            });
+
+            // Collect comments
+            $('textarea[name^="comment_"]').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                comments[name] = value;
+            });
+
+            $.ajax({
+                url: '@Url.Action("SaveScores", "StudentAssessments")',
+                type: 'POST',
+                data: {
+                    assessmentId: @Model.Assessment.AssessmentId,
+                    courseId: '@Model.CourseRolesId',
+                    role: '@Model.Role',
+                    scores: scores,
+                    comments: comments,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while saving scores.');
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .weighted-score {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .score-selection .btn-group .btn {
+            min-width: 35px;
+        }
+
+        .score-selection .btn-check:checked + .btn {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .student-weighted-total {
+            font-size: 1.2rem;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .dropdown-menu {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .progress {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        /* Keyboard navigation hint */
+        .card-header::after {
+            content: "Use Ctrl+← → to navigate, Ctrl+S to save";
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            float: right;
+            margin-top: 5px;
+        }
+    </style>
+}

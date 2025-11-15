@@ -41,7 +41,7 @@ namespace smart_feedback.Data
 
         private static async Task SeedAdminUserAsync(UserManager<IdentityUser> userManager)
         {
-            const string adminEmail = "admin@email.com";
+            const string adminEmail = "admin@ais.co.nz";
             const string adminPassword = "Admin123!";
             
 
