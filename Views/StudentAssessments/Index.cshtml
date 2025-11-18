@@ -1,0 +1,159 @@
+﻿@model smart_feedback.Models.ViewModels.StudentAssessmentViewModel
+@{
+    ViewData["Title"] = "Student Assessments";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode (@Model.TermName)
+                </h3>
+                <div class="card-tools">
+                    @if (Model.Role == "Lecturer")
+                    {
+                        <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Create New Assessment
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model.Assessments.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Assessment Name</th>
+                                    <th>Rubric</th>
+                                    <th>Total Marks</th>
+                                    <th>Created Date</th>
+                                    <th>Created By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var assessment in Model.Assessments)
+                                {
+                                    <tr>
+                                        <td>@assessment.AssessmentName</td>
+                                        <td>@assessment.Rubric?.RubricName</td>
+                                        <td>@assessment.Rubric?.TotalMarks</td>
+                                        <td>@assessment.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@assessment.CreatedBy</td>
+                                        <td>
+                                            <a asp-action="Mark" asp-route-id="@assessment.AssessmentId" 
+                                               asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
+                                               class="btn btn-success btn-sm">
+                                                <i class="fas fa-edit"></i> Mark Students
+                                            </a>
+                                            <a href="#" class="btn btn-info btn-sm">
+                                                <i class="fas fa-chart-bar"></i> View Reports
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No assessments found for this course. 
+                        @if (Model.Role == "Lecturer")
+                        {
+                            <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
+                               class="btn btn-sm btn-primary ml-2">
+                                Create your first assessment
+                            </a>
+                        }
+                    </div>
+                }
+
+                @if (!Model.AvailableRubrics.Any() && Model.Role == "Lecturer")
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        No rubrics available for this course. You need to create or upload a rubric before creating assessments.
+                        <a asp-controller="Rubrics" asp-action="Index" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
+                           class="btn btn-sm btn-warning ml-2">
+                            Manage Rubrics
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users"></i> Students Overview
+                </h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Students:</strong> @Model.Students.Count</p>
+                @if (Model.Students.Any())
+                {
+                    @* <small class="text-muted">
+                        Students: @string.Join(", ", Model.Students.Take(5).Select(s => s.Name))
+                        @if (Model.Students.Count > 5)
+                        {
+                            <span>... and @(Model.Students.Count - 5) more</span>
+                        }
+                    </small> *@
+
+                    <ul class="list-unstyled">
+                        @foreach (var student in Model.Students.Take(3))
+                        {
+                            <li><small class="text-muted">• @student.StudentId (@student.Name)</small></li>
+                        }
+                        @if (Model.Students.Count > 3)
+                        {
+                            <li><small class="text-muted">... and @(Model.Students.Count - 3) more</small></li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        No students found. You may need to add students to the system first.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list-alt"></i> Available Rubrics
+                </h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Rubrics:</strong> @Model.AvailableRubrics.Count</p>
+                @if (Model.AvailableRubrics.Any())
+                {
+                    <ul class="list-unstyled">
+                        @foreach (var rubric in Model.AvailableRubrics.Take(3))
+                        {
+                            <li><small class="text-muted">• @rubric.RubricName (@rubric.TotalMarks marks)</small></li>
+                        }
+                        @if (Model.AvailableRubrics.Count > 3)
+                        {
+                            <li><small class="text-muted">... and @(Model.AvailableRubrics.Count - 3) more</small></li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

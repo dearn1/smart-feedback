@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using smart_feedback.Data;
 
@@ -11,9 +12,11 @@ using smart_feedback.Data;
 namespace smart_feedback.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251113085127_AddAssessmentTables")]
+    partial class AddAssessmentTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,6 +227,43 @@ namespace smart_feedback.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("smart_feedback.Models.Assessment", b =>
+                {
+                    b.Property<int>("AssessmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AssessmentId"));
+
+                    b.Property<string>("AssessmentName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CourseCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RubricsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TermName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AssessmentId");
+
+                    b.HasIndex("RubricsId");
+
+                    b.ToTable("Assessments");
+                });
+
             modelBuilder.Entity("smart_feedback.Models.CourseRoles", b =>
                 {
                     b.Property<int>("CourseRolesId")
@@ -417,6 +457,43 @@ namespace smart_feedback.Data.Migrations
                     b.ToTable("Student");
                 });
 
+            modelBuilder.Entity("smart_feedback.Models.StudentAssessmentScore", b =>
+                {
+                    b.Property<int>("StudentAssessmentScoreId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StudentAssessmentScoreId"));
+
+                    b.Property<int>("AssessmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RubricCriteriaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StudentAssessmentScoreId");
+
+                    b.HasIndex("AssessmentId");
+
+                    b.HasIndex("RubricCriteriaId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("StudentAssessmentScores");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -466,6 +543,49 @@ namespace smart_feedback.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("smart_feedback.Models.Assessment", b =>
+                {
+                    b.HasOne("smart_feedback.Models.Rubrics", "Rubric")
+                        .WithMany()
+                        .HasForeignKey("RubricsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rubric");
+                });
+
+            modelBuilder.Entity("smart_feedback.Models.StudentAssessmentScore", b =>
+                {
+                    b.HasOne("smart_feedback.Models.Assessment", "Assessment")
+                        .WithMany("StudentScores")
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("smart_feedback.Models.RubricCriteria", "RubricCriteria")
+                        .WithMany()
+                        .HasForeignKey("RubricCriteriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("smart_feedback.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assessment");
+
+                    b.Navigation("RubricCriteria");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("smart_feedback.Models.Assessment", b =>
+                {
+                    b.Navigation("StudentScores");
                 });
 #pragma warning restore 612, 618
         }

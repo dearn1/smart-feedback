@@ -31,6 +31,80 @@
     </div>
 </div>
 
+@if (User.IsInRole("Admin"))
+{
+    @* Lecturer Courses Section *@
+    @if (ViewBag.LecturerCourses != null && ((List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses).Any())
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chalkboard-teacher"></i> My Admin Courses
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Name</th>
+                                        <th>Term</th>
+                                        <th>Programme</th>
+                                        <th>Institution</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var course in (List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses)
+                                    {
+                                        <tr>
+                                            <td>@course.CourseCode</td>
+                                            <td>@course.CourseName</td>
+                                            <td>@course.TermName</td>
+                                            <td>@course.Programme</td>
+                                            <td>@course.Institution</td>
+                                            <td>
+                                                <a asp-controller="Rubrics" asp-action="Index" 
+                                                   asp-route-courseId="@course.CourseRolesId"
+                                                   asp-route-role="Admin"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-list"></i> Manage Rubrics
+                                                </a>
+                                                <a href="#"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-users"></i> Manage Students
+                                                </a>
+                                                @* <a href="#"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-users"></i> Manage Assessments
+                                                </a> *@
+                                                <a asp-controller="StudentAssessments" asp-action="Index"
+                                                   asp-route-courseId="@course.CourseRolesId"
+                                                   asp-route-role="Admin"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-clipboard-check"></i> Manage Assessments
+                                                </a>
+
+                                                <a href="#"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-archive"></i> Archived
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
 @if (User.IsInRole("Lecturer"))
 {
     @* Lecturer Courses Section *@
@@ -77,10 +151,17 @@
                                                    class="btn btn-primary btn-sm">
                                                     <i class="fas fa-users"></i> Manage Students
                                                 </a>
-                                                <a href="#"
+                                                @* <a href="#"
                                                    class="btn btn-primary btn-sm">
                                                     <i class="fas fa-users"></i> Manage Assessments
+                                                </a> *@
+                                                <a asp-controller="StudentAssessments" asp-action="Index"
+                                                   asp-route-courseId="@course.CourseRolesId"
+                                                   asp-route-role="Lecturer"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-clipboard-check"></i> Manage Assessments
                                                 </a>
+
                                                 <a href="#"
                                                    class="btn btn-primary btn-sm">
                                                     <i class="fas fa-archive"></i> Archived

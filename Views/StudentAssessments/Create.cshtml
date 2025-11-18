@@ -1,0 +1,66 @@
+﻿@model smart_feedback.Models.Assessment
+@{
+    ViewData["Title"] = "Create Assessment";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create New Assessment</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <input type="hidden" asp-for="CourseCode" value="@ViewBag.CourseCode" />
+                    <input type="hidden" asp-for="TermName" value="@ViewBag.TermName" />
+                    
+                    <div class="form-group">
+                        <label asp-for="AssessmentName" class="control-label">Assessment Name</label>
+                        <input asp-for="AssessmentName" class="form-control" placeholder="Enter assessment name" />
+                        <span asp-validation-for="AssessmentName" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="RubricsId" class="control-label">Select Rubric</label>
+                        <select asp-for="RubricsId" class="form-control">
+                            <option value="">-- Select a Rubric --</option>
+                            @foreach (var rubric in (List<smart_feedback.Models.Rubrics>)ViewBag.AvailableRubrics)
+                            {
+                                <option value="@rubric.RubricsId">@rubric.RubricName (@rubric.TotalMarks marks)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="RubricsId" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Assessment
+                        </button>
+                        <a asp-action="Index" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Course Information</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Course Code:</strong> @ViewBag.CourseCode</p>
+                <p><strong>Term:</strong> @ViewBag.TermName</p>
+                <p><strong>Available Rubrics:</strong> @((List<smart_feedback.Models.Rubrics>)ViewBag.AvailableRubrics).Count</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

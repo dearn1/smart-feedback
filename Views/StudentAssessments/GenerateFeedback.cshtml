@@ -1,0 +1,157 @@
+﻿@model smart_feedback.Models.ViewModels.StudentFeedbackViewModel
+@{
+    ViewData["Title"] = "Student Feedback";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user-graduate"></i> Feedback Report - @Model.Student.Name
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="window.close()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Student Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Student Information</h5>
+                        <p><strong>Name:</strong> @Model.Student.Name</p>
+                        <p><strong>Student ID:</strong> @Model.Student.StudentId</p>
+                        <p><strong>Email:</strong> @Model.Student.Email</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Assessment Information</h5>
+                        <p><strong>Assessment:</strong> @Model.Assessment.AssessmentName</p>
+                        <p><strong>Course:</strong> @Model.Assessment.CourseCode</p>
+                        <p><strong>Term:</strong> @Model.Assessment.TermName</p>
+                    </div>
+                </div>
+
+                <!-- Score Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="mb-0">Score Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h4 class="text-primary">@Model.TotalScore / @Model.MaxPossibleScore</h4>
+                                        <p class="mb-0">Total Score</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h4 class="text-success">@Model.Percentage.ToString("F1")%</h4>
+                                        <p class="mb-0">Percentage</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h4 class="text-info">
+                                            @if (Model.Percentage >= 85)
+                                            {
+                                                <span>Excellent</span>
+                                            }
+                                            else if (Model.Percentage >= 70)
+                                            {
+                                                <span>Good</span>
+                                            }
+                                            else if (Model.Percentage >= 50)
+                                            {
+                                                <span>Satisfactory</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Needs Improvement</span>
+                                            }
+                                        </h4>
+                                        <p class="mb-0">Grade Category</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Results -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5>Detailed Results</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Criteria</th>
+                                        <th>Score</th>
+                                        <th>Performance Level</th>
+                                        <th>Feedback</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model.CriteriaResults)
+                                    {
+                                        <tr>
+                                            <td>@result.TaskTitle</td>
+                                            <td>@result.CriteriaTitle</td>
+                                            <td class="text-center">
+                                                <span class="badge badge-@(result.Score >= 3 ? "success" : result.Score >= 2 ? "warning" : "danger")">
+                                                    @result.Score / @result.MaxScore
+                                                </span>
+                                            </td>
+                                            <td>@result.ScoreDescription</td>
+                                            <td>
+                                                <div style="white-space: pre-line;">@result.GeneratedFeedback</div>
+                                                @if (!string.IsNullOrEmpty(result.CustomComment))
+                                                {
+                                                    <div class="mt-2">
+                                                        <strong>Additional Comment:</strong>
+                                                        <div class="text-info">@result.CustomComment</div>
+                                                    </div>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overall Feedback -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Overall Feedback</h5>
+                            </div>
+                            <div class="card-body">
+                                <div style="white-space: pre-line;">@Model.OverallFeedback</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    @@media print {
+        .card-tools {
+            display: none !important;
+        }
+
+        .btn {
+            display: none !important;
+        }
+    }
+</style>
+

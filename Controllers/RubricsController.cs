@@ -25,9 +25,9 @@ namespace smart_feedback.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<IdentityUser> userManager)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
@@ -58,14 +58,15 @@ namespace smart_feedback.Controllers
             }
 
             // Apply user authorization check
-            if (!string.IsNullOrEmpty(role) && !User.IsInRole("Admin"))
+            if (!string.IsNullOrEmpty(role))
             {
                 // Verify user has the specified role for the course
                 var hasAccess = await _context.CourseRoles
                     .AnyAsync(cr => cr.CourseCode == course.CourseCode &&
                                    cr.TermName == course.TermName &&
                                    ((role == "Lecturer" && cr.RoleLecturer == userId) ||
-                                    (role == "Moderator" && cr.RoleModerator == userId)));
+                                    (role == "Moderator" && cr.RoleModerator == userId) ||
+                                    (role == "Admin")));
 
                 if (!hasAccess)
                 {
@@ -929,7 +930,7 @@ namespace smart_feedback.Controllers
                                 rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
                                 rubric.CourseName = firstSpaceIndex > 0 ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
                                 rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
-                                rubric.TermName = rubricsParagraphs[3];
+                                rubric.TermName = rubricsParagraphs[3].Replace(" ","");
                                 rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
                                 rubric.SourceFile = filePath;
 
