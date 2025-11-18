@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using smart_feedback.Data;
+using smart_feedback.Models;
 using smart_feedback.Models.ViewModels;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,10 +13,10 @@ namespace smart_feedback.Controllers
     [Authorize(Roles = ApplicationRoles.Admin)]
     public class AdminController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AdminController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -34,6 +35,9 @@ namespace smart_feedback.Controllers
                     Id = user.Id,
                     Email = user.Email,
                     UserName = user.Email,
+                    FullName = user.FullName,
+                    Department = user.Department ?? string.Empty,
+                    JobTitle = user.JobTitle ?? string.Empty,
                     EmailConfirmed = user.EmailConfirmed,
                     Roles = roles.ToList(),
                     LockoutEnd = user.LockoutEnd,
@@ -59,10 +63,11 @@ namespace smart_feedback.Controllers
                 // Generate a random password
                 string tempPassword = GenerateTemporaryPassword();
 
-                var user = new IdentityUser
+                var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
+                    FullName = model.FullName,
                     EmailConfirmed = true
                 };
 
@@ -137,22 +142,84 @@ namespace smart_feedback.Controllers
             return RedirectToAction(nameof(UserManagement));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditUser(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditUserViewModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Department = user.Department,
+                JobTitle = user.JobTitle
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(EditUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByIdAsync(model.Id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                // Update user properties
+                user.Email = model.Email;
+                user.UserName = model.Email; // Keep UserName in sync with Email
+                user.FullName = model.FullName;
+                user.Department = model.Department ?? string.Empty;
+                user.JobTitle = model.JobTitle ?? string.Empty;
+
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = "User information updated successfully.";
+                    return RedirectToAction(nameof(UserManagement));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            return View(model);
+        }
+
+
         private string GenerateTemporaryPassword()
         {
-            const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%";
+            const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%^&*()-=_+[]{}|;':,./<>?";
             var random = new Random();
             var password = new StringBuilder();
 
             // Ensure at least one uppercase, one lowercase, one digit, and one special character
-            password.Append(chars[random.Next(0, 26)]); // Uppercase
-            password.Append(chars[random.Next(26, 52)]); // Lowercase  
-            password.Append(chars[random.Next(52, 62)]); // Digit
-            password.Append(chars[random.Next(62, 67)]); // Special character
+            password.Append(chars[random.Next(0, 25)]); // Uppercase
+            password.Append(chars[random.Next(26, 50)]); // Lowercase  
+            password.Append(chars[random.Next(51, 60)]); // Digit
+            password.Append(chars[random.Next(61, 88)]); // Special character
 
             // Fill the rest randomly
             for (int i = 4; i < 8; i++)
             {
-                password.Append(chars[random.Next(chars.Length)]);
+                password.Append(chars[random.Next(chars.Length-1)]);
             }
 
             // Shuffle the password

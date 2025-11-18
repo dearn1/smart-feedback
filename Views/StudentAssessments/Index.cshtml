@@ -103,13 +103,24 @@
                 <p><strong>Total Students:</strong> @Model.Students.Count</p>
                 @if (Model.Students.Any())
                 {
-                    <small class="text-muted">
+                    @* <small class="text-muted">
                         Students: @string.Join(", ", Model.Students.Take(5).Select(s => s.Name))
                         @if (Model.Students.Count > 5)
                         {
                             <span>... and @(Model.Students.Count - 5) more</span>
                         }
-                    </small>
+                    </small> *@
+
+                    <ul class="list-unstyled">
+                        @foreach (var student in Model.Students.Take(3))
+                        {
+                            <li><small class="text-muted">• @student.StudentId (@student.Name)</small></li>
+                        }
+                        @if (Model.Students.Count > 3)
+                        {
+                            <li><small class="text-muted">... and @(Model.Students.Count - 3) more</small></li>
+                        }
+                    </ul>
                 }
                 else
                 {

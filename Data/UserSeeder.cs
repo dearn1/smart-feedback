@@ -1,19 +1,18 @@
 using Microsoft.AspNetCore.Identity;
+using smart_feedback.Models;
 
 namespace smart_feedback.Data
 {
     public static class UserSeeder
     {
 
-        public static async Task SeedRolesAndAdminUserAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public static async Task SeedRolesAndAdminUserAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             // Seed roles
             await SeedRolesAsync(roleManager);
 
             // Seed admin, lecturer, moderator user
             await SeedAdminUserAsync(userManager);
-            //await SeedLecturerUserAsync(userManager);
-            //await SeedModeratorUserAsync(userManager);
         }
 
         private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -39,7 +38,7 @@ namespace smart_feedback.Data
             }
         }
 
-        private static async Task SeedAdminUserAsync(UserManager<IdentityUser> userManager)
+        private static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager)
         {
             const string adminEmail = "admin@ais.co.nz";
             const string adminPassword = "Admin123!";
@@ -48,10 +47,11 @@ namespace smart_feedback.Data
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
             {
-                adminUser = new IdentityUser
+                adminUser = new ApplicationUser
                 {
                     UserName = adminEmail,
                     Email = adminEmail,
+                    FullName = "System Administrator",
                     EmailConfirmed = true
                 };
 

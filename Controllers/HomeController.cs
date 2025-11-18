@@ -13,9 +13,9 @@ public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _context = context;
@@ -30,15 +30,34 @@ public class HomeController : Controller
 
             _logger.LogInformation("Dashboard accessed by user: {UserId}", userId);
 
-            var lecturerCourses = await _context.CourseRoles
+            // Check roles using Identity
+            bool isLecturer = await _userManager.IsInRoleAsync(currentUser, "Lecturer");
+            bool isModerator = await _userManager.IsInRoleAsync(currentUser, "Moderator");
+            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+
+            var lecturerCourses = new List<CourseRoles>();
+            var moderatorCourses = new List<CourseRoles>();
+
+            if (isAdmin)
+            {
+                lecturerCourses = await _context.CourseRoles
+                .ToListAsync();
+                _logger.LogInformation("Admin courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
+            }
+            else if (isLecturer)
+            {
+                lecturerCourses = await _context.CourseRoles
                 .Where(cr => cr.RoleLecturer == userId)
                 .ToListAsync();
-            _logger.LogInformation("Lecturer courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
-
-            var moderatorCourses = await _context.CourseRoles
-                .Where(cr => cr.RoleModerator == userId)
-                .ToListAsync();
-            _logger.LogInformation("Moderator courses fetched for user: {UserId}, count: {Count}", userId, moderatorCourses.Count);
+                _logger.LogInformation("Lecturer courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
+            }
+            else if (isModerator)
+            {
+                moderatorCourses = await _context.CourseRoles
+                    .Where(cr => cr.RoleModerator == userId)
+                    .ToListAsync();
+                _logger.LogInformation("Moderator courses fetched for user: {UserId}, count: {Count}", userId, moderatorCourses.Count);
+            }
 
             ViewBag.LecturerCourses = lecturerCourses;
             ViewBag.ModeratorCourses = moderatorCourses;

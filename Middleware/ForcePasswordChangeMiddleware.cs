@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using smart_feedback.Models;
 
 namespace smart_feedback.Middleware
 {
@@ -11,7 +12,7 @@ namespace smart_feedback.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, UserManager<IdentityUser> userManager)
+        public async Task InvokeAsync(HttpContext context, UserManager<ApplicationUser> userManager)
         {
             if (context.User.Identity.IsAuthenticated)
             {

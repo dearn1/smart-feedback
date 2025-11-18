@@ -14,10 +14,10 @@ namespace smart_feedback.Controllers
     public class StudentAssessmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFeedbackGenerationService _feedbackService;
 
-        public StudentAssessmentsController(ApplicationDbContext context, UserManager<IdentityUser> userManager, IFeedbackGenerationService feedbackService)
+        public StudentAssessmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IFeedbackGenerationService feedbackService)
         {
             _context = context;
             _userManager = userManager;
