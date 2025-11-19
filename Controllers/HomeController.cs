@@ -25,44 +25,53 @@ public class HomeController : Controller
         [Authorize]
         public async Task<IActionResult> Index()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var userId = currentUser?.UserName;
-
-            _logger.LogInformation("Dashboard accessed by user: {UserId}", userId);
-
-            // Check roles using Identity
-            bool isLecturer = await _userManager.IsInRoleAsync(currentUser, "Lecturer");
-            bool isModerator = await _userManager.IsInRoleAsync(currentUser, "Moderator");
-            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
-
-            var lecturerCourses = new List<CourseRoles>();
-            var moderatorCourses = new List<CourseRoles>();
-
-            if (isAdmin)
+            try
             {
-                lecturerCourses = await _context.CourseRoles
-                .ToListAsync();
-                _logger.LogInformation("Admin courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
-            }
-            else if (isLecturer)
-            {
-                lecturerCourses = await _context.CourseRoles
-                .Where(cr => cr.RoleLecturer == userId)
-                .ToListAsync();
-                _logger.LogInformation("Lecturer courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
-            }
-            else if (isModerator)
-            {
-                moderatorCourses = await _context.CourseRoles
-                    .Where(cr => cr.RoleModerator == userId)
+                var currentUser = await _userManager.GetUserAsync(User);
+                var userId = currentUser?.UserName;
+
+                _logger.LogInformation("Dashboard accessed by user: {UserId}", userId);
+
+                // Check roles using Identity
+                bool isLecturer = await _userManager.IsInRoleAsync(currentUser, "Lecturer");
+                bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+
+                var lecturerCourses = new List<CourseRoles>();
+                var moderatorCourses = new List<CourseRoles>();
+
+                if (isAdmin)
+                {                    
+                    lecturerCourses = await _context.CourseRoles
                     .ToListAsync();
-                _logger.LogInformation("Moderator courses fetched for user: {UserId}, count: {Count}", userId, moderatorCourses.Count);
+
+                    _logger.LogInformation("Admin courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
+                }
+                else if (isLecturer)
+                {
+                    lecturerCourses = await _context.CourseRoles
+                    .Where(cr => cr.RoleLecturer == userId)
+                    .ToListAsync();
+                    _logger.LogInformation("Lecturer courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
+
+                    moderatorCourses = await _context.CourseRoles
+                        .Where(cr => cr.RoleModerator == userId)
+                        .ToListAsync();
+                    _logger.LogInformation("Moderator courses fetched for user: {UserId}, count: {Count}", userId, moderatorCourses.Count);
+                }
+
+                ViewBag.LecturerCourses = lecturerCourses;
+                ViewBag.ModeratorCourses = moderatorCourses;
+
+                return View();
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading dashboard for user {UserId}. Error: {ErrorMessage}",
+                    User.Identity?.Name, ex.Message);
 
-            ViewBag.LecturerCourses = lecturerCourses;
-            ViewBag.ModeratorCourses = moderatorCourses;
-
-            return View();
+                TempData["ErrorMessage"] = "An error occurred while loading your dashboard. Please try again.";
+                return View();
+            }
         }
 
         [Authorize]
