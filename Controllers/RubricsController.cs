@@ -22,16 +22,18 @@ using System.Text.RegularExpressions;
 namespace smart_feedback.Controllers
 {
     public class RubricsController : Controller
-    {
+    {        
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<HomeController> _logger;
 
-        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<HomeController> logger)
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
             _userManager = userManager;
+            _logger = logger;
         }
         // GET: Rubrics
         [Authorize]
@@ -445,10 +447,77 @@ namespace smart_feedback.Controllers
             var rubrics = await _context.Rubrics.FindAsync(id);
             if (rubrics != null)
             {
+                // Check if rubric is being used in any assessments
+                var assessmentsUsingRubric = await _context.Assessments
+                    .Where(a => a.RubricsId == id)
+                    .ToListAsync();
+
+                if (assessmentsUsingRubric.Any())
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it is being used in {assessmentsUsingRubric.Count} assessment(s). Please delete or reassign the assessments first.";
+                    return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                }
+
+                // Get all tasks for this rubric
+                var rubricTasks = await _context.RubricTask
+                    .Where(rt => rt.RubricsId == id)
+                    .ToListAsync();
+
+                // Get all criteria for these tasks
+                var taskIds = rubricTasks.Select(rt => rt.RubricTaskId).ToList();
+                var rubricCriterias = await _context.RubricCriteria
+                    .Where(rc => taskIds.Contains(rc.RubricTaskId))
+                    .ToListAsync();
+
+                // Get all scores for these criteria
+                var criteriaIds = rubricCriterias.Select(rc => rc.RubricCriteriaId).ToList();
+                var rubricCriteriaScores = await _context.RubricCriteriaScore
+                    .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
+                    .ToListAsync();
+
+                // Check if any criteria are being used in student assessments
+                var studentScoresUsingCriteria = await _context.StudentAssessmentScores
+                    .Where(sas => criteriaIds.Contains(sas.RubricCriteriaId))
+                    .ToListAsync();
+
+                if (studentScoresUsingCriteria.Any())
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
+                    return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                }
+
+                // Delete in the correct order to maintain referential integrity
+
+                // 1. Delete rubric criteria scores first
+                if (rubricCriteriaScores.Any())
+                {
+                    _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                }
+
+                // 2. Delete rubric criteria
+                if (rubricCriterias.Any())
+                {
+                    _context.RubricCriteria.RemoveRange(rubricCriterias);
+                }
+
+                // 3. Delete rubric tasks
+                if (rubricTasks.Any())
+                {
+                    _context.RubricTask.RemoveRange(rubricTasks);
+                }
+
+                // 4. Finally delete the rubric itself
                 _context.Rubrics.Remove(rubrics);
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Rubric '{rubrics.RubricName}' and all its related data have been successfully deleted.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Rubric not found.";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction("Index", "Rubrics", new { courseId, role });
         }
 
@@ -483,10 +552,56 @@ namespace smart_feedback.Controllers
             var rubricTask = await _context.RubricTask.FindAsync(id);
             if (rubricTask != null)
             {
+                // Get all criteria for this task
+                var rubricCriterias = await _context.RubricCriteria
+                    .Where(rc => rc.RubricTaskId == id)
+                    .ToListAsync();
+
+                if (rubricCriterias.Any())
+                {
+                    // Get all criteria IDs for this task
+                    var criteriaIds = rubricCriterias.Select(rc => rc.RubricCriteriaId).ToList();
+
+                    // Check if any criteria are being used in student assessments
+                    var studentScoresUsingCriteria = await _context.StudentAssessmentScores
+                        .Where(sas => criteriaIds.Contains(sas.RubricCriteriaId))
+                        .ToListAsync();
+
+                    if (studentScoresUsingCriteria.Any())
+                    {
+                        TempData["ErrorMessage"] = $"Cannot delete task '{rubricTask.TaskTitle}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
+                        return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                    }
+
+                    // Get all scores for these criteria
+                    var rubricCriteriaScores = await _context.RubricCriteriaScore
+                        .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
+                        .ToListAsync();
+
+                    // Delete in the correct order to maintain referential integrity
+
+                    // 1. Delete rubric criteria scores first
+                    if (rubricCriteriaScores.Any())
+                    {
+                        _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                    }
+
+                    // 2. Delete rubric criteria
+                    _context.RubricCriteria.RemoveRange(rubricCriterias);
+                }
+
+                // 3. Finally delete the task itself
                 _context.RubricTask.Remove(rubricTask);
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Task '{rubricTask.TaskTitle}' and all its related criteria and scores have been successfully deleted.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Task not found.";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
         }
 
@@ -521,10 +636,42 @@ namespace smart_feedback.Controllers
             var rubricCriteria = await _context.RubricCriteria.FindAsync(criteriaId);
             if (rubricCriteria != null)
             {
+                // Check if this criteria is being used in student assessments
+                var studentScoresUsingCriteria = await _context.StudentAssessmentScores
+                    .Where(sas => sas.RubricCriteriaId == criteriaId)
+                    .ToListAsync();
+
+                if (studentScoresUsingCriteria.Any())
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete criteria '{rubricCriteria.CriterionTitle}' because it is being used in student assessments. Please delete the related assessments first.";
+                    return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                }
+
+                // Get all scores for this criteria
+                var rubricCriteriaScores = await _context.RubricCriteriaScore
+                    .Where(rcs => rcs.RubricCriteriaId == criteriaId)
+                    .ToListAsync();
+
+                // Delete in the correct order to maintain referential integrity
+
+                // 1. Delete rubric criteria scores first
+                if (rubricCriteriaScores.Any())
+                {
+                    _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                }
+
+                // 2. Finally delete the criteria itself
                 _context.RubricCriteria.Remove(rubricCriteria);
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Criteria '{rubricCriteria.CriterionTitle}' and all its related scores have been successfully deleted.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Criteria not found.";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
         }
 
@@ -782,25 +929,7 @@ namespace smart_feedback.Controllers
             }
 
             try
-            {
-                // Create uploads directory if it doesn't exist
-                string uploadsFolder = Path.Combine(
-                    _hostingEnvironment.WebRootPath, "uploads", "rubrics");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                // Generate unique file name to prevent overwriting
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + rubricsFile.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                // Save the file
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await rubricsFile.CopyToAsync(fileStream);
-                }
-
+            {                
                 var rubric = new Rubrics();
                 List<string> rubricsParagraphs = new List<string>();
                 List<RubricTask> rubricTasks = new List<RubricTask>();
@@ -808,7 +937,7 @@ namespace smart_feedback.Controllers
                 List<RubricCriteriaScore> rubricCriteriaScores = new List<RubricCriteriaScore>();
                 if (extension == ".docx")
                 {
-                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    using (var stream = rubricsFile.OpenReadStream())
                     {
                         XWPFDocument docx = new XWPFDocument(stream);
 
@@ -869,30 +998,37 @@ namespace smart_feedback.Controllers
                                     var rows = table.Rows;
 
                                     // Extract score headers from the first row (header row)
-                                    var headerRow = rows[0];
+                                    var headerRow = rows[0];                                    
                                     var headerCells = headerRow.GetTableCells();
-                                    string[] scoreHeaders = new string[headerCells.Count];
 
                                     if (headerCells.Count >= 4) // Ensure we have at least 4 columns
                                     {
+                                        var checkRow = rows[1];
+                                        var checkCells = checkRow.GetTableCells();
+                                        string[] scoreHeaders = new string[headerCells.Count];
+                                        int maxScore = -1;
+
+                                    
                                         for (int col = 2; col < headerCells.Count; col++)
                                         {
+                                            if (GetCellText(checkCells[col]).Trim() == "")
+                                            {
+                                                break; // Stop if we encounter an empty cell
+                                            }
+
                                             string scoreHeader = GetCellText(headerCells[col]);
                                             // Clean up the score header by removing numbering or dashes if present
                                             scoreHeader = System.Text.RegularExpressions.Regex.Replace(scoreHeader, @"^[\d\-\–\.\s]+", "").Trim();
                                             scoreHeaders[col - 2] = scoreHeader;
+                                            maxScore++;
                                         }
-                                    }
+                                    
 
-                                    // Skip header row (index 0) and process data rows
-                                    for (int i = 1; i < rows.Count; i++)
-                                    {
-                                        var row = rows[i];
-                                        var cells = row.GetTableCells();
-
-                                        if (cells.Count >= 4) // Ensure we have at least 4 columns
+                                        // Skip header row (index 0) and process data rows
+                                        for (int i = 1; i < rows.Count; i++)
                                         {
-                                            int maxScore = cells.Count - 3;
+                                            var row = rows[i];
+                                            var cells = row.GetTableCells();
 
                                             var rubricCriteria = new RubricCriteria
                                             {
@@ -932,7 +1068,7 @@ namespace smart_feedback.Controllers
                                 rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
                                 rubric.TermName = rubricsParagraphs[3].Replace(" ","");
                                 rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
-                                rubric.SourceFile = filePath;
+                                rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
 
                                 // VALIDATION 1: Check if course information matches current course context
                                 if (!string.IsNullOrEmpty(courseId))
