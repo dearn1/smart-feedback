@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using smart_feedback.Data;
 using smart_feedback.Models;
 using smart_feedback.Models.ViewModels;
+using smart_feedback.Services;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,12 +18,14 @@ namespace smart_feedback.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<AdminController> _logger;
+        private readonly IEmailService _emailService;
 
-        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<AdminController> logger)
+        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<AdminController> logger, IEmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> UserManagement()
@@ -118,10 +122,31 @@ namespace smart_feedback.Controllers
                     // Force password change on first login
                     await _userManager.SetAuthenticationTokenAsync(user, "Default", "RequirePasswordChange", "true");
 
-                    TempData["SuccessMessage"] = $"User created successfully! Email: {model.Email}, Temporary Password: {tempPassword}";
-                    TempData["TempPassword"] = tempPassword;
+                        // Send email with credentials
+                        try
+                        {
+                            await _emailService.SendPasswordEmailAsync(model.Email, model.FullName, tempPassword);
+                            _logger.LogInformation("Email sent successfully to {Email} for new user account", model.Email);
 
-                    _logger.LogInformation("User creation completed successfully for {Email} by admin {AdminUser}",
+                            TempData["SuccessMessage"] = $"User created successfully! An email with login credentials has been sent to {model.Email}.";
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogError(emailEx, "Failed to send email to {Email} for new user account. Error details: {ErrorType} - {ErrorMessage}",
+                                model.Email, emailEx.GetType().Name, emailEx.Message);
+
+                            // Check for specific error types
+                            if (emailEx.InnerException != null)
+                            {
+                                _logger.LogError("Inner exception: {InnerExceptionType} - {InnerExceptionMessage}",
+                                    emailEx.InnerException.GetType().Name, emailEx.InnerException.Message);
+                            }
+
+                            TempData["SuccessMessage"] = $"User created successfully! Email: {model.Email}, Temporary Password: {tempPassword} (Email sending failed - please provide credentials manually)";
+                            TempData["TempPassword"] = tempPassword;
+                        }
+
+                        _logger.LogInformation("User creation completed successfully for {Email} by admin {AdminUser}",
                             model.Email, User.Identity.Name);
                     return RedirectToAction(nameof(UserManagement));
                 }
@@ -220,8 +245,29 @@ namespace smart_feedback.Controllers
                         await _userManager.SetAuthenticationTokenAsync(user, "Default", "RequirePasswordChange", "true");
                         _logger.LogInformation("Set password change requirement for user {Email}", user.Email);
 
-                        TempData["SuccessMessage"] = $"Password reset successfully. New password: {newPassword}";
-                        TempData["TempPassword"] = newPassword;
+                        // Send email with new password
+                        try
+                        {
+                            await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName ?? user.Email, newPassword);
+                            _logger.LogInformation("Password reset email sent successfully to {Email}", user.Email);
+
+                            TempData["SuccessMessage"] = $"Password reset successfully. An email with the new password has been sent to {user.Email}.";
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogError(emailEx, "Failed to send email to {Email} for new user account. Error details: {ErrorType} - {ErrorMessage}",
+                                user.Email, emailEx.GetType().Name, emailEx.Message);
+
+                            // Check for specific error types
+                            if (emailEx.InnerException != null)
+                            {
+                                _logger.LogError("Inner exception: {InnerExceptionType} - {InnerExceptionMessage}",
+                                    emailEx.InnerException.GetType().Name, emailEx.InnerException.Message);
+                            }
+
+                            TempData["SuccessMessage"] = $"User created successfully! Email: {user.Email}, Temporary Password: {newPassword} (Email sending failed - please provide credentials manually)";
+                            TempData["TempPassword"] = newPassword;
+                        }
                     }
                     else
                     {

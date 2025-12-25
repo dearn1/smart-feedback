@@ -10,6 +10,8 @@
         public List<Assessment> Assessments { get; set; } = new();
         public List<Student> Students { get; set; } = new();
         public List<Rubrics> AvailableRubrics { get; set; } = new();
+        public Dictionary<int, List<int>> AssessmentMarkedStudents { get; set; } = new Dictionary<int, List<int>>();
+        public Dictionary<int, int> AssessmentMarkingProgress { get; set; } = new Dictionary<int, int>();
     }
 
     public class AssessmentMarkingViewModel

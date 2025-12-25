@@ -16,12 +16,14 @@ namespace smart_feedback.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFeedbackGenerationService _feedbackService;
+        private readonly ILogger<StudentAssessmentsController> _logger; 
 
-        public StudentAssessmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IFeedbackGenerationService feedbackService)
+        public StudentAssessmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IFeedbackGenerationService feedbackService, ILogger<StudentAssessmentsController> logger)
         {
             _context = context;
             _userManager = userManager;
             _feedbackService = feedbackService;
+            _logger = logger;
         }
 
         // GET: StudentAssessments
@@ -69,6 +71,28 @@ namespace smart_feedback.Controllers
                 .Where(r => r.CourseCode == course.CourseCode && r.TermName == course.TermName)
                 .ToListAsync();
 
+            // Get marking status for each assessment
+            var assessmentMarkedStudents = new Dictionary<int, List<int>>();
+            var assessmentMarkingProgress = new Dictionary<int, int>();
+
+            foreach (var assessment in assessments)
+            {
+                // Get list of students who have been marked for this assessment
+                var markedStudentIds = await _context.StudentAssessmentScores
+                    .Where(sas => sas.AssessmentId == assessment.AssessmentId)
+                    .Select(sas => sas.StudentId)
+                    .Distinct()
+                    .ToListAsync();
+
+                assessmentMarkedStudents[assessment.AssessmentId] = markedStudentIds;
+
+                // Calculate progress percentage
+                var progressPercentage = students.Count > 0
+                    ? (int)((double)markedStudentIds.Count / students.Count * 100)
+                    : 0;
+                assessmentMarkingProgress[assessment.AssessmentId] = progressPercentage;
+            }
+
             var viewModel = new StudentAssessmentViewModel
             {
                 CourseRolesId = course.CourseRolesId,
@@ -78,7 +102,9 @@ namespace smart_feedback.Controllers
                 Role = role,
                 Assessments = assessments,
                 Students = students,
-                AvailableRubrics = availableRubrics
+                AvailableRubrics = availableRubrics,
+                AssessmentMarkedStudents = assessmentMarkedStudents,
+                AssessmentMarkingProgress = assessmentMarkingProgress
             };
 
             return View(viewModel);
@@ -141,6 +167,106 @@ namespace smart_feedback.Controllers
             ViewBag.TermName = course?.TermName;
 
             return View(assessment);
+        }
+
+        // GET: StudentAssessments/Delete/5
+        public async Task<IActionResult> Delete(int? id, string courseId, string role)
+        {
+            _logger.LogInformation("Delete GET action called for assessment ID: {AssessmentId}", id);
+
+            if (id == null)
+            {
+                _logger.LogWarning("Assessment ID is null in Delete action");
+                return NotFound();
+            }
+
+            try
+            {
+                var assessment = await _context.Assessments
+                    .Include(a => a.Rubric)
+                    .FirstOrDefaultAsync(a => a.AssessmentId == id);
+
+                if (assessment == null)
+                {
+                    _logger.LogWarning("Assessment not found for ID: {AssessmentId}", id);
+                    return NotFound();
+                }
+
+                // Check if assessment has student scores
+                var hasScores = await _context.StudentAssessmentScores
+                    .AnyAsync(sas => sas.AssessmentId == id);
+
+                ViewBag.HasScores = hasScores;
+                ViewBag.CourseId = courseId;
+                ViewBag.Role = role;
+
+                _logger.LogDebug("Loading delete confirmation for assessment: {AssessmentName} (ID: {AssessmentId})",
+                    assessment.AssessmentName, id);
+
+                return View(assessment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Delete GET action for assessment ID: {AssessmentId}", id);
+                throw;
+            }
+        }
+
+        // POST: StudentAssessments/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id, string courseId, string role)
+        {
+            _logger.LogInformation("Delete POST action called for assessment ID: {AssessmentId}", id);
+
+            try
+            {
+                var assessment = await _context.Assessments.FindAsync(id);
+                if (assessment != null)
+                {
+                    _logger.LogDebug("Found assessment to delete: {AssessmentName} (ID: {AssessmentId})",
+                        assessment.AssessmentName, id);
+
+                    // Get all student scores for this assessment
+                    var studentScores = await _context.StudentAssessmentScores
+                        .Where(sas => sas.AssessmentId == id)
+                        .ToListAsync();
+
+                    _logger.LogDebug("Found {ScoreCount} student scores to delete for assessment {AssessmentId}",
+                        studentScores.Count, id);
+
+                    if (studentScores.Any())
+                    {
+                        // Delete all student scores first
+                        _context.StudentAssessmentScores.RemoveRange(studentScores);
+                        _logger.LogDebug("Marked {ScoreCount} student scores for deletion", studentScores.Count);
+                    }
+
+                    // Delete the assessment
+                    _context.Assessments.Remove(assessment);
+                    _logger.LogDebug("Marked assessment {AssessmentId} for deletion", id);
+
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Successfully deleted assessment {AssessmentName} (ID: {AssessmentId}) and all related data",
+                        assessment.AssessmentName, id);
+
+                    TempData["SuccessMessage"] = $"Assessment '{assessment.AssessmentName}' and all its student scores have been successfully deleted.";
+                }
+                else
+                {
+                    _logger.LogWarning("Attempted to delete non-existent assessment ID: {AssessmentId}", id);
+                    TempData["ErrorMessage"] = "Assessment not found.";
+                }
+
+                return RedirectToAction("Index", new { courseId, role });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting assessment ID: {AssessmentId}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the assessment. Please try again.";
+                return RedirectToAction("Index", new { courseId, role });
+            }
         }
 
         // GET: StudentAssessments/Mark/5
@@ -230,13 +356,17 @@ namespace smart_feedback.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveScores(int assessmentId, string courseId, string role,
-            Dictionary<string, string> scores, Dictionary<string, string> comments)
+    Dictionary<string, string> scores, Dictionary<string, string> comments)
         {
             try
             {
+                _logger.LogInformation("SaveScores called for assessmentId: {AssessmentId}, scores count: {ScoreCount}, comments count: {CommentCount}",
+                    assessmentId, scores?.Count ?? 0, comments?.Count ?? 0);
+
                 var assessment = await _context.Assessments.FindAsync(assessmentId);
                 if (assessment == null)
                 {
+                    _logger.LogWarning("Assessment not found with ID: {AssessmentId}", assessmentId);
                     return Json(new { success = false, message = "Assessment not found." });
                 }
 
@@ -244,31 +374,58 @@ namespace smart_feedback.Controllers
                     .Where(sas => sas.AssessmentId == assessmentId)
                     .ToListAsync();
 
+                _logger.LogInformation("Found {ExistingScoreCount} existing scores for assessment {AssessmentId}",
+                    existingScores.Count, assessmentId);
+
+                int savedCount = 0;
+                int updatedCount = 0;
+
                 foreach (var scoreEntry in scores)
                 {
-                    var keyParts = scoreEntry.Key.Split('_'); // Format: studentId_criteriaId
-                    if (keyParts.Length != 2) continue;
+                    _logger.LogDebug("Processing score entry: {Key} = {Value}", scoreEntry.Key, scoreEntry.Value);
+
+                    // Parse the key format: "score_studentId_criteriaId"
+                    var keyParts = scoreEntry.Key.Replace("score_", "").Split('_');
+                    if (keyParts.Length != 2)
+                    {
+                        _logger.LogWarning("Invalid score key format: {Key}", scoreEntry.Key);
+                        continue;
+                    }
 
                     if (!int.TryParse(keyParts[0], out int studentId) ||
                         !int.TryParse(keyParts[1], out int criteriaId) ||
                         !int.TryParse(scoreEntry.Value, out int score))
+                    {
+                        _logger.LogWarning("Failed to parse score data: key={Key}, value={Value}", scoreEntry.Key, scoreEntry.Value);
                         continue;
+                    }
 
+                    // Get corresponding comment
                     var commentKey = $"comment_{studentId}_{criteriaId}";
-                    var customComment = comments.ContainsKey(commentKey) ? comments[commentKey] : null;
+                    var customComment = comments.ContainsKey(commentKey) ? comments[commentKey] : "";
 
+                    _logger.LogDebug("Parsed data - StudentId: {StudentId}, CriteriaId: {CriteriaId}, Score: {Score}, Comment: {Comment}",
+                        studentId, criteriaId, score, customComment?.Length ?? 0);
+
+                    // Find existing score or create new one
                     var existingScore = existingScores.FirstOrDefault(es =>
                         es.StudentId == studentId && es.RubricCriteriaId == criteriaId);
 
                     if (existingScore != null)
                     {
+                        // Update existing score
                         existingScore.Score = score;
                         existingScore.CustomComment = customComment;
                         existingScore.LastModified = DateTime.Now;
                         _context.Update(existingScore);
+                        updatedCount++;
+
+                        _logger.LogDebug("Updated existing score for Student {StudentId}, Criteria {CriteriaId}",
+                            studentId, criteriaId);
                     }
                     else
                     {
+                        // Create new score
                         var newScore = new StudentAssessmentScore
                         {
                             AssessmentId = assessmentId,
@@ -279,17 +436,38 @@ namespace smart_feedback.Controllers
                             LastModified = DateTime.Now
                         };
                         _context.Add(newScore);
+                        savedCount++;
+
+                        _logger.LogDebug("Created new score for Student {StudentId}, Criteria {CriteriaId}",
+                            studentId, criteriaId);
                     }
                 }
 
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Scores saved successfully." });
+
+                _logger.LogInformation("Successfully saved scores: {SavedCount} new, {UpdatedCount} updated for assessment {AssessmentId}",
+                    savedCount, updatedCount, assessmentId);
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Scores saved successfully! {savedCount} new scores created, {updatedCount} scores updated.",
+                    savedCount = savedCount,
+                    updatedCount = updatedCount
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "An error occurred while saving scores." });
+                _logger.LogError(ex, "Error occurred while saving scores for assessment {AssessmentId}", assessmentId);
+                return Json(new
+                {
+                    success = false,
+                    message = "An error occurred while saving scores. Please try again.",
+                    error = ex.Message
+                });
             }
         }
+
 
         // GET: StudentAssessments/GenerateFeedback/5?studentId=1
         public async Task<IActionResult> GenerateFeedback(int id, int studentId, string courseId, string role)

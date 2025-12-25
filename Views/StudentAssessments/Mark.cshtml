@@ -94,52 +94,6 @@
                         </div>
                     </div>
 
-                    <!-- Task Summary Cards -->
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-chart-bar"></i> Task Score Summary
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        @foreach (var task in Model.RubricTasks.OrderBy(t => t.TaskTitle))
-                                        {
-                                            var taskCriterias = Model.RubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId);
-                                            var taskMaxScore = taskCriterias.Sum(tc => tc.Weight * tc.MaxScore / 100.0);
-
-                                            <div class="col-md-4 mb-3">
-                                                <div class="card task-summary-card border-info">
-                                                    <div class="card-body text-center">
-                                                        <h6 class="card-title text-info">@task.TaskTitle</h6>
-                                                        <h3 class="text-primary">
-                                                            <span class="task-total-score" data-student="@currentStudent.Id" data-task="@task.RubricTaskId">-</span>
-                                                        </h3>
-                                                        <p class="text-muted mb-1">out of @taskMaxScore.ToString("F1")</p>
-                                                        <div class="progress" style="height: 8px;">
-                                                            <div class="progress-bar bg-info task-progress"
-                                                                 data-student="@currentStudent.Id"
-                                                                 data-task="@task.RubricTaskId"
-                                                                 data-max="@taskMaxScore"
-                                                                 role="progressbar"
-                                                                 style="width: 0%"
-                                                                 aria-valuenow="0"
-                                                                 aria-valuemin="0"
-                                                                 aria-valuemax="@taskMaxScore"></div>
-                                                        </div>
-                                                        <small class="task-percentage text-success" data-student="@currentStudent.Id" data-task="@task.RubricTaskId">Marks 0% of 100%</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Task-Based Assessment Tables -->
                     @foreach (var task in Model.RubricTasks.OrderBy(t => t.TaskTitle))
                     {
@@ -171,7 +125,7 @@
                                                                 var maxScore = Model.CriteriaScores
                                                                 .Where(cs => cs.RubricCriteriaId == firstCriteria.RubricCriteriaId)
                                                                 .Max(cs => cs.CriterionScore);
-																var widthPerScore = 55 / (maxScore + 1); // Distribute 50% width among score columns
+																var widthPerScore = 55 / (maxScore + 1); // Distribute 55% width among score columns
 
                                                                 for (int i = maxScore; i >= 0; i--)
                                                                 {
@@ -193,7 +147,7 @@
                                                             }
                                                         }
                                                         <th style="width: 5%" class="text-center">Weighted Score</th>
-                                                        <th style="width: 15%" class="text-center">Moderator Comments</th>
+                                                        <th style="width: 15%" class="text-center">Lecturer Comments</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -267,7 +221,7 @@
                                                                         -
                                                                     </span>
                                                                 </h5>
-                                                                <small class="text-muted">of @((criteria.Weight * maxScore / 100.0).ToString("F1"))</small>
+                                                                <small class="text-muted">of @((criteria.Weight * maxScore / 100.0).ToString("F2"))</small>
                                                             </td>
 
                                                             <!-- Comments -->
@@ -293,7 +247,7 @@
                                                                       data-task="@task.RubricTaskId">-</span>
                                                             </h5>
                                                             <small class="text-muted">
-                                                                / @taskMaxScore.ToString("F1")
+                                                                / @taskMaxScore.ToString("F2")
                                                             </small>
                                                             <br>
                                                             <small class="task-subtotal-percentage text-success"
@@ -311,6 +265,54 @@
                         </div>
                     }
 
+                    <!-- Task Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-chart-bar"></i> Task Score Summary
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        @foreach (var task in Model.RubricTasks.OrderBy(t => t.TaskTitle))
+                                        {
+                                            var taskCriterias = Model.RubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId);
+                                            var taskMaxScore = taskCriterias.Sum(tc => tc.Weight * tc.MaxScore / 100.0);
+
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card task-summary-card border-info"
+                                                    data-task="@task.RubricTaskId"
+                                                    data-max-marks="@task.MaxMarks">
+                                                    <div class="card-body text-center">
+                                                        <h6 class="card-title text-info">@task.TaskTitle</h6>
+                                                        <h3 class="text-primary">
+                                                            <span class="task-total-score" data-student="@currentStudent.Id" data-task="@task.RubricTaskId">-</span>
+                                                        </h3>
+                                                        <p class="text-muted mb-1">out of @task.MaxMarks</p>
+                                                        <div class="progress" style="height: 8px;">
+                                                            <div class="progress-bar bg-info task-progress"
+                                                                 data-student="@currentStudent.Id"
+                                                                 data-task="@task.RubricTaskId"
+                                                                 data-max="@taskMaxScore"
+                                                                 role="progressbar"
+                                                                 style="width: 0%"
+                                                                 aria-valuenow="0"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="@taskMaxScore"></div>
+                                                        </div>
+                                                        <small class="task-percentage text-success" data-student="@currentStudent.Id" data-task="@task.RubricTaskId">Marks 0% of 100%</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Overall Summary -->
                     <div class="row mb-4">
                         <div class="col-md-12">
@@ -322,33 +324,20 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row text-center">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <h3 class="text-primary">
                                                 <span class="student-weighted-total" data-student="@currentStudent.Id">-</span>
                                             </h3>
                                             <p class="text-muted">Total Score</p>
                                             <small class="text-muted">
-                                                out of @Model.RubricCriterias.Sum(rc => rc.Weight * rc.MaxScore / 100.0).ToString("F1")
+                                                out of @Model.RubricTasks.Sum(t => t.MaxMarks).ToString("F2")
                                             </small>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <h3 class="text-success">
-                                                <span class="student-percentage" data-student="@currentStudent.Id">-%</span>
+                                                <span class="student-percentage" data-student="@currentStudent.Id">-</span>
                                             </h3>
                                             <p class="text-muted">Overall Score</p>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success overall-progress"
-                                                     data-student="@currentStudent.Id"
-                                                     role="progressbar"
-                                                     style="width: 0%"
-                                                     aria-valuenow="0"
-                                                     aria-valuemin="0"
-                                                     aria-valuemax="100">
-                                                </div>                                                
-                                            </div>
-                                            <small class="text-muted mt-1 d-block">Marks Overall</small>
                                         </div>
                                     </div>
                                 </div>
@@ -361,9 +350,6 @@
                         <div class="col-md-12 text-center">
                             <button type="button" class="btn btn-success btn-lg" id="saveScores">
                                 <i class="fas fa-save"></i> Save Scores
-                            </button>
-                            <button type="button" class="btn btn-success btn-lg" id="saveComments">
-                                <i class="fas fa-save"></i> Save Moderator Comments
                             </button>
                             <button type="button" class="btn btn-info btn-lg generate-feedback"
                                     data-student="@currentStudent.Id">
@@ -458,11 +444,13 @@
             });
         });
 
-                 function calculateStudentTotal(studentId) {
+    function calculateStudentTotal(studentId) {
             var overallWeightedTotal = 0;
             var overallRawTotal = 0;
             var totalMaxMarks = 0;
             var totalMaxWeighted = 0;
+            var percentageAll = 0;
+            var taskMaxMarksFromHTML = 0;
 
             console.log('Calculating total for student:', studentId);
 
@@ -481,9 +469,13 @@
                 var taskRawTotal = 0;
                 var taskMaxRaw = 0;
                 var taskMaxWeighted = 0;
+                var taskMaxScore = 0;
+                
 
                 // Get task max marks from the badge
-                var taskMaxMarksFromHTML = 0;
+                var taskMaxMarks = parseInt($('.task-summary-card[data-task="' + taskId + '"]').data('max-marks')) || 0;
+        
+                taskMaxMarksFromHTML = 0;
                 $('.task-summary-card[data-task="' + taskId + '"] .badge-light').each(function() {
                     var badgeText = $(this).text();
                     var matches = badgeText.match(/(\d+)/);
@@ -498,6 +490,7 @@
                     var criteriaId = criteriaRow.data('criteria');
                     var weight = parseFloat(criteriaRow.data('weight')) || 0;
                     var maxScore = parseInt(criteriaRow.data('max-score')) || 0;
+                    taskMaxScore = parseInt(criteriaRow.data('max-score')) || 0;
 
                     taskMaxWeighted += (maxScore * weight) / 100;
                     taskMaxRaw += maxScore;
@@ -510,7 +503,8 @@
                         taskRawTotal += score;
 
                         $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
-                            .text(weightedScore.toFixed(1));
+                            .text(weightedScore.toFixed(2));
+                            
                     } else {
                         $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
                             .text('-');
@@ -521,28 +515,23 @@
                 overallRawTotal += taskRawTotal;
                 totalMaxMarks += taskMaxMarksFromHTML || taskMaxRaw;
                 totalMaxWeighted += taskMaxWeighted;
+                percentageAll += (taskWeightedTotal / taskMaxScore * taskMaxMarks);
             });
 
+            
             console.log('Overall Totals:', {
                 overallWeightedTotal,
                 overallRawTotal,
                 totalMaxMarks,
-                totalMaxWeighted
+                totalMaxWeighted,
+                percentageAll
             });
 
             // Use weighted totals for display (aligns with task calculations)
-            $('.student-weighted-total[data-student="' + studentId + '"]').text(overallWeightedTotal.toFixed(1));
+            $('.student-weighted-total[data-student="' + studentId + '"]').text(percentageAll.toFixed(2));
 
             // Calculate percentage based on weighted scores
-            var percentage = totalMaxWeighted > 0 ? (overallWeightedTotal / totalMaxWeighted * 100) : 0;
-            $('.student-percentage[data-student="' + studentId + '"]').text(percentage.toFixed(1) + '%');
-
-            // Progress bar shows the same percentage
-            $('.overall-progress[data-student="' + studentId + '"]')
-                .css('width', percentage.toFixed(1) + '%')
-                .attr('aria-valuenow', overallWeightedTotal.toFixed(1))
-                .attr('aria-valuemax', totalMaxWeighted.toFixed(1))
-                .text(percentage.toFixed(1) + '%');
+            $('.student-percentage[data-student="' + studentId + '"]').text(percentageAll.toFixed(2));
         }
 
 
@@ -565,6 +554,9 @@
                 var taskMaxWeightedTotal = 0;
                 var taskRawTotal = 0;
                 var taskMaxRawTotal = 0;
+                var taskMarks = 0;
+                var taskMaxScore = 0;
+                var taskMaxMarks = parseInt($('.task-summary-card[data-task="' + taskId + '"]').data('max-marks')) || 0;
 
                 $('tr[data-student="' + studentId + '"][data-task="' + taskId + '"]').each(function() {
                     var weight = parseFloat($(this).data('weight')) || 0;
@@ -572,11 +564,12 @@
 
                     // Weighted calculations
                     taskMaxWeightedTotal += (maxScore * weight) / 100;
+                    taskMaxScore = maxScore;
 
                     var checkedRadio = $(this).find('.score-radio:checked');
                     if (checkedRadio.length > 0) {
                         var score = parseInt(checkedRadio.val()) || 0;
-                        taskWeightedTotal += (score * weight) / 100;
+                        taskWeightedTotal += (score * weight) / 100;                        
                         taskRawTotal += score;
                     }
 
@@ -584,26 +577,28 @@
                     taskMaxRawTotal += maxScore;
                 });
 
-                console.log('Task', taskId, 'totals:', { taskWeightedTotal, taskMaxWeightedTotal, taskRawTotal, taskMaxRawTotal });
+                taskMarks = taskWeightedTotal * taskMaxMarks / taskMaxScore;
+
+                console.log('Task', taskId, 'totals:', { taskWeightedTotal, taskMaxWeightedTotal, taskRawTotal, taskMaxRawTotal, taskMarks, taskMaxMarks });
 
                 // Update displays
                 $('.task-total-score[data-student="' + studentId + '"][data-task="' + taskId + '"]')
-                    .text(taskWeightedTotal.toFixed(1));
+                    .text(taskMarks.toFixed(2));
                 $('.task-subtotal[data-student="' + studentId + '"][data-task="' + taskId + '"]')
-                    .text(taskWeightedTotal.toFixed(1));
+                    .text(taskWeightedTotal.toFixed(2));
 
                 // Percentage based on weighted scores
                 var taskPercentage = taskMaxWeightedTotal > 0 ? (taskWeightedTotal / taskMaxWeightedTotal * 100) : 0;
                 $('.task-percentage[data-student="' + studentId + '"][data-task="' + taskId + '"]')
-                    .text(taskPercentage.toFixed(1) + '% of 100%');
+                    .text(taskPercentage.toFixed(2) + '% of 100%');
                 $('.task-subtotal-percentage[data-student="' + studentId + '"][data-task="' + taskId + '"]')
-                    .text(taskPercentage.toFixed(1) + '%');
+                    .text(taskPercentage.toFixed(2) + '%');
 
                 // Progress bar based on raw scores to align with MaxMarks
                 var progressBar = $('.task-progress[data-student="' + studentId + '"][data-task="' + taskId + '"]');
                 var rawPercentage = taskMaxRawTotal > 0 ? (taskRawTotal / taskMaxRawTotal * 100) : 0;
 
-                progressBar.css('width', rawPercentage.toFixed(1) + '%')
+                progressBar.css('width', rawPercentage.toFixed(2) + '%')
                           .attr('aria-valuenow', taskRawTotal)
                           .attr('aria-valuemax', taskMaxRawTotal);
             });
@@ -643,13 +638,40 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        toastr.success(response.message);
+                        // Show success message
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message);
+                        } else {
+                            alert('Success: ' + response.message);
+                        }
                     } else {
-                        toastr.error(response.message);
+                        // Show error message
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || 'Failed to save scores');
+                        } else {
+                            alert('Error: ' + (response.message || 'Failed to save scores'));
+                        }
                     }
                 },
-                error: function() {
-                    toastr.error('An error occurred while saving scores.');
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', xhr.responseText);
+                    var errorMessage = 'An error occurred while saving scores.';
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        errorMessage = 'Server error: ' + xhr.responseText;
+                    }
+
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(errorMessage);
+                    } else {
+                        alert('Error: ' + errorMessage);
+                    }
+                },
+                complete: function() {
+                    // Restore button state
+                    $('#saveScores').prop('disabled', false).html('<i class="fas fa-save"></i> Save Scores');
                 }
             });
         }
@@ -682,7 +704,6 @@
         font-weight: bold;
     }
 
-    /* Fix for radio button styling - remove the score-selection reference */
     .btn-check:checked + .btn {
         background-color: #28a745 !important;
         border-color: #28a745 !important;
@@ -765,15 +786,6 @@
             letter-spacing: 0.5px;
         }
 
-    /* Keyboard navigation hint */
-    .card-header::after {
-        content: "Use Ctrl+← → to navigate, Ctrl+S to save";
-        font-size: 0.75rem;
-        color: rgba(255,255,255,0.7);
-        float: right;
-        margin-top: 5px;
-    }
-
     /* Task section styling */
     .card-header.bg-info {
         background-color: #17a2b8 !important;
@@ -783,7 +795,6 @@
         transition: width 0.3s ease;
     }
 
-    /* Additional styling for better visual feedback */
     .btn-outline-primary {
         border-width: 2px;
     }

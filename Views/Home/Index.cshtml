@@ -34,7 +34,7 @@
 @if (User.IsInRole("Admin"))
 {
     @* Lecturer Courses Section *@
-    @if (ViewBag.LecturerCourses != null && ((List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses).Any())
+    @if (ViewBag.LecturerCourses != null && ((List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses).Any())
     {
         <div class="row">
             <div class="col-md-12">
@@ -53,29 +53,31 @@
                                         <th>Course Name</th>
                                         <th>Term</th>
                                         <th>Programme</th>
-                                        <th>Institution</th>
+                                        <th>Lecturer</th>
+                                        <th>Moderator</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var course in (List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses)
+                                    @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses)
                                     {
                                         <tr>
                                             <td>@course.CourseCode</td>
                                             <td>@course.CourseName</td>
                                             <td>@course.TermName</td>
                                             <td>@course.Programme</td>
-                                            <td>@course.Institution</td>
+                                            <td>@course.LecturerFullName</td>
+                                            <td>@course.ModeratorFullName</td>
                                             <td>
                                                 <a asp-controller="Rubrics" asp-action="Index" 
                                                    asp-route-courseId="@course.CourseRolesId"
                                                    asp-route-role="Admin"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-list"></i> Manage Rubrics
+                                                    <i class="fas fa-list"></i> Rubrics
                                                 </a>
                                                 <a href="#"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Manage Students
+                                                    <i class="fas fa-users"></i> Students
                                                 </a>
                                                 @* <a href="#"
                                                    class="btn btn-primary btn-sm">
@@ -85,7 +87,7 @@
                                                    asp-route-courseId="@course.CourseRolesId"
                                                    asp-route-role="Admin"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-clipboard-check"></i> Manage Assessments
+                                                    <i class="fas fa-clipboard-check"></i> Assessments
                                                 </a>
 
                                                 <a href="#"
@@ -108,7 +110,7 @@
 @if (User.IsInRole("Lecturer"))
 {
     @* Lecturer Courses Section *@
-    @if (ViewBag.LecturerCourses != null && ((List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses).Any())
+    @if (ViewBag.LecturerCourses != null && ((List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses).Any())
     {
         <div class="row">
             <div class="col-md-12">
@@ -127,29 +129,29 @@
                                         <th>Course Name</th>
                                         <th>Term</th>
                                         <th>Programme</th>
-                                        <th>Institution</th>
+                                        <th>Moderator</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var course in (List<smart_feedback.Models.CourseRoles>)ViewBag.LecturerCourses)
+                                    @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses)
                                     {
                                         <tr>
                                             <td>@course.CourseCode</td>
                                             <td>@course.CourseName</td>
                                             <td>@course.TermName</td>
                                             <td>@course.Programme</td>
-                                            <td>@course.Institution</td>
+                                            <td>@course.ModeratorFullName</td>
                                             <td>
                                                 <a asp-controller="Rubrics" asp-action="Index" 
                                                    asp-route-courseId="@course.CourseRolesId"
                                                    asp-route-role="Lecturer"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-list"></i> Manage Rubrics
+                                                    <i class="fas fa-list"></i> Rubrics
                                                 </a>
                                                 <a href="#"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Manage Students
+                                                    <i class="fas fa-users"></i> Students
                                                 </a>
                                                 @* <a href="#"
                                                    class="btn btn-primary btn-sm">
@@ -159,7 +161,7 @@
                                                    asp-route-courseId="@course.CourseRolesId"
                                                    asp-route-role="Lecturer"
                                                    class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-clipboard-check"></i> Manage Assessments
+                                                    <i class="fas fa-clipboard-check"></i> Assessments
                                                 </a>
 
                                                 <a href="#"
@@ -179,7 +181,7 @@
     }
 
     @* Moderator Courses Section *@
-    @if (ViewBag.ModeratorCourses != null && ((List<smart_feedback.Models.CourseRoles>)ViewBag.ModeratorCourses).Any())
+    @if (ViewBag.ModeratorCourses != null && ((List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.ModeratorCourses).Any())
     {
         <div class="row">
             <div class="col-md-12">
@@ -198,33 +200,33 @@
                                         <th>Course Name</th>
                                         <th>Term</th>
                                         <th>Programme</th>
-                                        <th>Institution</th>
+                                        <th>Lecturer</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var course in (List<smart_feedback.Models.CourseRoles>)ViewBag.ModeratorCourses)
+                                    @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.ModeratorCourses)
                                     {
                                         <tr>
                                             <td>@course.CourseCode</td>
                                             <td>@course.CourseName</td>
                                             <td>@course.TermName</td>
                                             <td>@course.Programme</td>
-                                            <td>@course.Institution</td>
+                                            <td>@course.LecturerFullName</td>
                                             <td>
                                                 <a asp-controller="Rubrics" asp-action="Index"
                                                    asp-route-courseId="@course.CourseRolesId"
                                                    asp-route-role="Moderator"
                                                    class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-list"></i> View Rubrics
+                                                    <i class="fas fa-list"></i> Rubrics
                                                 </a>
                                                 <a href="#"
                                                    class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-users"></i> View Students
+                                                    <i class="fas fa-users"></i> Students
                                                 </a>
                                                 <a href="#"
                                                    class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-users"></i> View Assessments
+                                                    <i class="fas fa-users"></i> Assessments
                                                 </a>
                                             </td>
                                         </tr>

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using smart_feedback.Models;
 using smart_feedback.Data;
 using Microsoft.AspNetCore.Identity;
+using smart_feedback.Models.ViewModels;
 
 namespace smart_feedback.Controllers
 {
@@ -36,26 +37,28 @@ public class HomeController : Controller
                 bool isLecturer = await _userManager.IsInRoleAsync(currentUser, "Lecturer");
                 bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
 
-                var lecturerCourses = new List<CourseRoles>();
-                var moderatorCourses = new List<CourseRoles>();
+                var lecturerCourses = new List<CourseRolesViewModel>();
+                var moderatorCourses = new List<CourseRolesViewModel>();
 
                 if (isAdmin)
                 {                    
-                    lecturerCourses = await _context.CourseRoles
-                    .ToListAsync();
+                    var courses = await _context.CourseRoles.ToListAsync();
+                    lecturerCourses = await MapCoursesToViewModels(courses);
 
                     _logger.LogInformation("Admin courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
                 }
                 else if (isLecturer)
                 {
-                    lecturerCourses = await _context.CourseRoles
-                    .Where(cr => cr.RoleLecturer == userId)
-                    .ToListAsync();
+                    var lecturerCoursesData = await _context.CourseRoles
+                        .Where(cr => cr.RoleLecturer == userId)
+                        .ToListAsync();
+                    lecturerCourses = await MapCoursesToViewModels(lecturerCoursesData);
                     _logger.LogInformation("Lecturer courses fetched for user: {UserId}, count: {Count}", userId, lecturerCourses.Count);
 
-                    moderatorCourses = await _context.CourseRoles
+                    var moderatorCoursesData = await _context.CourseRoles
                         .Where(cr => cr.RoleModerator == userId)
                         .ToListAsync();
+                    moderatorCourses = await MapCoursesToViewModels(moderatorCoursesData);
                     _logger.LogInformation("Moderator courses fetched for user: {UserId}, count: {Count}", userId, moderatorCourses.Count);
                 }
 
@@ -72,6 +75,44 @@ public class HomeController : Controller
                 TempData["ErrorMessage"] = "An error occurred while loading your dashboard. Please try again.";
                 return View();
             }
+        }
+
+        private async Task<List<CourseRolesViewModel>> MapCoursesToViewModels(List<CourseRoles> courses)
+        {
+            var viewModels = new List<CourseRolesViewModel>();
+
+            foreach (var course in courses)
+            {
+                var viewModel = new CourseRolesViewModel
+                {
+                    CourseRolesId = course.CourseRolesId,
+                    CourseCode = course.CourseCode,
+                    CourseName = course.CourseName,
+                    TermName = course.TermName,
+                    Programme = course.Programme,
+                    Institution = course.Institution,
+                    RoleLecturer = course.RoleLecturer,
+                    RoleModerator = course.RoleModerator
+                };
+
+                // Get lecturer full name
+                if (!string.IsNullOrEmpty(course.RoleLecturer))
+                {
+                    var lecturer = await _userManager.FindByNameAsync(course.RoleLecturer);
+                    viewModel.LecturerFullName = lecturer?.FullName ?? course.RoleLecturer;
+                }
+
+                // Get moderator full name
+                if (!string.IsNullOrEmpty(course.RoleModerator))
+                {
+                    var moderator = await _userManager.FindByNameAsync(course.RoleModerator);
+                    viewModel.ModeratorFullName = moderator?.FullName ?? course.RoleModerator;
+                }
+
+                viewModels.Add(viewModel);
+            }
+
+            return viewModels;
         }
 
         [Authorize]
