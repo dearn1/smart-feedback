@@ -55,7 +55,7 @@
                                         <th>Programme</th>
                                         <th>Lecturer</th>
                                         <th>Moderator</th>
-                                        <th>Actions</th>
+                                        <th style="min-width: 400px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -69,31 +69,32 @@
                                             <td>@course.LecturerFullName</td>
                                             <td>@course.ModeratorFullName</td>
                                             <td>
-                                                <a asp-controller="Rubrics" asp-action="Index" 
-                                                   asp-route-courseId="@course.CourseRolesId"
-                                                   asp-route-role="Admin"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-list"></i> Rubrics
-                                                </a>
-                                                <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Students
-                                                </a>
-                                                @* <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Manage Assessments
-                                                </a> *@
-                                                <a asp-controller="StudentAssessments" asp-action="Index"
-                                                   asp-route-courseId="@course.CourseRolesId"
-                                                   asp-route-role="Admin"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-clipboard-check"></i> Assessments
-                                                </a>
-
-                                                <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-archive"></i> Archived
-                                                </a>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <a asp-controller="Rubrics" asp-action="Index" 
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Admin"
+                                                       class="btn btn-outline-primary btn-sm" 
+                                                       title="Manage Rubrics">
+                                                        <i class="fas fa-list me-1"></i> Rubrics
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-info btn-sm"
+                                                       title="Manage Students">
+                                                        <i class="fas fa-users me-1"></i> Students
+                                                    </a>
+                                                    <a asp-controller="StudentAssessments" asp-action="Index"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Admin"
+                                                       class="btn btn-outline-success btn-sm"
+                                                       title="Manage Assessments">
+                                                        <i class="fas fa-clipboard-check me-1"></i> Assessments
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-secondary btn-sm"
+                                                       title="View Archived Items">
+                                                        <i class="fas fa-archive me-1"></i> Archived
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     }
@@ -130,7 +131,7 @@
                                         <th>Term</th>
                                         <th>Programme</th>
                                         <th>Moderator</th>
-                                        <th>Actions</th>
+                                        <th style="min-width: 400px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -143,31 +144,32 @@
                                             <td>@course.Programme</td>
                                             <td>@course.ModeratorFullName</td>
                                             <td>
-                                                <a asp-controller="Rubrics" asp-action="Index" 
-                                                   asp-route-courseId="@course.CourseRolesId"
-                                                   asp-route-role="Lecturer"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-list"></i> Rubrics
-                                                </a>
-                                                <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Students
-                                                </a>
-                                                @* <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-users"></i> Manage Assessments
-                                                </a> *@
-                                                <a asp-controller="StudentAssessments" asp-action="Index"
-                                                   asp-route-courseId="@course.CourseRolesId"
-                                                   asp-route-role="Lecturer"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-clipboard-check"></i> Assessments
-                                                </a>
-
-                                                <a href="#"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-archive"></i> Archived
-                                                </a>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <a asp-controller="Rubrics" asp-action="Index" 
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Lecturer"
+                                                       class="btn btn-outline-primary btn-sm"
+                                                       title="Manage Rubrics">
+                                                        <i class="fas fa-list me-1"></i> Rubrics
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-info btn-sm"
+                                                       title="Manage Students">
+                                                        <i class="fas fa-users me-1"></i> Students
+                                                    </a>
+                                                    <a asp-controller="StudentAssessments" asp-action="Index"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Lecturer"
+                                                       class="btn btn-outline-success btn-sm"
+                                                       title="Manage Assessments">
+                                                        <i class="fas fa-clipboard-check me-1"></i> Assessments
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-secondary btn-sm"
+                                                       title="View Archived Items">
+                                                        <i class="fas fa-archive me-1"></i> Archived
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     }
@@ -201,7 +203,7 @@
                                         <th>Term</th>
                                         <th>Programme</th>
                                         <th>Lecturer</th>
-                                        <th>Actions</th>
+                                        <th style="min-width: 350px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -214,20 +216,25 @@
                                             <td>@course.Programme</td>
                                             <td>@course.LecturerFullName</td>
                                             <td>
-                                                <a asp-controller="Rubrics" asp-action="Index"
-                                                   asp-route-courseId="@course.CourseRolesId"
-                                                   asp-route-role="Moderator"
-                                                   class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-list"></i> Rubrics
-                                                </a>
-                                                <a href="#"
-                                                   class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-users"></i> Students
-                                                </a>
-                                                <a href="#"
-                                                   class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-users"></i> Assessments
-                                                </a>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <a asp-controller="Rubrics" asp-action="Index"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Moderator"
+                                                       class="btn btn-outline-warning btn-sm"
+                                                       title="View Rubrics">
+                                                        <i class="fas fa-list me-1"></i> Rubrics
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-warning btn-sm"
+                                                       title="View Students">
+                                                        <i class="fas fa-users me-1"></i> Students
+                                                    </a>
+                                                    <a href="#"
+                                                       class="btn btn-outline-warning btn-sm"
+                                                       title="View Assessments">
+                                                        <i class="fas fa-clipboard-check me-1"></i> Assessments
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     }

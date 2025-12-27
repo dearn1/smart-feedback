@@ -20,8 +20,7 @@ namespace smart_feedback.Data.Migrations
                 name: "FullName",
                 table: "AspNetUsers",
                 type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+                nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "JobTitle",
@@ -30,6 +29,7 @@ namespace smart_feedback.Data.Migrations
                 nullable: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
