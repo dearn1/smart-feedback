@@ -1,0 +1,316 @@
+@model smart_feedback.Models.ViewModels.CourseStudentManagementViewModel
+@{
+    ViewData["Title"] = "Manage Course Students";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users"></i> Manage Students - @Model.CourseCode @Model.CourseName (@Model.TermName)
+                </h3>
+                <div class="card-tools">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <strong>Course:</strong> @Model.CourseCode - @Model.CourseName <br />
+                            <strong>Term:</strong> @Model.TermName <br />
+                            <strong>Programme:</strong> @Model.Programme <br />
+                            <strong>Enrolled Students:</strong> @Model.EnrolledStudents.Count / @Model.AllStudents.Count
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.Role != "Moderator")
+                {
+                    <div class="row">
+                        <!-- Available Students -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-user-plus"></i> Available Students (@Model.AvailableStudents.Count)
+                                    </h5>
+                                </div>
+                                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                                    @if (Model.AvailableStudents.Any())
+                                    {
+                                        <div class="mb-3">
+                                            <button type="button" class="btn btn-success btn-sm" onclick="addAllStudents()">
+                                                <i class="fas fa-plus-circle"></i> Add All Students
+                                            </button>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="addSelectedStudents()">
+                                                <i class="fas fa-check"></i> Add Selected
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="form-group mb-2">
+                                            <input type="text" id="searchAvailable" class="form-control form-control-sm" placeholder="Search students..." />
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover" id="availableStudentsTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="40px">
+                                                            <input type="checkbox" id="selectAllAvailable" title="Select All" />
+                                                        </th>
+                                                        <th>Student ID</th>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+                                                        <th width="80px">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var student in Model.AvailableStudents)
+                                                    {
+                                                        <tr class="student-row">
+                                                            <td>
+                                                                <input type="checkbox" class="student-checkbox" value="@student.Id" />
+                                                            </td>
+                                                            <td class="student-id"><strong>@student.StudentId</strong></td>
+                                                            <td class="student-name">@student.Name</td>
+                                                            <td class="student-email"><small class="text-muted">@student.Email</small></td>
+                                                            <td>
+                                                                <form asp-controller="CourseStudents" asp-action="AddStudent" method="post" style="display:inline;">
+                                                                    <input type="hidden" name="courseId" value="@Model.CourseRolesId" />
+                                                                    <input type="hidden" name="studentId" value="@student.Id" />
+                                                                    <input type="hidden" name="role" value="@Model.Role" />
+                                                                    <button type="submit" class="btn btn-sm btn-success" 
+                                                                            onclick="return confirm('Add @student.Name to this course?')"
+                                                                            title="Add to course">
+                                                                        <i class="fas fa-plus"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> All students are already enrolled in this course.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enrolled Students -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-user-check"></i> Enrolled Students (@Model.EnrolledStudents.Count)
+                                    </h5>
+                                </div>
+                                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                                    @if (Model.EnrolledStudents.Any())
+                                    {
+                                        <div class="form-group mb-2">
+                                            <input type="text" id="searchEnrolled" class="form-control form-control-sm" placeholder="Search enrolled students..." />
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover" id="enrolledStudentsTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Student ID</th>
+                                                        <th>Name</th>
+                                                        <th>Enrolled Date</th>
+                                                        <th width="80px">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var enrollment in Model.EnrolledStudents)
+                                                    {
+                                                        <tr class="enrolled-row">
+                                                            <td class="enrolled-id"><strong>@enrollment.StudentIdNumber</strong></td>
+                                                            <td class="enrolled-name">@enrollment.Name</td>
+                                                            <td><small class="text-muted">@enrollment.EnrolledDate.ToString("dd MMM yyyy")</small></td>
+                                                            <td>
+                                                                <form asp-controller="CourseStudents" asp-action="RemoveStudent" method="post" style="display:inline;">
+                                                                    <input type="hidden" name="courseStudentId" value="@enrollment.CourseStudentId" />
+                                                                    <input type="hidden" name="courseId" value="@Model.CourseRolesId" />
+                                                                    <input type="hidden" name="role" value="@Model.Role" />
+                                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                                            onclick="return confirm('Remove @enrollment.Name from this course?')"
+                                                                            title="Remove from course">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> No students enrolled yet. Add students from the left panel.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Moderator View (Read-only) -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-warning">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-users"></i> Enrolled Students (View Only)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (Model.EnrolledStudents.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Student ID</th>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+                                                        <th>Enrolled Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var enrollment in Model.EnrolledStudents)
+                                                    {
+                                                        <tr>
+                                                            <td><strong>@enrollment.StudentIdNumber</strong></td>
+                                                            <td>@enrollment.Name</td>
+                                                            <td>@enrollment.Email</td>
+                                                            <td>@enrollment.EnrolledDate.ToString("dd MMM yyyy HH:mm")</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> No students enrolled in this course yet.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for bulk operations -->
+<form id="bulkAddForm" asp-controller="CourseStudents" asp-action="AddMultipleStudents" method="post" style="display:none;">
+    <input type="hidden" name="courseId" value="@Model.CourseRolesId" />
+    <input type="hidden" name="role" value="@Model.Role" />
+    <input type="hidden" id="bulkStudentIds" name="studentIds" />
+</form>
+
+@section Scripts {
+    <script>
+        // Search functionality for available students
+        $('#searchAvailable').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('#availableStudentsTable tbody tr').filter(function() {
+                $(this).toggle(
+                    $(this).find('.student-id').text().toLowerCase().indexOf(value) > -1 ||
+                    $(this).find('.student-name').text().toLowerCase().indexOf(value) > -1 ||
+                    $(this).find('.student-email').text().toLowerCase().indexOf(value) > -1
+                );
+            });
+        });
+
+        // Search functionality for enrolled students
+        $('#searchEnrolled').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('#enrolledStudentsTable tbody tr').filter(function() {
+                $(this).toggle(
+                    $(this).find('.enrolled-id').text().toLowerCase().indexOf(value) > -1 ||
+                    $(this).find('.enrolled-name').text().toLowerCase().indexOf(value) > -1
+                );
+            });
+        });
+
+        // Select all checkbox functionality
+        $('#selectAllAvailable').on('change', function() {
+            $('.student-checkbox:visible').prop('checked', $(this).prop('checked'));
+        });
+
+        // Add selected students
+        function addSelectedStudents() {
+            var selectedIds = $('.student-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one student to add.');
+                return;
+            }
+
+            if (!confirm(`Add ${selectedIds.length} selected student(s) to this course?`)) {
+                return;
+            }
+
+            $('#bulkStudentIds').val(selectedIds.join(','));
+            $('#bulkAddForm').submit();
+        }
+
+        // Add all students
+        function addAllStudents() {
+            var allIds = $('.student-checkbox').map(function() {
+                return parseInt($(this).val());
+            }).get();
+
+            if (allIds.length === 0) {
+                alert('No students available to add.');
+                return;
+            }
+
+            if (!confirm(`Add all ${allIds.length} student(s) to this course?`)) {
+                return;
+            }
+
+            $('#bulkStudentIds').val(allIds.join(','));
+            $('#bulkAddForm').submit();
+        }
+    </script>
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+<style>
+    .card {
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>

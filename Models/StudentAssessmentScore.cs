@@ -1,13 +1,18 @@
-﻿namespace smart_feedback.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace smart_feedback.Models
 {
     public class StudentAssessmentScore
     {
+        [Key]
         public int StudentAssessmentScoreId { get; set; }
         public int AssessmentId { get; set; }
         public int StudentId { get; set; }
         public int RubricCriteriaId { get; set; }
         public int Score { get; set; } // 0-4
         public string? CustomComment { get; set; }
+
+        public string ModeratorComments { get; set; }
         public DateTime LastModified { get; set; }
 
         // Navigation properties

@@ -77,7 +77,9 @@
                                                        title="Manage Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
-                                                    <a href="#"
+                                                    <a asp-controller="CourseStudents" asp-action="Manage"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Admin"
                                                        class="btn btn-outline-info btn-sm"
                                                        title="Manage Students">
                                                         <i class="fas fa-users me-1"></i> Students
@@ -152,7 +154,9 @@
                                                        title="Manage Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
-                                                    <a href="#"
+                                                    <a asp-controller="CourseStudents" asp-action="Manage"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Lecturer"
                                                        class="btn btn-outline-info btn-sm"
                                                        title="Manage Students">
                                                         <i class="fas fa-users me-1"></i> Students
@@ -224,12 +228,9 @@
                                                        title="View Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
-                                                    <a href="#"
-                                                       class="btn btn-outline-warning btn-sm"
-                                                       title="View Students">
-                                                        <i class="fas fa-users me-1"></i> Students
-                                                    </a>
-                                                    <a href="#"
+                                                    <a asp-controller="StudentAssessments" asp-action="Index"
+                                                       asp-route-courseId="@course.CourseRolesId"
+                                                       asp-route-role="Moderator"
                                                        class="btn btn-outline-warning btn-sm"
                                                        title="View Assessments">
                                                         <i class="fas fa-clipboard-check me-1"></i> Assessments

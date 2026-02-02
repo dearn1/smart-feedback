@@ -5,6 +5,9 @@
     var currentStudent = Model.Students.FirstOrDefault();
     var hasNext = Model.CurrentStudentIndex < Model.TotalStudents - 1;
     var hasPrevious = Model.CurrentStudentIndex > 0;
+    var canEditScores = Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark" || Model.Assessment.Status == "FinalReview";
+    var canEditModeratorComments = Model.Assessment.Status == "Moderation";
+    var showModeratorComments = Model.Assessment.Status != "Marking" && Model.Assessment.Status != "ReMark";
 }
 
 <div class="row">
@@ -14,6 +17,18 @@
                 <h3 class="card-title">
                     <i class="fas fa-clipboard-check"></i> Mark Students - @Model.Assessment.AssessmentName
                 </h3>
+                @if (!canEditScores && !canEditModeratorComments)
+                {
+                    <span class="badge badge-warning ml-2">
+                        <i class="fas fa-lock"></i> Read-Only Mode
+                    </span>
+                }
+                @if (canEditModeratorComments)
+                {
+                    <span class="badge badge-info ml-2">
+                        <i class="fas fa-user-check"></i> Moderation Mode
+                    </span>
+                }
             </div>
             <div class="card-body">
                 @if (currentStudent != null && Model.RubricCriterias.Any())
@@ -115,7 +130,7 @@
                                             <table class="table table-bordered table-hover mb-0">
                                                 <thead class="table-dark">
                                                     <tr>
-                                                        <th style="width: 20%">Criteria</th>
+                                                        <th style="width: 15%">Criteria</th>
                                                         <th style="width: 5%" class="text-center">Weight</th>
                                                         @* Dynamic Score Title Headers *@
                                                         @{
@@ -132,7 +147,7 @@
                                                                     var scoreTitle = Model.CriteriaScores
                                                                     .FirstOrDefault(cs => cs.RubricCriteriaId == firstCriteria.RubricCriteriaId && cs.CriterionScore == i)?.ScoreTitle;
 
-                                                                    <th style="width: 10%" class="text-center">
+                                                                    <th style="width: 8%" class="text-center">
                                                                         <div class="score-header">
                                                                             <strong>@i</strong>
                                                                             @if (!string.IsNullOrEmpty(scoreTitle))
@@ -147,7 +162,11 @@
                                                             }
                                                         }
                                                         <th style="width: 5%" class="text-center">Weighted Score</th>
-                                                        <th style="width: 15%" class="text-center">Lecturer Comments</th>
+                                                        <th style="width: @(showModeratorComments ? "12%" : "24%")" class="text-center">Lecturer Comments</th>
+                                                        @if (showModeratorComments)
+                                                        {
+                                                            <th style="width: 12%" class="text-center">Moderator Comments</th>
+                                                        }
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -162,6 +181,9 @@
                                                         var customComment = Model.StudentScores.ContainsKey(currentStudent.Id) &&
                                                         Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
                                                         ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].CustomComment : "";
+                                                        var moderatorComment = Model.StudentScores.ContainsKey(currentStudent.Id) &&
+                                                        Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
+                                                        ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].ModeratorComments : "";
 
                                                         <tr data-criteria="@criteria.RubricCriteriaId"
                                                             data-student="@currentStudent.Id"
@@ -197,8 +219,9 @@
                                                                            data-criteria="@criteria.RubricCriteriaId"
                                                                            data-task="@task.RubricTaskId"
                                                                            data-weight="@criteria.Weight"
-                                                                           data-max-score="@maxScore">
-                                                                    <label class="btn btn-outline-primary btn-sm w-100"
+                                                                           data-max-score="@maxScore"
+                                                                           disabled="@(!canEditScores)">
+                                                                    <label class="btn btn-outline-primary btn-sm w-100 @(!canEditScores ? "disabled" : "")"
                                                                            for="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)_@i"
                                                                            title="@scoreTitle: @scoreDescription">
                                                                         <i class="fas fa-check"></i>
@@ -224,13 +247,26 @@
                                                                 <small class="text-muted">of @((criteria.Weight * maxScore / 100.0).ToString("F2"))</small>
                                                             </td>
 
-                                                            <!-- Comments -->
+                                                            <!-- Lecturer Comments -->
                                                             <td>
                                                                 <textarea name="comment_@(currentStudent.Id)_@(criteria.RubricCriteriaId)"
                                                                           class="form-control"
                                                                           rows="2"
-                                                                          placeholder="Additional comments">@customComment</textarea>
+                                                                          placeholder="Lecturer comments"
+                                                                          readonly="@(!canEditScores)">@customComment</textarea>
                                                             </td>
+
+                                                            <!-- Moderator Comments -->
+                                                            @if (showModeratorComments)
+                                                            {
+                                                                <td>
+                                                                    <textarea name="moderator_comment_@(currentStudent.Id)_@(criteria.RubricCriteriaId)"
+                                                                              class="form-control moderator-comment @(canEditModeratorComments ? "moderator-editable" : "")"
+                                                                              rows="2"
+                                                                              placeholder="Moderator comments"
+                                                                              readonly="@(!canEditModeratorComments)">@moderatorComment</textarea>
+                                                                </td>
+                                                            }
                                                         </tr>
                                                     }
 
@@ -254,7 +290,7 @@
                                                                    data-student="@currentStudent.Id"
                                                                    data-task="@task.RubricTaskId">-%</small>
                                                         </th>
-                                                        <th></th>
+                                                        <th colspan="@(showModeratorComments ? 2 : 1)"></th>
                                                     </tr>
                                                 </tfoot>
                                             </table>
@@ -348,13 +384,47 @@
                     <!-- Actions -->
                     <div class="row">
                         <div class="col-md-12 text-center">
-                            <button type="button" class="btn btn-success btn-lg" id="saveScores">
-                                <i class="fas fa-save"></i> Save Scores
-                            </button>
-                            <button type="button" class="btn btn-info btn-lg generate-feedback"
-                                    data-student="@currentStudent.Id">
-                                <i class="fas fa-comment-alt"></i> Generate Feedback
-                            </button>
+                            @if (canEditScores)
+                            {
+                                <button type="button" class="btn btn-success btn-lg" id="saveScores">
+                                    <i class="fas fa-save"></i> Save Scores
+                                </button>
+                            }
+                            @if (canEditModeratorComments)
+                            {
+                                <button type="button" class="btn btn-success btn-lg" id="saveModeratorComments">
+                                    <i class="fas fa-save"></i> Save Moderator Comments
+                                </button>
+                            }
+                            @if (Model.Role == "Lecturer" || Model.Role == "Admin")
+                            {
+                                <button type="button" class="btn btn-info btn-lg generate-feedback"
+                                        data-student="@currentStudent.Id">
+                                    <i class="fas fa-comment-alt"></i> Generate Feedback
+                                </button>
+                            }
+                            @if (!(Model.Role == "Moderator" && Model.Assessment.Status == "Published"))
+                            {
+                                <button type="button" class="btn btn-warning btn-lg" id="updateStatus">
+                                    <i class="fas fa-user-check"></i> Send to 
+                                    @if (Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark")
+                                    {
+                                        @:Moderation
+                                    }
+                                    else if (Model.Assessment.Status == "Moderation")
+                                    {
+                                        @:Final Review
+                                    }
+                                    else if (Model.Assessment.Status == "FinalReview")
+                                    {
+                                        @:Published
+                                    }
+                                    else if (Model.Assessment.Status == "Published")
+                                    {
+                                        @:ReMark
+                                    }
+                                </button>
+                            }
                         </div>
                     </div>
                 }
@@ -373,15 +443,33 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            var canEditScores = @Json.Serialize(canEditScores);
+            var canEditModeratorComments = @Json.Serialize(canEditModeratorComments);
+
             // Add anti-forgery token for AJAX requests
             $('body').append('<input type="hidden" name="__RequestVerificationToken" value="' + $('[name="__RequestVerificationToken"]').val() + '">');
 
             // Calculate totals when scores change
             $('.score-radio').on('change', function() {
+                if (!canEditScores) {
+                    return false;
+                }
                 var studentId = $(this).data('student');
                 console.log('Score changed for student:', studentId); // Debug log
                 calculateStudentTotal(studentId);
                 calculateTaskTotals(studentId);
+            });
+
+            // Prevent clicking on disabled radio buttons
+            $('.score-radio:disabled').on('click', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Prevent clicking on disabled labels
+            $('.btn.disabled').on('click', function(e) {
+                e.preventDefault();
+                return false;
             });
 
             // Initial calculation on page load
@@ -391,9 +479,28 @@
                 @:calculateTaskTotals(@currentStudent.Id);
             }
 
-            // Save scores
+            // Save scores with validation
             $('#saveScores').on('click', function() {
-                saveScores();
+                if (canEditScores) {
+                    // Check if all criteria are marked before saving
+                    var allMarked = validateAllCriteriaMarked();
+                    if (!allMarked) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.warning('Please mark all criteria before saving scores.');
+                        } else {
+                            alert('Warning: Please mark all criteria before saving scores.');
+                        }
+                        return false;
+                    }
+                    saveScores();
+                }
+            });
+
+            // Save moderator comments
+            $('#saveModeratorComments').on('click', function() {
+                if (canEditModeratorComments) {
+                    saveModeratorComments();
+                }
             });
 
             // Generate feedback
@@ -403,6 +510,76 @@
                          '?id=@Model.Assessment.AssessmentId&studentId=' + studentId +
                          '&courseId=@Model.CourseRolesId&role=@Model.Role';
                 window.open(url, '_blank');
+            });
+
+            // Update Status: Moderation, FinalReview, Published
+            $('#updateStatus').on('click', function() {
+                var status = '@Model.Assessment.Status';
+                var nextRole = '';
+                var nextStatus = '';
+                var courseId = '@Model.CourseRolesId';
+                var role = '@Model.Role';
+
+                if (status == 'Marking' || status == 'ReMark') {
+                    nextRole = 'moderator';
+                    nextStatus = 'Moderation';
+                } else if (status == 'Moderation') {
+                    nextRole = 'lecturer';
+                    nextStatus = 'FinalReview';
+                } else if (status == 'FinalReview') {
+                    nextRole = 'moderator';
+                    nextStatus = 'Published';
+                } else if (status == 'Published') {
+                    nextRole = 'lecturer';
+                    nextStatus = 'ReMark';
+                }
+
+                if (confirm('Are you sure you want to send this assessment to ' + nextStatus + '? This will notify the ' + nextRole + ' for review.')) {
+                    $.ajax({
+                        url: '@Url.Action("UpdateStatusAssessment", "StudentAssessments")',
+                        type: 'POST',
+                        data: {
+                            assessmentId: @Model.Assessment.AssessmentId,
+                            courseId: courseId,
+                            role: role,
+                            nextStatus: nextStatus,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success(response.message);
+                                } else {
+                                    alert('Success: ' + response.message);
+                                }
+                                // Optionally redirect or refresh
+                                setTimeout(function() {
+                                    window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
+                                }, 1500);
+                            } else {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error(response.message || 'Failed to send to ' + nextStatus);
+                                } else {
+                                    alert('Error: ' + (response.message || 'Failed to send to ' + nextStatus));
+                                }
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', xhr.responseText);
+                            var errorMessage = 'An error occurred while sending to ' + nextStatus + '.';
+                            
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessage);
+                            } else {
+                                alert('Error: ' + errorMessage);
+                            }
+                        }
+                    });
+                }
             });
 
             // Keyboard navigation
@@ -436,13 +613,67 @@
                             e.preventDefault();
                             break;
                         case 83: // S key
-                            saveScores();
+                            if (canEditScores) {
+                                var allMarked = validateAllCriteriaMarked();
+                                if (allMarked) {
+                                    saveScores();
+                                } else {
+                                    if (typeof toastr !== 'undefined') {
+                                        toastr.warning('Please mark all criteria before saving scores.');
+                                    }
+                                }
+                            } else if (canEditModeratorComments) {
+                                saveModeratorComments();
+                            }
                             e.preventDefault();
                             break;
                     }
                 }
             });
         });
+
+    function validateAllCriteriaMarked() {
+            var allCriteriaRows = $('tr[data-criteria][data-student="@currentStudent?.Id"]');
+            var totalCriteria = allCriteriaRows.length;
+            var markedCriteria = 0;
+            var unmarkedCriteria = [];
+
+            allCriteriaRows.each(function() {
+                var criteriaId = $(this).data('criteria');
+                var studentId = $(this).data('student');
+                var criteriaTitle = $(this).find('strong').first().text();
+                
+                var hasCheckedScore = $(this).find('.score-radio:checked').length > 0;
+                
+                if (hasCheckedScore) {
+                    markedCriteria++;
+                } else {
+                    unmarkedCriteria.push(criteriaTitle);
+                }
+            });
+
+            console.log('Validation: ' + markedCriteria + ' of ' + totalCriteria + ' criteria marked');
+
+            if (unmarkedCriteria.length > 0) {
+                console.log('Unmarked criteria:', unmarkedCriteria);
+                
+                // Highlight unmarked criteria
+                allCriteriaRows.each(function() {
+                    var hasCheckedScore = $(this).find('.score-radio:checked').length > 0;
+                    if (!hasCheckedScore) {
+                        $(this).addClass('table-danger').effect('shake', { times: 2, distance: 5 }, 500);
+                    } else {
+                        $(this).removeClass('table-danger');
+                    }
+                });
+
+                return false;
+            }
+
+            // Remove any previous highlighting
+            allCriteriaRows.removeClass('table-danger');
+            return true;
+        }
 
     function calculateStudentTotal(studentId) {
             var overallWeightedTotal = 0;
@@ -608,6 +839,9 @@
 
 
         function saveScores() {
+            // Disable button to prevent double-clicking
+            $('#saveScores').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
             var scores = {};
             var comments = {};
 
@@ -645,11 +879,17 @@
                             alert('Success: ' + response.message);
                         }
                     } else {
-                        // Show error message
+                        // Show error message with details about unmarked criteria
+                        var errorMessage = response.message || 'Failed to save scores';
+                        
+                        if (response.unmarkedCriteria && response.unmarkedCriteria.length > 0) {
+                            errorMessage += '\n\n' + response.unmarkedCriteria.join('\n');
+                        }
+                        
                         if (typeof toastr !== 'undefined') {
-                            toastr.error(response.message || 'Failed to save scores');
+                            toastr.error(errorMessage, 'Validation Error', { timeOut: 10000 });
                         } else {
-                            alert('Error: ' + (response.message || 'Failed to save scores'));
+                            alert('Error: ' + errorMessage);
                         }
                     }
                 },
@@ -672,6 +912,63 @@
                 complete: function() {
                     // Restore button state
                     $('#saveScores').prop('disabled', false).html('<i class="fas fa-save"></i> Save Scores');
+                }
+            });
+        }
+
+        function saveModeratorComments() {
+            var moderatorComments = {};
+
+            // Collect moderator comments
+            $('textarea[name^="moderator_comment_"]').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                moderatorComments[name] = value;
+            });
+
+            $.ajax({
+                url: '@Url.Action("SaveModeratorComments", "StudentAssessments")',
+                type: 'POST',
+                data: {
+                    assessmentId: @Model.Assessment.AssessmentId,
+                    courseId: '@Model.CourseRolesId',
+                    role: '@Model.Role',
+                    moderatorComments: moderatorComments,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(response.message);
+                        } else {
+                            alert('Success: ' + response.message);
+                        }
+                    } else {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(response.message || 'Failed to save moderator comments');
+                        } else {
+                            alert('Error: ' + (response.message || 'Failed to save moderator comments'));
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', xhr.responseText);
+                    var errorMessage = 'An error occurred while saving moderator comments.';
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        errorMessage = 'Server error: ' + xhr.responseText;
+                    }
+
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(errorMessage);
+                    } else {
+                        alert('Error: ' + errorMessage);
+                    }
+                },
+                complete: function() {
+                    $('#saveModeratorComments').prop('disabled', false).html('<i class="fas fa-save"></i> Save Moderator Comments');
                 }
             });
         }
@@ -728,6 +1025,31 @@
         .score-radio + label.btn:hover {
             background-color: #e3f2fd;
             border-color: #2196f3;
+        }
+
+    /* Disabled state styling */
+    .score-radio:disabled + label.btn,
+    .btn.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    textarea[readonly] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    /* Moderator comment editable styling */
+    .moderator-comment.moderator-editable {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+
+        .moderator-comment.moderator-editable:focus {
+            background-color: #ffffff;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
         }
 
     .student-weighted-total {

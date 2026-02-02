@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using smart_feedback.Data;
 
@@ -11,9 +12,11 @@ using smart_feedback.Data;
 namespace smart_feedback.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251228214335_AddAssessmentStatus")]
+    partial class AddAssessmentStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,32 +326,6 @@ namespace smart_feedback.Data.Migrations
                     b.ToTable("CourseRoles");
                 });
 
-            modelBuilder.Entity("smart_feedback.Models.CourseStudent", b =>
-                {
-                    b.Property<int>("CourseStudentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseStudentId"));
-
-                    b.Property<int>("CourseRolesId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EnrolledDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("CourseStudentId");
-
-                    b.HasIndex("CourseRolesId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("CourseStudent");
-                });
-
             modelBuilder.Entity("smart_feedback.Models.RubricCriteria", b =>
                 {
                     b.Property<int>("RubricCriteriaId")
@@ -602,25 +579,6 @@ namespace smart_feedback.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Rubric");
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.CourseStudent", b =>
-                {
-                    b.HasOne("smart_feedback.Models.CourseRoles", "CourseRoles")
-                        .WithMany()
-                        .HasForeignKey("CourseRolesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("smart_feedback.Models.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CourseRoles");
-
-                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("smart_feedback.Models.StudentAssessmentScore", b =>

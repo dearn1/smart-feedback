@@ -8,10 +8,10 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode (@Model.TermName)
+                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (@Model.TermName)
                 </h3>
                 <div class="card-tools">
-                    @if (Model.Role == "Lecturer")
+                    @if (Model.Role == "Lecturer" || Model.Role == "Admin")
                     {
                         <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
                            class="btn btn-primary btn-sm">
@@ -31,8 +31,9 @@
                                     <th>Rubric</th>
                                     <th>Total Marks</th>
                                     <th>Marking Progress</th>
-                                    <th>Created Date</th>
-                                    <th>Created By</th>
+                                    <th>Status</th>
+                                    <th>Lecturer</th>
+                                    <th>Moderator</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -79,25 +80,46 @@
                                             </div>
                                             <small class="text-muted">@markedCount / @totalStudents students marked</small>
                                         </td>
-                                        <td>@assessment.CreatedDate.ToString("dd/MM/yyyy")</td>
-                                        <td>@assessment.CreatedBy</td>
+                                        <td>@assessment.Status</td>
+                                        <td>@ViewBag.LecturerFullName</td>
+                                        <td>@ViewBag.ModeratorFullName</td>                                        
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a asp-action="Mark" asp-route-id="@assessment.AssessmentId" 
-                                                   asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
-                                                   class="btn btn-success btn-sm"
-                                                   title="Mark Students">
-                                                    <i class="fas fa-edit"></i> Mark
-                                                </a>
+                                                @if (Model.Role == "Lecturer" && (assessment.Status == "Marking" || assessment.Status == "ReMark" || assessment.Status == "FinalReview" || assessment.Status == "Published"))
+                                                {
+                                                    <a asp-action="Mark" asp-route-id="@assessment.AssessmentId" 
+                                                       asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
+                                                       class="btn btn-success btn-sm"
+                                                       title="Mark Students">
+                                                        <i class="fas fa-edit"></i> Mark
+                                                    </a>
+                                                }
+                                                @if (Model.Role == "Moderator" && (assessment.Status == "Moderation" || assessment.Status == "Published"))
+                                                {
+                                                    <a asp-action="Mark" asp-route-id="@assessment.AssessmentId"
+                                                       asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
+                                                       class="btn btn-success btn-sm"
+                                                       title="Mark Students">
+                                                        <i class="fas fa-edit"></i> Mark
+                                                    </a>
+                                                }
                                                 <button type="button" class="btn btn-info btn-sm" 
                                                         data-toggle="modal" 
                                                         data-target="#studentListModal_@assessment.AssessmentId"
                                                         title="View Students">
                                                     <i class="fas fa-users"></i> Students
                                                 </button>
-                                                <a href="#" class="btn btn-secondary btn-sm" title="View Reports">
-                                                    <i class="fas fa-chart-bar"></i> Reports
-                                                </a>
+                                                @if (assessment.Status == "Published" && (Model.Role == "Lecturer" || User.IsInRole("Admin")))
+                                                {
+                                                    <a asp-action="GenerateFeedback" 
+                                                       asp-route-id="@assessment.AssessmentId" 
+                                                       asp-route-courseId="@Model.CourseRolesId" 
+                                                       asp-route-role="@Model.Role" 
+                                                       class="btn btn-secondary btn-sm" 
+                                                       title="View Batch Reports">
+                                                        <i class="fas fa-chart-bar"></i> Batch Reports
+                                                    </a>
+                                                }
                                                 @if (Model.Role == "Lecturer" || User.IsInRole("Admin"))
                                                 {
                                                     <button type="button" 
@@ -105,7 +127,7 @@
                                                             data-toggle="modal" 
                                                             data-target="#deleteModal_@assessment.AssessmentId"
                                                             title="Delete Assessment">
-                                                        <i class="fas fa-trash-alt"></i>
+                                                        <i class="fas fa-trash-alt"></i> Delete
                                                     </button>
                                                 }
                                             </div>
@@ -174,7 +196,6 @@
                                     <th>Student Name</th>
                                     <th>Email</th>
                                     <th>Status</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -206,19 +227,9 @@
                                             else
                                             {
                                                 <span class="badge badge-warning">
-                                                    <i class="fas fa-hourglass-half"></i> Pending
+                                                    <i class="fas fa-hourglass-half"></i> Not Marked
                                                 </span>
                                             }
-                                        </td>
-                                        <td>
-                                            <a asp-action="Mark" 
-                                               asp-route-id="@assessment.AssessmentId" 
-                                               asp-route-courseId="@Model.CourseRolesId" 
-                                               asp-route-role="@Model.Role"
-                                               asp-route-studentIndex="@studentIndex"
-                                               class="btn btn-sm @(isMarked ? "btn-info" : "btn-warning")">
-                                                <i class="fas @(isMarked ? "fa-edit" : "fa-pen")"></i> @(isMarked ? "Edit" : "Mark")
-                                            </a>
                                         </td>
                                     </tr>
                                 }
@@ -234,14 +245,6 @@
                         </small>
                     </div>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <a asp-action="Mark" 
-                       asp-route-id="@assessment.AssessmentId" 
-                       asp-route-courseId="@Model.CourseRolesId" 
-                       asp-route-role="@Model.Role"
-                       asp-route-studentIndex="0"
-                       class="btn btn-primary">
-                        <i class="fas fa-clipboard-check"></i> Start Marking
-                    </a>
                 </div>
             </div>
         </div>

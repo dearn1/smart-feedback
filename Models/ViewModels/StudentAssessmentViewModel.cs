@@ -38,10 +38,35 @@
         public Student Student { get; set; }
         public Assessment Assessment { get; set; }
         public List<StudentCriteriaResult> CriteriaResults { get; set; } = new();
+        public Dictionary<string, TaskScoreSummary> TaskSummaries { get; set; } = new();
         public int TotalScore { get; set; }
         public int MaxPossibleScore { get; set; }
         public double Percentage { get; set; }
         public string OverallFeedback { get; set; }
+        
+        // NEW: Batch mode properties
+        public bool IsBatchMode { get; set; }
+        public int CurrentStudentIndex { get; set; }
+        public int TotalStudents { get; set; }
+        public List<Student> AllStudents { get; set; } = new();
+        public List<StudentFeedbackViewModel> AllStudentFeedbacks { get; set; } = new();
+        public int CourseRolesId { get; set; }
+        public string Role { get; set; }
+        public string CourseCode { get; set; }
+        public string CourseName { get; set; }
+        public string TermName { get; set; }
+    }
+
+    public class TaskScoreSummary
+    {
+        public string TaskTitle { get; set; }
+
+        public string TaskDescription { get; set; }
+        public double TotalWeightedScore { get; set; }
+        public double MaxWeightedScore { get; set; }
+        public double Percentage { get; set; }
+        public int MaxMarks { get; set; }
+        public double ActualMarks { get; set; }
     }
 
     public class StudentCriteriaResult
@@ -50,6 +75,9 @@
         public string CriteriaTitle { get; set; }
         public int Score { get; set; }
         public int MaxScore { get; set; }
+        public double Weight { get; set; }
+        public double WeightedScore { get; set; }
+        public double MaxWeightedScore { get; set; }
         public string ScoreDescription { get; set; }
         public string GeneratedFeedback { get; set; }
         public string CustomComment { get; set; }

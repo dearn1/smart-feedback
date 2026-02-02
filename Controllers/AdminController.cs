@@ -68,6 +68,15 @@ namespace smart_feedback.Controllers
         }
 
         [HttpGet]
+        public IActionResult MLManagement()
+        {
+            _logger.LogInformation("Admin {AdminUser} accessed ML Management at {Timestamp}",
+                User.Identity.Name, DateTime.UtcNow);
+
+            return View();
+        }
+
+        [HttpGet]
         public IActionResult CreateUser()
         {
             _logger.LogInformation("Admin {AdminUser} accessed create user page at {Timestamp}",

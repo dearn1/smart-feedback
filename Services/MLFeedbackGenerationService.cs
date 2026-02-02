@@ -354,26 +354,16 @@ namespace smart_feedback.Services
 
         private void TrainFeedbackModel()
         {
+            // SKIP FEEDBACK MODEL TRAINING
+            // The rule-based feedback generator is more effective for this use case
+            // ML.NET doesn't support sequence-to-sequence text generation well
+            // The feedback model will remain null, and GenerateFeedbackAsync will use rule-based approach
+            
             var feedbackDataPath = Path.Combine(_environment.ContentRootPath, "ML", "feedback_data.csv");
             if (!File.Exists(feedbackDataPath)) return;
-
-            var data = _mlContext.Data.LoadFromTextFile<FeedbackData>(feedbackDataPath, separatorChar: ',', hasHeader: true);
-
-            var pipeline = _mlContext.Transforms.Text.FeaturizeText("Features",
-                new TextFeaturizingEstimator.Options
-                {
-                    OutputTokensColumnName = "TokenizedFeedback",
-                    WordFeatureExtractor = new WordBagEstimator.Options { NgramLength = 1, UseAllLengths = true },
-                    CharFeatureExtractor = new WordBagEstimator.Options { NgramLength = 3, UseAllLengths = false }
-                })
-                .Append(_mlContext.Transforms.Concatenate("Features", "Features", "Score", "PercentageScore"))
-                .Append(_mlContext.Transforms.Text.TokenizeIntoWords("TokenizedFeedback", "GeneratedFeedback"))
-                .Append(_mlContext.Transforms.Text.ProduceNgrams("NgramFeedback", "TokenizedFeedback"))
-                .Append(_mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("GeneratedFeedback", "Features"));
-
-
-            _feedbackModel = pipeline.Fit(data);
-            _mlContext.Model.Save(_feedbackModel, data.Schema, _modelPath);
+            
+            // Optional: Log that we're skipping this
+            Console.WriteLine("Skipping feedback model training - using rule-based generation instead");
         }
 
         private void TrainSentimentModel()

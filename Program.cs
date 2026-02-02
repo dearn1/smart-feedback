@@ -38,6 +38,7 @@ builder.Services.AddScoped<IEmailService, UserEmailService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 builder.Services.AddScoped<IFeedbackGenerationService, MLFeedbackGenerationService>();
+builder.Services.AddScoped<MLModelTrainer>();
 var app = builder.Build();
 
 // Seed roles and admin user
