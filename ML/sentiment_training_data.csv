@@ -1,0 +1,16 @@
+Text,IsPositive
+Excellent work! Outstanding performance demonstrated.,True
+Good job! Nice improvement shown.,True
+Well done! Keep up the great work.,True
+Strong understanding demonstrated.,True
+Impressive solution with great attention to detail.,True
+You've shown mastery of the concepts.,True
+Your approach is both elegant and efficient.,True
+Satisfactory work with room for growth and improvement.,True
+"Good foundation, focus on strengthening key areas.",True
+"You're on the right track, continue practicing.",True
+This area needs more attention and practice.,False
+"Significant gaps found, requires substantial improvement.",False
+"Poor implementation, many issues identified.",False
+Fails to meet basic requirements.,False
+Lacks understanding of fundamental concepts.,False

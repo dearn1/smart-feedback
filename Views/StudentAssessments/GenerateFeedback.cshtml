@@ -1,8 +1,127 @@
 ﻿@model smart_feedback.Models.ViewModels.StudentFeedbackViewModel
 @{
-    ViewData["Title"] = "Student Feedback";
+    ViewData["Title"] = Model.IsBatchMode ? "Batch Feedback Reports" : "Student Feedback";
 }
 
+<!-- Navigation Bar (Only for Batch Mode) -->
+@if (Model.IsBatchMode)
+{
+    <div class="row mb-3 no-print">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar"></i> Batch Feedback Reports - @Model.Assessment.AssessmentName
+                            </h5>
+                            <small class="text-muted">
+                                @Model.CourseCode - @Model.CourseName | @Model.TermName
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge badge-primary badge-lg mr-2">
+                                Student @(Model.CurrentStudentIndex + 1) of @Model.TotalStudents
+                            </span>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="printAllStudents()">
+                                <i class="fas fa-print"></i> Print All (@Model.TotalStudents Students)
+                            </button>
+                            <a asp-action="Index" 
+                               asp-route-courseId="@Model.CourseRolesId" 
+                               asp-route-role="@Model.Role" 
+                               class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="row mb-3 no-print">
+        <div class="col-md-12">
+            <div class="btn-toolbar justify-content-between" role="toolbar">
+                <div class="btn-group" role="group">
+                    @if (Model.CurrentStudentIndex > 0)
+                    {
+                        <a asp-action="GenerateFeedback" 
+                           asp-route-id="@Model.Assessment.AssessmentId"
+                           asp-route-courseId="@Model.CourseRolesId"
+                           asp-route-role="@Model.Role"
+                           asp-route-studentIndex="0"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-angle-double-left"></i> First
+                        </a>
+                        <a asp-action="GenerateFeedback" 
+                           asp-route-id="@Model.Assessment.AssessmentId"
+                           asp-route-courseId="@Model.CourseRolesId"
+                           asp-route-role="@Model.Role"
+                           asp-route-studentIndex="@(Model.CurrentStudentIndex - 1)"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-angle-left"></i> Previous
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="fas fa-angle-double-left"></i> First
+                        </button>
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="fas fa-angle-left"></i> Previous
+                        </button>
+                    }
+                </div>
+
+                <div class="btn-group" role="group">
+                    <select class="form-control" onchange="navigateToStudent(this.value)">
+                        @for (int i = 0; i < Model.AllStudents.Count; i++)
+                        {
+                            var student = Model.AllStudents[i];
+                            <option value="@i" selected="@(i == Model.CurrentStudentIndex)">
+                                @(i + 1). @student.StudentId - @student.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="btn-group" role="group">
+                    @if (Model.CurrentStudentIndex < Model.TotalStudents - 1)
+                    {
+                        <a asp-action="GenerateFeedback" 
+                           asp-route-id="@Model.Assessment.AssessmentId"
+                           asp-route-courseId="@Model.CourseRolesId"
+                           asp-route-role="@Model.Role"
+                           asp-route-studentIndex="@(Model.CurrentStudentIndex + 1)"
+                           class="btn btn-outline-primary">
+                            Next <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a asp-action="GenerateFeedback" 
+                           asp-route-id="@Model.Assessment.AssessmentId"
+                           asp-route-courseId="@Model.CourseRolesId"
+                           asp-route-role="@Model.Role"
+                           asp-route-studentIndex="@(Model.TotalStudents - 1)"
+                           class="btn btn-outline-primary">
+                            Last <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary" disabled>
+                            Next <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" disabled>
+                            Last <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Student Feedback Report (Same for both modes) -->
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -10,13 +129,19 @@
                 <h3 class="card-title">
                     <i class="fas fa-user-graduate"></i> Feedback Report - @Model.Student.Name
                 </h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                    <button type="button" class="btn btn-info btn-sm" onclick="window.close()">
-                        <i class="fas fa-times"></i> Close
-                    </button>
+                <div class="card-tools no-print">
+                    @if (!Model.IsBatchMode && (User.IsInRole("Lecturer") || User.IsInRole("Admin")) && Model.Assessment.Status == "Published")
+                    {
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    }
+                    @if (!Model.IsBatchMode)
+                    {
+                        <button type="button" class="btn btn-info btn-sm" onclick="window.close()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    }
                 </div>
             </div>
             <div class="card-body">
@@ -30,8 +155,9 @@
                     </div>
                     <div class="col-md-6">
                         <h5>Assessment Information</h5>
-                        <p><strong>Assessment:</strong> @Model.Assessment.AssessmentName</p>
-                        <p><strong>Course:</strong> @Model.Assessment.CourseCode</p>
+                        <p><strong>Course:</strong> @Model.Assessment.CourseCode - @Model.Assessment.Rubric?.CourseName</p>
+                        <p><strong>Programme:</strong> @Model.Assessment.Rubric?.Programme</p>
+                        <p><strong>Assignment:</strong> @Model.Assessment.Rubric?.RubricName</p>
                         <p><strong>Term:</strong> @Model.Assessment.TermName</p>
                     </div>
                 </div>
@@ -39,40 +165,48 @@
                 <!-- Score Summary -->
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <div class="card bg-light">
+                        <div class="card bg-light score-summary-card">
                             <div class="card-header">
-                                <h5 class="mb-0">Score Summary</h5>
+                                <h4 class="mb-0"><i class="fas fa-chart-pie"></i> Score Summary</h4>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body text-center py-5">
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <h4 class="text-primary">@Model.TotalScore / @Model.MaxPossibleScore</h4>
-                                        <p class="mb-0">Total Score</p>
+                                    <div class="col-md-6 border-right">
+                                        <div class="score-display">
+                                            <h1 class="display-1 text-success font-weight-bold mb-3">@Model.Percentage.ToString("F2")</h1>
+                                            <h5 class="text-muted mb-0">Total Score</h5>
+                                        </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <h4 class="text-success">@Model.Percentage.ToString("F1")%</h4>
-                                        <p class="mb-0">Percentage</p>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h4 class="text-info">
-                                            @if (Model.Percentage >= 85)
-                                            {
-                                                <span>Excellent</span>
-                                            }
-                                            else if (Model.Percentage >= 70)
-                                            {
-                                                <span>Good</span>
-                                            }
-                                            else if (Model.Percentage >= 50)
-                                            {
-                                                <span>Satisfactory</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Needs Improvement</span>
-                                            }
-                                        </h4>
-                                        <p class="mb-0">Grade Category</p>
+                                    <div class="col-md-6">
+                                        <div class="grade-display">
+                                            <h1 class="display-3 font-weight-bold mb-3">
+                                                @if (Model.Percentage >= 85)
+                                                {
+                                                    <span class="text-success">
+                                                        <i class="fas fa-trophy"></i> Excellent
+                                                    </span>
+                                                }
+                                                else if (Model.Percentage >= 70)
+                                                {
+                                                    <span class="text-primary">
+                                                        <i class="fas fa-thumbs-up"></i> Good
+                                                    </span>
+                                                }
+                                                else if (Model.Percentage >= 50)
+                                                {
+                                                    <span class="text-warning">
+                                                        <i class="fas fa-check-circle"></i> Satisfactory
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-info">
+                                                        <i class="fas fa-hand-holding-heart"></i> Needs Improvement
+                                                    </span>
+                                                }
+                                            </h1>
+                                            <h5 class="text-muted mb-0">Grade Category</h5>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -80,60 +214,186 @@
                     </div>
                 </div>
 
+                <!-- Task Score Summary Cards -->
+                @if (Model.TaskSummaries != null && Model.TaskSummaries.Any())
+                {
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5><i class="fas fa-chart-bar"></i> Task Performance Summary</h5>
+                        </div>
+                        @foreach (var taskSummary in Model.TaskSummaries.OrderBy(t => t.Key))
+                        {
+                            var summary = taskSummary.Value;
+                            var performanceClass = summary.Percentage >= 85 ? "success" : summary.Percentage >= 70 ? "primary" : summary.Percentage >= 50 ? "warning" : "danger";
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="card task-summary-card border-@performanceClass">
+                                    <div class="card-header bg-@performanceClass text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-tasks"></i> @summary.TaskTitle
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center mb-3">
+                                            <h3 class="text-@performanceClass mb-1">
+                                                @summary.ActualMarks.ToString("F2")
+                                            </h3>
+                                            <p class="text-muted mb-0">out of @summary.MaxMarks marks</p>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 20px;">
+                                            <div class="progress-bar bg-@performanceClass" 
+                                                 role="progressbar" 
+                                                 style="width: @summary.Percentage.ToString("F2")%"
+                                                 aria-valuenow="@summary.Percentage" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                Score: @summary.Percentage.ToString("F2")%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
                 <!-- Detailed Results -->
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <h5>Detailed Results</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Task</th>
-                                        <th>Criteria</th>
-                                        <th>Score</th>
-                                        <th>Performance Level</th>
-                                        <th>Feedback</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var result in Model.CriteriaResults)
-                                    {
-                                        <tr>
-                                            <td>@result.TaskTitle</td>
-                                            <td>@result.CriteriaTitle</td>
-                                            <td class="text-center">
-                                                <span class="badge badge-@(result.Score >= 3 ? "success" : result.Score >= 2 ? "warning" : "danger")">
-                                                    @result.Score / @result.MaxScore
-                                                </span>
-                                            </td>
-                                            <td>@result.ScoreDescription</td>
-                                            <td>
-                                                <div style="white-space: pre-line;">@result.GeneratedFeedback</div>
-                                                @if (!string.IsNullOrEmpty(result.CustomComment))
+                        <h5><i class="fas fa-list-ul"></i> Detailed Results by Task</h5>
+                        @{
+                            var groupedResults = Model.CriteriaResults.GroupBy(r => r.TaskTitle).OrderBy(g => g.Key);
+                        }
+                        
+                        @foreach (var taskGroup in groupedResults)
+                        {
+                            <div class="card mb-3 task-detail-card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-tasks mr-2"></i>@taskGroup.Key
+                                        @if (Model.TaskSummaries.ContainsKey(taskGroup.Key))
+                                        {
+                                            var summary = Model.TaskSummaries[taskGroup.Key];
+                                            <span class="badge badge-light float-right">
+                                                @summary.ActualMarks.ToString("F2") / @summary.MaxMarks (@summary.Percentage.ToString("F2")%)
+                                            </span>
+                                        }
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="25%">Criteria</th>
+                                                    <th width="10%" class="text-center">Score</th>
+                                                    <th width="15%">Performance Level</th>
+                                                    <th width="50%">Feedback</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var result in taskGroup)
                                                 {
-                                                    <div class="mt-2">
-                                                        <strong>Additional Comment:</strong>
-                                                        <div class="text-info">@result.CustomComment</div>
-                                                    </div>
+                                                    <tr>
+                                                        <td>
+                                                            <strong>@result.CriteriaTitle</strong>
+                                                            <br />
+                                                            <small class="text-muted">
+                                                                Weight: @result.Weight.ToString("F0")%
+                                                            </small>
+                                                        </td>
+                                                        <td class="text-center align-middle">
+                                                            <span class="badge badge-success badge-lg">
+                                                                @result.Score / @result.MaxScore
+                                                            </span>
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            <span>@result.ScoreDescription</span>
+                                                        </td>
+                                                        <td>
+                                                            <div style="white-space: pre-line;">@result.GeneratedFeedback</div>
+                                                            @if (!string.IsNullOrEmpty(result.CustomComment))
+                                                            {
+                                                                <div class="mt-2 p-2 bg-light rounded border-left border-info" style="border-left-width: 3px !important;">
+                                                                    <strong><i class="fas fa-comment-dots"></i> Lecturer Comment:</strong>
+                                                                    <div class="text-info mt-1">@result.CustomComment</div>
+                                                                </div>
+                                                            }
+                                                        </td>
+                                                    </tr>
                                                 }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
 
                 <!-- Overall Feedback -->
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Overall Feedback</h5>
+                        <div class="card overall-feedback-card shadow-sm">
+                            <div class="card-header bg-gradient-primary text-white">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-comments fa-2x mr-3"></i>
+                                    <div>
+                                        <h4 class="mb-0">Overall Assessment Feedback</h4>
+                                        <small class="opacity-75">Comprehensive evaluation and recommendations</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div style="white-space: pre-line;">@Model.OverallFeedback</div>
+                            <div class="card-body feedback-content">
+                                @if (!string.IsNullOrEmpty(Model.OverallFeedback))
+                                {
+                                    <div class="feedback-text">
+                                        @Html.Raw(Model.OverallFeedback.Replace("\n", "<br />"))
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        No overall feedback has been generated yet.
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Generated: @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        @if (Model.Percentage >= 85)
+                                        {
+                                            <span class="badge badge-success badge-lg">
+                                                <i class="fas fa-trophy mr-1"></i> Outstanding Performance
+                                            </span>
+                                        }
+                                        else if (Model.Percentage >= 70)
+                                        {
+                                            <span class="badge badge-primary badge-lg">
+                                                <i class="fas fa-thumbs-up mr-1"></i> Good Performance
+                                            </span>
+                                        }
+                                        else if (Model.Percentage >= 50)
+                                        {
+                                            <span class="badge badge-warning badge-lg">
+                                                <i class="fas fa-chart-line mr-1"></i> Satisfactory Performance
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-info badge-lg">
+                                                <i class="fas fa-hand-holding-heart mr-1"></i> Room for Growth
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -143,14 +403,451 @@
     </div>
 </div>
 
-<style type="text/css">
+<!-- Hidden section for printing all students (Batch Mode Only) -->
+@if (Model.IsBatchMode)
+{
+    <div id="printAllContent" style="display: none;">
+        @foreach (var feedback in Model.AllStudentFeedbacks)
+        {
+            <div class="page-break">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-user-graduate"></i> Feedback Report - @feedback.Student.Name
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Student Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Student Information</h5>
+                                <p><strong>Name:</strong> @feedback.Student.Name</p>
+                                <p><strong>Student ID:</strong> @feedback.Student.StudentId</p>
+                                <p><strong>Email:</strong> @feedback.Student.Email</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Assessment Information</h5>
+                                <p><strong>Course:</strong> @feedback.Assessment.CourseCode - @feedback.Assessment.Rubric?.CourseName</p>
+                                <p><strong>Programme:</strong> @feedback.Assessment.Rubric?.Programme</p>
+                                <p><strong>Assignment:</strong> @feedback.Assessment.Rubric?.RubricName</p>
+                                <p><strong>Term:</strong> @feedback.Assessment.TermName</p>
+                            </div>
+                        </div>
+
+                        <!-- Score Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card bg-light score-summary-card">
+                                    <div class="card-header">
+                                        <h4 class="mb-0"><i class="fas fa-chart-pie"></i> Score Summary</h4>
+                                    </div>
+                                    <div class="card-body text-center py-4">
+                                        <div class="row">
+                                            <div class="col-md-6 border-right">
+                                                <div class="score-display">
+                                                    <h1 class="display-3 text-success font-weight-bold mb-2">@feedback.Percentage.ToString("F2")</h1>
+                                                    <h5 class="text-muted mb-0">Total Score</h5>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="grade-display">
+                                                    <h2 class="font-weight-bold mb-2">
+                                                        @if (feedback.Percentage >= 85)
+                                                        {
+                                                            <span class="text-success">
+                                                                <i class="fas fa-trophy"></i> Excellent
+                                                            </span>
+                                                        }
+                                                        else if (feedback.Percentage >= 70)
+                                                        {
+                                                            <span class="text-primary">
+                                                                <i class="fas fa-thumbs-up"></i> Good
+                                                            </span>
+                                                        }
+                                                        else if (feedback.Percentage >= 50)
+                                                        {
+                                                            <span class="text-warning">
+                                                                <i class="fas fa-check-circle"></i> Satisfactory
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-info">
+                                                                <i class="fas fa-hand-holding-heart"></i> Needs Improvement
+                                                            </span>
+                                                        }
+                                                    </h2>
+                                                    <h5 class="text-muted mb-0">Grade Category</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task Score Summary Cards -->
+                        @if (feedback.TaskSummaries != null && feedback.TaskSummaries.Any())
+                        {
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <h5><i class="fas fa-chart-bar"></i> Task Performance Summary</h5>
+                                </div>
+                                @foreach (var taskSummary in feedback.TaskSummaries.OrderBy(t => t.Key))
+                                {
+                                    var summary = taskSummary.Value;
+                                    var performanceClass = summary.Percentage >= 85 ? "success" : summary.Percentage >= 70 ? "primary" : summary.Percentage >= 50 ? "warning" : "danger";
+                                    
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card task-summary-card border-@performanceClass">
+                                            <div class="card-header bg-@performanceClass text-white">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-tasks"></i> @summary.TaskTitle
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="text-center mb-2">
+                                                    <h4 class="text-@performanceClass mb-1">
+                                                        @summary.ActualMarks.ToString("F2")
+                                                    </h4>
+                                                    <p class="text-muted mb-0 small">out of @summary.MaxMarks marks</p>
+                                                </div>
+                                                <div class="progress mb-2" style="height: 18px;">
+                                                    <div class="progress-bar bg-@performanceClass" 
+                                                         role="progressbar" 
+                                                         style="width: @summary.Percentage.ToString("F2")%">
+                                                        @summary.Percentage.ToString("F2")%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Detailed Results by Task -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5><i class="fas fa-list-ul"></i> Detailed Results by Task</h5>
+                                @{
+                                    var groupedResultsInner = feedback.CriteriaResults.GroupBy(r => r.TaskTitle).OrderBy(g => g.Key);
+                                }
+                                
+                                @foreach (var taskGroup in groupedResultsInner)
+                                {
+                                    <div class="card mb-3 task-detail-card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-tasks mr-2"></i>@taskGroup.Key
+                                                @if (feedback.TaskSummaries != null && feedback.TaskSummaries.ContainsKey(taskGroup.Key))
+                                                {
+                                                    var summary = feedback.TaskSummaries[taskGroup.Key];
+                                                    <span class="badge badge-light float-right">
+                                                        @summary.ActualMarks.ToString("F2") / @summary.MaxMarks (@summary.Percentage.ToString("F2")%)
+                                                    </span>
+                                                }
+                                            </h5>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th width="25%">Criteria</th>
+                                                            <th width="10%" class="text-center">Score</th>
+                                                            <th width="15%">Performance Level</th>
+                                                            <th width="50%">Feedback</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var result in taskGroup)
+                                                        {
+                                                            <tr>
+                                                                <td>
+                                                                    <strong>@result.CriteriaTitle</strong>
+                                                                    <br />
+                                                                    <small class="text-muted">
+                                                                        Weight: @result.Weight.ToString("F0")%
+                                                                    </small>
+                                                                </td>
+                                                                <td class="text-center align-middle">
+                                                                    <span class="badge badge-success badge-lg">
+                                                                        @result.Score / @result.MaxScore
+                                                                    </span>
+                                                                </td>
+                                                                <td class="align-middle">
+                                                                    <span>@result.ScoreDescription</span>
+                                                                </td>
+                                                                <td>
+                                                                    <div style="white-space: pre-line;">@result.GeneratedFeedback</div>
+                                                                    @if (!string.IsNullOrEmpty(result.CustomComment))
+                                                                    {
+                                                                        <div class="mt-2 p-2 bg-light rounded border-left border-info" style="border-left-width: 3px !important;">
+                                                                            <strong><i class="fas fa-comment-dots"></i> Lecturer Comment:</strong>
+                                                                            <div class="text-info mt-1">@result.CustomComment</div>
+                                                                        </div>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Overall Feedback -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card overall-feedback-card shadow-sm">
+                                    <div class="card-header bg-gradient-primary text-white">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-comments fa-2x mr-3"></i>
+                                            <div>
+                                                <h4 class="mb-0">Overall Assessment Feedback</h4>
+                                                <small class="opacity-75">Comprehensive evaluation and recommendations</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body feedback-content">
+                                        @if (!string.IsNullOrEmpty(feedback.OverallFeedback))
+                                        {
+                                            <div class="feedback-text">
+                                                @Html.Raw(feedback.OverallFeedback.Replace("\n", "<br />"))
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle mr-2"></i>
+                                                No overall feedback has been generated yet.
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="card-footer bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    Generated: @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")
+                                                </small>
+                                            </div>
+                                            <div class="col-md-6 text-right">
+                                                @if (feedback.Percentage >= 85)
+                                                {
+                                                    <span class="badge badge-success badge-lg">
+                                                        <i class="fas fa-trophy mr-1"></i> Outstanding Performance
+                                                    </span>
+                                                }
+                                                else if (feedback.Percentage >= 70)
+                                                {
+                                                    <span class="badge badge-primary badge-lg">
+                                                        <i class="fas fa-thumbs-up mr-1"></i> Good Performance
+                                                    </span>
+                                                }
+                                                else if (feedback.Percentage >= 50)
+                                                {
+                                                    <span class="badge badge-warning badge-lg">
+                                                        <i class="fas fa-chart-line mr-1"></i> Satisfactory Performance
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-info badge-lg">
+                                                        <i class="fas fa-hand-holding-heart mr-1"></i> Room for Growth
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>  <!-- Close printAllContent div -->
+}  <!-- <-- Add this closing brace to properly close the if block -->
+
+@section Scripts {
+    <script>
+        function navigateToStudent(index) {
+            var url = '@Url.Action("GenerateFeedback", "StudentAssessments")?id=@Model.Assessment.AssessmentId&courseId=@Model.CourseRolesId&role=@Model.Role&studentIndex=' + index;
+            window.location.href = url;
+        }
+
+        function printAllStudents() {
+            // Get the hidden content
+            var printContent = document.getElementById('printAllContent').innerHTML;
+            var originalContent = document.body.innerHTML;
+
+            // Replace body with print content
+            document.body.innerHTML = printContent;
+            
+            // Print
+            window.print();
+            
+            // Restore original content
+            document.body.innerHTML = originalContent;
+            
+            // Reload to restore functionality
+            location.reload();
+        }
+
+        @if (!Model.IsBatchMode)
+        {
+            <text>
+            $(document).ready(function() {
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .no-print {
+        /* Will be hidden during print */
+    }
+    
+    .page-break {
+        page-break-after: always;
+        margin-bottom: 2rem;
+    }
+
+    .score-summary-card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+
+    .score-summary-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .feedback-text {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #2c3e50;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .badge-lg {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
     @@media print {
-        .card-tools {
+        .no-print {
             display: none !important;
         }
 
-        .btn {
-            display: none !important;
+        .page-break {
+            page-break-after: always;
+            page-break-inside: avoid;
+            margin-bottom: 0;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+            page-break-inside: avoid;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            page-break-after: avoid;
+        }
+
+        .card-body {
+            page-break-before: avoid;
+        }
+
+        .task-detail-card {
+            page-break-inside: auto;
+        }
+
+        .task-detail-card table {
+            page-break-inside: auto;
+        }
+
+        .task-detail-card tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        body {
+            margin: 1cm;
+            font-size: 11pt;
+        }
+
+        h1 { font-size: 20pt; }
+        h2 { font-size: 18pt; }
+        h3 { font-size: 16pt; }
+        h4 { font-size: 14pt; }
+        h5 { font-size: 12pt; }
+
+        /* Ensure colored backgrounds print */
+        .bg-primary,
+        .bg-success,
+        .bg-warning,
+        .bg-danger,
+        .bg-info,
+        .bg-light,
+        .bg-gradient-primary,
+        .score-summary-card .card-header,
+        .text-success,
+        .text-primary,
+        .text-warning,
+        .text-danger,
+        .text-info,
+        .badge {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Optimize table printing */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+        }
+
+        /* Keep progress bars visible */
+        .progress {
+            border: 1px solid #dee2e6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .progress-bar {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     }
 </style>

@@ -2,48 +2,139 @@
     ViewData["Title"] = "ML Model Management";
 }
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-brain"></i> Machine Learning Model Management
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Feedback Generation Model</h5>
-                        <p>Status: <span class="badge badge-success">Active</span></p>
-                        <button class="btn btn-primary" onclick="trainModel('feedback')">
-                            <i class="fas fa-play"></i> Train Feedback Model
-                        </button>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Sentiment Analysis Model</h5>
-                        <p>Status: <span class="badge badge-success">Active</span></p>
-                        <button class="btn btn-primary" onclick="trainModel('sentiment')">
-                            <i class="fas fa-play"></i> Train Sentiment Model
-                        </button>
-                    </div>
-                </div>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-brain"></i> Machine Learning Model Management</h1>
             </div>
         </div>
     </div>
 </div>
 
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title">
+                            <i class="fas fa-comments"></i> Feedback Generation Model
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p>This model generates personalized feedback based on rubric criteria and scores.</p>
+                        <div id="feedbackModelStatus">
+                            <p><strong>Status:</strong> <span class="badge badge-info">Checking...</span></p>
+                        </div>
+                        <button id="trainFeedbackBtn" class="btn btn-primary" onclick="trainModels()">
+                            <i class="fas fa-play"></i> Train Both Models
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success">
+                        <h3 class="card-title">
+                            <i class="fas fa-smile"></i> Sentiment Analysis Model
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p>This model ensures feedback maintains a constructive and positive tone.</p>
+                        <div id="sentimentModelStatus">
+                            <p><strong>Status:</strong> <span class="badge badge-info">Checking...</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle"></i> Training Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <h5>How Training Works:</h5>
+                        <ol>
+                            <li><strong>Data Collection:</strong> The system collects historical feedback from your database (student scores and custom comments).</li>
+                            <li><strong>Model Training:</strong> ML.NET algorithms analyze patterns in your feedback to learn your teaching style.</li>
+                            <li><strong>Automatic Application:</strong> Once trained, models automatically generate context-aware feedback.</li>
+                            <li><strong>Fallback System:</strong> If models aren't available, the system uses rule-based generation.</li>
+                        </ol>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> The more assessments you complete with custom comments, the better the ML models become at matching your feedback style.
+                        </div>
+                        
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong> Training may take 1-2 minutes. The models will be saved and loaded automatically.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="trainingProgress" class="row mt-3" style="display: none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5><i class="fas fa-spinner fa-spin"></i> Training in Progress...</h5>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <p class="mt-2 text-muted">This may take a moment. Please don't close this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 @section Scripts {
     <script>
-        function trainModel(type) {
+        $(document).ready(function() {
+            checkModelStatus();
+        });
+
+        function checkModelStatus() {
+            // Check if model files exist (optional - you can create an endpoint for this)
+            $('#feedbackModelStatus').html('<p><strong>Status:</strong> <span class="badge badge-success">Ready to Train</span></p>');
+            $('#sentimentModelStatus').html('<p><strong>Status:</strong> <span class="badge badge-success">Ready to Train</span></p>');
+        }
+
+        function trainModels() {
+            if (!confirm('This will train both ML models using your historical assessment data. Continue?')) {
+                return;
+            }
+
+            $('#trainFeedbackBtn').prop('disabled', true);
+            $('#trainingProgress').show();
+
             $.ajax({
-                url: '@Url.Action("TrainMLModel", "StudentAssessments")',
+                url: '@Url.Action("TrainMLModels", "StudentAssessments")',
                 type: 'POST',
-                data: { modelType: type, __RequestVerificationToken: $('[name="__RequestVerificationToken"]').val() },
-                success: function(response) {
-                    toastr.success('Model training initiated successfully');
+                data: {
+                    __RequestVerificationToken: $('[name="__RequestVerificationToken"]').val()
                 },
-                error: function() {
-                    toastr.error('Failed to initiate model training');
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        $('#feedbackModelStatus').html('<p><strong>Status:</strong> <span class="badge badge-success">Trained Successfully</span></p>');
+                        $('#sentimentModelStatus').html('<p><strong>Status:</strong> <span class="badge badge-success">Trained Successfully</span></p>');
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    toastr.error('Failed to train models: ' + error);
+                },
+                complete: function() {
+                    $('#trainFeedbackBtn').prop('disabled', false);
+                    $('#trainingProgress').hide();
                 }
             });
         }

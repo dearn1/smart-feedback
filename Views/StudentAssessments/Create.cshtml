@@ -1,6 +1,7 @@
 ﻿@model smart_feedback.Models.Assessment
 @{
     ViewData["Title"] = "Create Assessment";
+    var availableRubrics = (List<smart_feedback.Models.Rubrics>)ViewBag.AvailableRubrics;
 }
 
 <div class="row">
@@ -10,40 +11,56 @@
                 <h3 class="card-title">Create New Assessment</h3>
             </div>
             <div class="card-body">
-                <form asp-action="Create" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    
-                    <input type="hidden" asp-for="CourseCode" value="@ViewBag.CourseCode" />
-                    <input type="hidden" asp-for="TermName" value="@ViewBag.TermName" />
-                    
-                    <div class="form-group">
-                        <label asp-for="AssessmentName" class="control-label">Assessment Name</label>
-                        <input asp-for="AssessmentName" class="form-control" placeholder="Enter assessment name" />
-                        <span asp-validation-for="AssessmentName" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label asp-for="RubricsId" class="control-label">Select Rubric</label>
-                        <select asp-for="RubricsId" class="form-control">
-                            <option value="">-- Select a Rubric --</option>
-                            @foreach (var rubric in (List<smart_feedback.Models.Rubrics>)ViewBag.AvailableRubrics)
-                            {
-                                <option value="@rubric.RubricsId">@rubric.RubricName (@rubric.TotalMarks marks)</option>
-                            }
-                        </select>
-                        <span asp-validation-for="RubricsId" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Create Assessment
-                        </button>
+                @if (availableRubrics.Count == 0)
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>No Available Rubrics</strong>
+                        <p>All rubrics for this course already have assessments. Please create a new rubric first or delete an existing assessment.</p>
                         <a asp-action="Index" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role" 
                            class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Cancel
+                            <i class="fas fa-arrow-left"></i> Back to Assessments
                         </a>
                     </div>
-                </form>
+                }
+                else
+                {
+                    <form asp-action="Create" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="CourseCode" value="@ViewBag.CourseCode" />
+                        <input type="hidden" asp-for="TermName" value="@ViewBag.TermName" />
+                        
+                        <div class="form-group">
+                            <label asp-for="AssessmentName" class="control-label">Assessment Name</label>
+                            <input asp-for="AssessmentName" id="assessmentName" class="form-control" placeholder="Enter assessment name" />
+                            <span asp-validation-for="AssessmentName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label asp-for="RubricsId" class="control-label">Select Rubric</label>
+                            <select asp-for="RubricsId" id="rubricSelect" class="form-control">
+                                <option value="">-- Select a Rubric --</option>
+                                @foreach (var rubric in availableRubrics)
+                                {
+                                    <option value="@rubric.RubricsId" data-rubric-name="@rubric.RubricName">@rubric.RubricName (@rubric.TotalMarks marks)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="RubricsId" class="text-danger"></span>
+                            <small class="form-text text-muted">Only rubrics without existing assessments are shown.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Assessment
+                            </button>
+                            <a asp-action="Index" asp-route-courseId="@ViewBag.CourseId" asp-route-role="@ViewBag.Role" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                }
             </div>
         </div>
     </div>
@@ -55,7 +72,13 @@
             <div class="card-body">
                 <p><strong>Course Code:</strong> @ViewBag.CourseCode</p>
                 <p><strong>Term:</strong> @ViewBag.TermName</p>
-                <p><strong>Available Rubrics:</strong> @((List<smart_feedback.Models.Rubrics>)ViewBag.AvailableRubrics).Count</p>
+                <p><strong>Available Rubrics:</strong> @availableRubrics.Count</p>
+                @if (availableRubrics.Count == 0)
+                {
+                    <div class="alert alert-info mt-3">
+                        <small><i class="fas fa-info-circle"></i> All rubrics are already assigned to assessments.</small>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -63,4 +86,30 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.getElementById('rubricSelect')?.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const rubricName = selectedOption.getAttribute('data-rubric-name');
+            const assessmentNameInput = document.getElementById('assessmentName');
+            
+            if (rubricName) {
+                // Remove spaces from rubric name
+                const rubricNameNoSpaces = rubricName.replace(/\s+/g, '');
+                
+                // Get course code and term name
+                const courseCode = '@ViewBag.CourseCode';
+                const termName = '@ViewBag.TermName';
+                
+                // Replace commas with underscores in term name
+                const termNameFormatted = termName.replace(/,/g, '_');
+                
+                // Create assessment name: rubricName + courseCode + termName
+                const assessmentName = rubricNameNoSpaces + '_' + courseCode + '_' + termNameFormatted;
+                
+                // Set the value
+                assessmentNameInput.value = assessmentName;
+            }
+        });
+    </script>
 }

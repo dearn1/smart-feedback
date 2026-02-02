@@ -8,8 +8,10 @@ using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using smart_feedback.Data;
 using smart_feedback.Models;
+using smart_feedback.Models.Configuration;
 
 namespace smart_feedback.Controllers
 {
@@ -17,29 +19,98 @@ namespace smart_feedback.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<CourseRolesController> _logger;
+        private readonly ApplicationSettings _appSettings;
 
 
-        public CourseRolesController(ApplicationDbContext context, ILogger<CourseRolesController> logger)
+        public CourseRolesController(ApplicationDbContext context, ILogger<CourseRolesController> logger, IOptions<ApplicationSettings> appSettings)
         {
             _context = context;
             _logger = logger;
+            _appSettings = appSettings.Value;
         }
 
         // GET: CourseRoles
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string termName, string programme)
         {
             try
             {
-                var courseRoles = await _context.CourseRoles.ToListAsync();
-                _logger.LogInformation("Successfully retrieved {Count} course roles", courseRoles.Count);
+                _logger.LogInformation("CourseRoles Index called with filters - TermName: {TermName}, Programme: {Programme}, SortOrder: {SortOrder}",
+                    termName, programme, sortOrder);
+
+                // Set up ViewData for sorting links
+                ViewData["CurrentSort"] = sortOrder;
+                ViewData["CourseCodeSortParm"] = string.IsNullOrEmpty(sortOrder) ? "courseCode_desc" : "";
+                ViewData["CourseNameSortParm"] = sortOrder == "courseName" ? "courseName_desc" : "courseName";
+                ViewData["TermNameSortParm"] = sortOrder == "termName" ? "termName_desc" : "termName";
+                ViewData["ProgrammeSortParm"] = sortOrder == "programme" ? "programme_desc" : "programme";
+
+                // Set up ViewData for current filter values
+                ViewData["CurrentTermFilter"] = termName;
+                ViewData["CurrentProgrammeFilter"] = programme;
+
+                // Prepare programme dropdown options
+                ViewBag.ProgrammeOptions = _appSettings.GetProgrammeSelectList(programme);
+
+                // Start with all course roles
+                var courseRolesQuery = _context.CourseRoles.AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(termName))
+                {
+                    courseRolesQuery = courseRolesQuery.Where(cr => cr.TermName.Contains(termName));
+                    _logger.LogDebug("Applied term name filter: {TermName}", termName);
+                }
+
+                if (!string.IsNullOrEmpty(programme))
+                {
+                    courseRolesQuery = courseRolesQuery.Where(cr => cr.Programme.Equals(programme));
+                    _logger.LogDebug("Applied programme filter: {Programme}", programme);
+                }
+
+                // Apply sorting
+                switch (sortOrder)
+                {
+                    case "courseCode_desc":
+                        courseRolesQuery = courseRolesQuery.OrderByDescending(cr => cr.CourseCode);
+                        break;
+                    case "courseName":
+                        courseRolesQuery = courseRolesQuery.OrderBy(cr => cr.CourseName);
+                        break;
+                    case "courseName_desc":
+                        courseRolesQuery = courseRolesQuery.OrderByDescending(cr => cr.CourseName);
+                        break;
+                    case "termName":
+                        courseRolesQuery = courseRolesQuery.OrderBy(cr => cr.TermName);
+                        break;
+                    case "termName_desc":
+                        courseRolesQuery = courseRolesQuery.OrderByDescending(cr => cr.TermName);
+                        break;
+                    case "programme":
+                        courseRolesQuery = courseRolesQuery.OrderBy(cr => cr.Programme);
+                        break;
+                    case "programme_desc":
+                        courseRolesQuery = courseRolesQuery.OrderByDescending(cr => cr.Programme);
+                        break;
+                    default:
+                        courseRolesQuery = courseRolesQuery.OrderBy(cr => cr.CourseCode);
+                        break;
+                }
+
+                var courseRoles = await courseRolesQuery.ToListAsync();
+
+                _logger.LogInformation("Successfully retrieved {Count} course roles (filtered: Term={HasTermFilter}, Programme={HasProgrammeFilter})",
+                    courseRoles.Count, !string.IsNullOrEmpty(termName), !string.IsNullOrEmpty(programme));
+
                 return View(courseRoles);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while retrieving course roles");
+                _logger.LogError(ex, "Error occurred while retrieving course roles with filters - TermName: {TermName}, Programme: {Programme}",
+                    termName, programme);
                 throw;
-            }            
+            }
         }
+
 
         // GET: CourseRoles/Details/5
         public async Task<IActionResult> Details(int? id)

@@ -1,0 +1,7 @@
+Text,IsPositive
+Excellent work! Outstanding performance.,True
+Good job! Nice improvement.,True
+Well done! Keep it up.,True
+Needs improvement. Try harder next time.,False
+Poor performance. Significant issues found.,False
+Satisfactory work with room for growth.,True

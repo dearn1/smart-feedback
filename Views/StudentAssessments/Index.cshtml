@@ -8,10 +8,10 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode (@Model.TermName)
+                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (@Model.TermName)
                 </h3>
                 <div class="card-tools">
-                    @if (Model.Role == "Lecturer")
+                    @if (Model.Role == "Lecturer" || Model.Role == "Admin")
                     {
                         <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
                            class="btn btn-primary btn-sm">
@@ -30,29 +30,107 @@
                                     <th>Assessment Name</th>
                                     <th>Rubric</th>
                                     <th>Total Marks</th>
-                                    <th>Created Date</th>
-                                    <th>Created By</th>
+                                    <th>Marking Progress</th>
+                                    <th>Status</th>
+                                    <th>Lecturer</th>
+                                    <th>Moderator</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var assessment in Model.Assessments)
                                 {
+                                    var markedCount = Model.AssessmentMarkedStudents.ContainsKey(assessment.AssessmentId) 
+                                        ? Model.AssessmentMarkedStudents[assessment.AssessmentId].Count 
+                                        : 0;
+                                    var totalStudents = Model.Students.Count;
+                                    var progressPercentage = Model.AssessmentMarkingProgress.ContainsKey(assessment.AssessmentId) 
+                                        ? Model.AssessmentMarkingProgress[assessment.AssessmentId] 
+                                        : 0;
+                                    var progressColor = progressPercentage == 100 ? "success" : (progressPercentage > 0 ? "warning" : "danger");
+
                                     <tr>
-                                        <td>@assessment.AssessmentName</td>
+                                        <td>
+                                            <strong>@assessment.AssessmentName</strong>
+                                            @if (progressPercentage == 100)
+                                            {
+                                                <span class="badge badge-success ml-2">
+                                                    <i class="fas fa-check-circle"></i> Complete
+                                                </span>
+                                            }
+                                            else if (progressPercentage > 0)
+                                            {
+                                                <span class="badge badge-warning ml-2">
+                                                    <i class="fas fa-clock"></i> In Progress
+                                                </span>
+                                            }
+                                        </td>
                                         <td>@assessment.Rubric?.RubricName</td>
                                         <td>@assessment.Rubric?.TotalMarks</td>
-                                        <td>@assessment.CreatedDate.ToString("dd/MM/yyyy")</td>
-                                        <td>@assessment.CreatedBy</td>
                                         <td>
-                                            <a asp-action="Mark" asp-route-id="@assessment.AssessmentId" 
-                                               asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
-                                               class="btn btn-success btn-sm">
-                                                <i class="fas fa-edit"></i> Mark Students
-                                            </a>
-                                            <a href="#" class="btn btn-info btn-sm">
-                                                <i class="fas fa-chart-bar"></i> View Reports
-                                            </a>
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar progress-bar-striped bg-@progressColor" 
+                                                     role="progressbar" 
+                                                     style="width: @progressPercentage%"
+                                                     aria-valuenow="@progressPercentage" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    @progressPercentage%
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">@markedCount / @totalStudents students marked</small>
+                                        </td>
+                                        <td>@assessment.Status</td>
+                                        <td>@ViewBag.LecturerFullName</td>
+                                        <td>@ViewBag.ModeratorFullName</td>                                        
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                @if (Model.Role == "Lecturer" && (assessment.Status == "Marking" || assessment.Status == "ReMark" || assessment.Status == "FinalReview" || assessment.Status == "Published"))
+                                                {
+                                                    <a asp-action="Mark" asp-route-id="@assessment.AssessmentId" 
+                                                       asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
+                                                       class="btn btn-success btn-sm"
+                                                       title="Mark Students">
+                                                        <i class="fas fa-edit"></i> Mark
+                                                    </a>
+                                                }
+                                                @if (Model.Role == "Moderator" && (assessment.Status == "Moderation" || assessment.Status == "Published"))
+                                                {
+                                                    <a asp-action="Mark" asp-route-id="@assessment.AssessmentId"
+                                                       asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role"
+                                                       class="btn btn-success btn-sm"
+                                                       title="Mark Students">
+                                                        <i class="fas fa-edit"></i> Mark
+                                                    </a>
+                                                }
+                                                <button type="button" class="btn btn-info btn-sm" 
+                                                        data-toggle="modal" 
+                                                        data-target="#studentListModal_@assessment.AssessmentId"
+                                                        title="View Students">
+                                                    <i class="fas fa-users"></i> Students
+                                                </button>
+                                                @if (assessment.Status == "Published" && (Model.Role == "Lecturer" || User.IsInRole("Admin")))
+                                                {
+                                                    <a asp-action="GenerateFeedback" 
+                                                       asp-route-id="@assessment.AssessmentId" 
+                                                       asp-route-courseId="@Model.CourseRolesId" 
+                                                       asp-route-role="@Model.Role" 
+                                                       class="btn btn-secondary btn-sm" 
+                                                       title="View Batch Reports">
+                                                        <i class="fas fa-chart-bar"></i> Batch Reports
+                                                    </a>
+                                                }
+                                                @if (Model.Role == "Lecturer" || User.IsInRole("Admin"))
+                                                {
+                                                    <button type="button" 
+                                                            class="btn btn-danger btn-sm" 
+                                                            data-toggle="modal" 
+                                                            data-target="#deleteModal_@assessment.AssessmentId"
+                                                            title="Delete Assessment">
+                                                        <i class="fas fa-trash-alt"></i> Delete
+                                                    </button>
+                                                }
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -91,7 +169,155 @@
     </div>
 </div>
 
-<div class="row">
+<!-- Student List Modals for Each Assessment -->
+@foreach (var assessment in Model.Assessments)
+{
+    var markedStudentIds = Model.AssessmentMarkedStudents.ContainsKey(assessment.AssessmentId) 
+        ? Model.AssessmentMarkedStudents[assessment.AssessmentId] 
+        : new List<int>();
+
+    <div class="modal fade" id="studentListModal_@assessment.AssessmentId" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users"></i> Student Marking Status - @assessment.AssessmentName
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in Model.Students.OrderBy(s => s.StudentId))
+                                {
+                                    var isMarked = markedStudentIds.Contains(student.Id);
+                                    var rowClass = isMarked ? "table-success" : "";
+                                    var studentIndex = Model.Students.IndexOf(student);
+
+                                    <tr class="@rowClass">
+                                        <td>
+                                            <strong>@student.StudentId</strong>
+                                        </td>
+                                        <td>
+                                            @student.Name
+                                            @if (isMarked)
+                                            {
+                                                <i class="fas fa-check-circle text-success ml-2" title="Marked"></i>
+                                            }
+                                        </td>
+                                        <td>@student.Email</td>
+                                        <td>
+                                            @if (isMarked)
+                                            {
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check"></i> Marked
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-warning">
+                                                    <i class="fas fa-hourglass-half"></i> Not Marked
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="mr-auto">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            <span class="text-success font-weight-bold">Green rows</span> indicate students who have been marked
+                        </small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirmation Modals for Each Assessment -->
+@foreach (var assessment in Model.Assessments)
+{
+    var markedCount = Model.AssessmentMarkedStudents.ContainsKey(assessment.AssessmentId) 
+        ? Model.AssessmentMarkedStudents[assessment.AssessmentId].Count 
+        : 0;
+
+    <div class="modal fade" id="deleteModal_@assessment.AssessmentId" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i> Delete Assessment
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <strong>Warning!</strong> This action cannot be undone.
+                    </div>
+                    <p>Are you sure you want to delete the assessment <strong>"@assessment.AssessmentName"</strong>?</p>
+                    
+                    @if (markedCount > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Important:</strong> This assessment has <strong>@markedCount student(s)</strong> with recorded scores.
+                            All student scores and marking data will be permanently deleted.
+                        </div>
+                    }
+                    
+                    <p class="mb-0">
+                        <strong>This will delete:</strong>
+                    </p>
+                    <ul>
+                        <li>Assessment record</li>
+                        @if (markedCount > 0)
+                        {
+                            <li>All student scores (@markedCount student(s))</li>
+                            <li>All marking comments</li>
+                        }
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <form asp-action="Delete" 
+                          asp-route-id="@assessment.AssessmentId" 
+                          asp-route-courseId="@Model.CourseRolesId" 
+                          asp-route-role="@Model.Role" 
+                          method="post" 
+                          style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Yes, Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row mt-3">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
@@ -103,22 +329,18 @@
                 <p><strong>Total Students:</strong> @Model.Students.Count</p>
                 @if (Model.Students.Any())
                 {
-                    @* <small class="text-muted">
-                        Students: @string.Join(", ", Model.Students.Take(5).Select(s => s.Name))
+                    <ul class="list-unstyled">
+                        @foreach (var student in Model.Students.Take(5))
+                        {
+                            <li>
+                                <small class="text-muted">
+                                    • @student.StudentId - @student.Name
+                                </small>
+                            </li>
+                        }
                         @if (Model.Students.Count > 5)
                         {
-                            <span>... and @(Model.Students.Count - 5) more</span>
-                        }
-                    </small> *@
-
-                    <ul class="list-unstyled">
-                        @foreach (var student in Model.Students.Take(3))
-                        {
-                            <li><small class="text-muted">• @student.StudentId (@student.Name)</small></li>
-                        }
-                        @if (Model.Students.Count > 3)
-                        {
-                            <li><small class="text-muted">... and @(Model.Students.Count - 3) more</small></li>
+                            <li><small class="text-muted">... and @(Model.Students.Count - 5) more</small></li>
                         }
                     </ul>
                 }
@@ -157,3 +379,74 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Tooltip initialization
+            $('[data-toggle="tooltip"]').tooltip();
+            
+            // Confirm deletion with double-check
+            $('form[action*="Delete"]').on('submit', function(e) {
+                var form = $(this);
+                var assessmentName = form.closest('.modal-content').find('strong').first().text();
+                
+                // Optional: Add extra confirmation for assessments with scores
+                if (form.closest('.modal-body').find('.alert-warning').length > 0) {
+                    if (!confirm('This assessment has student scores. Are you absolutely sure you want to delete it?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+            
+            // Show success/error messages with animation
+            @if (TempData["SuccessMessage"] != null)
+            {
+                @:toastr.success('@TempData["SuccessMessage"]');
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                @:toastr.error('@TempData["ErrorMessage"]');
+            }
+        });
+    </script>
+}
+
+<style>
+    .table-success {
+        background-color: #d4edda !important;
+    }
+    
+    .progress {
+        border: 1px solid #dee2e6;
+    }
+    
+    .modal-lg {
+        max-width: 900px;
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+    }
+    
+    .btn-group .btn {
+        margin-right: 2px;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+    
+    /* Delete button specific styling */
+    .btn-danger.btn-sm {
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger.btn-sm:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 5px rgba(220, 53, 69, 0.4);
+    }
+</style>

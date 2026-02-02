@@ -26,9 +26,9 @@ namespace smart_feedback.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<RubricsController> _logger;
 
-        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<HomeController> logger)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<RubricsController> logger)
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
@@ -39,126 +39,230 @@ namespace smart_feedback.Controllers
         [Authorize]
         public async Task<IActionResult> Index(string courseId = null, string role = null)
         {
-            // Get current user
-            var currentUser = await _userManager.GetUserAsync(User);
-            var userId = currentUser?.UserName; // or currentUser?.Id if you want to use ID
+            _logger.LogInformation("Index action called with courseId: {CourseId}, role: {Role}", courseId, role);
 
-            var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
-
-            // Start with all rubrics
-            var rubricsQuery = _context.Rubrics.AsQueryable();
-
-            // Apply filters if parameters are provided
-            if (!string.IsNullOrEmpty(course.CourseCode))
+            try
             {
-                rubricsQuery = rubricsQuery.Where(r => r.CourseCode == course.CourseCode);
-            }
+                // Get current user
+                var currentUser = await _userManager.GetUserAsync(User);
+                var userId = currentUser?.UserName;
 
-            if (!string.IsNullOrEmpty(course.TermName))
-            {
-                rubricsQuery = rubricsQuery.Where(r => r.TermName == course.TermName);
-            }
+                _logger.LogInformation("Current user: {UserId}", userId ?? "Anonymous");
 
-            // Apply user authorization check
-            if (!string.IsNullOrEmpty(role))
-            {
-                // Verify user has the specified role for the course
-                var hasAccess = await _context.CourseRoles
-                    .AnyAsync(cr => cr.CourseCode == course.CourseCode &&
-                                   cr.TermName == course.TermName &&
-                                   ((role == "Lecturer" && cr.RoleLecturer == userId) ||
-                                    (role == "Moderator" && cr.RoleModerator == userId) ||
-                                    (role == "Admin")));
-
-                if (!hasAccess)
+                if (string.IsNullOrEmpty(courseId))
                 {
-                    TempData["ErrorMessage"] = "You don't have permission to access rubrics for this course.";
-                    return RedirectToAction("Index", "Home");
+                    _logger.LogWarning("CourseId is null or empty");
+                    return BadRequest("Course ID is required");
                 }
+
+                if (!int.TryParse(courseId, out int parsedCourseId))
+                {
+                    _logger.LogWarning("Invalid courseId format: {CourseId}", courseId);
+                    return BadRequest("Invalid course ID format");
+                }
+
+                var course = await _context.CourseRoles.FindAsync(parsedCourseId);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course not found for ID: {CourseId}", courseId);
+                    return NotFound("Course not found");
+                }
+
+                _logger.LogDebug("Found course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
+
+                // Start with all rubrics
+                var rubricsQuery = _context.Rubrics.AsQueryable();
+
+                // Apply filters if parameters are provided
+                if (!string.IsNullOrEmpty(course.CourseCode))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.CourseCode == course.CourseCode);
+                    _logger.LogDebug("Filtered by course code: {CourseCode}", course.CourseCode);
+                }
+
+                if (!string.IsNullOrEmpty(course.TermName))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.TermName == course.TermName);
+                    _logger.LogDebug("Filtered by term name: {TermName}", course.TermName);
+                }
+
+                // Apply user authorization check
+                if (!string.IsNullOrEmpty(role))
+                {
+                    _logger.LogDebug("Checking access for role: {Role}, user: {UserId}", role, userId);
+
+                    // Verify user has the specified role for the course
+                    var hasAccess = await _context.CourseRoles
+                        .AnyAsync(cr => cr.CourseCode == course.CourseCode &&
+                                       cr.TermName == course.TermName &&
+                                       ((role == "Lecturer" && cr.RoleLecturer == userId) ||
+                                        (role == "Moderator" && cr.RoleModerator == userId) ||
+                                        (role == "Admin")));
+
+                    if (!hasAccess)
+                    {
+                        _logger.LogWarning("Access denied for user {UserId} with role {Role} for course {CourseCode}", userId, role, course.CourseCode);
+                        TempData["ErrorMessage"] = "You don't have permission to access rubrics for this course.";
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    _logger.LogInformation("Access granted for user {UserId} with role {Role}", userId, role);
+                }
+
+                var rubrics = await rubricsQuery.ToListAsync();
+                _logger.LogInformation("Retrieved {RubricCount} rubrics for course {CourseCode}", rubrics.Count, course.CourseCode);
+
+                // Get full names for lecturer and moderator
+                string lecturerFullName = null;
+                string moderatorFullName = null;
+
+                if (!string.IsNullOrEmpty(course.RoleLecturer))
+                {
+                    var lecturer = await _userManager.FindByNameAsync(course.RoleLecturer);
+                    lecturerFullName = lecturer?.FullName ?? course.RoleLecturer;
+                    _logger.LogDebug("Retrieved lecturer: {LecturerName} for username {Username}", lecturerFullName, course.RoleLecturer);
+                }
+
+                if (!string.IsNullOrEmpty(course.RoleModerator))
+                {
+                    var moderator = await _userManager.FindByNameAsync(course.RoleModerator);
+                    moderatorFullName = moderator?.FullName ?? course.RoleModerator;
+                    _logger.LogDebug("Retrieved moderator: {ModeratorName} for username {Username}", moderatorFullName, course.RoleModerator);
+                }
+
+                // Set ViewBag data for the view to display filtering context
+                ViewBag.FilteredCourseCode = course.CourseCode;
+                ViewBag.FilteredCourseName = course.CourseName;
+                ViewBag.FilteredCourseTerm = course.TermName;
+                ViewBag.CourseId = course.CourseRolesId.ToString();
+                ViewBag.CurrentUserRole = role;
+                ViewBag.LecturerName = lecturerFullName;
+                ViewBag.ModeratorName = moderatorFullName;
+
+                return View(rubrics);
             }
-
-            var rubrics = await rubricsQuery.ToListAsync();
-
-            // Set ViewBag data for the view to display filtering context
-            ViewBag.FilteredCourseCode = course.CourseCode;
-            ViewBag.FilteredCourseName = course.CourseName;
-            ViewBag.FilteredCourseTerm = course.TermName;
-            ViewBag.CourseId = course.CourseRolesId.ToString();
-            ViewBag.CurrentUserRole = role;
-
-            return View(rubrics);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Index action for courseId: {CourseId}, role: {Role}", courseId, role);
+                throw;
+            }
         }
 
         // GET: Rubrics/Details/5
         public async Task<IActionResult> Details(int? id, string? courseid, string? role)
         {
+            _logger.LogInformation("Details action called with id: {RubricId}, courseId: {CourseId}, role: {Role}", id, courseid, role);
+
             if (id == null)
             {
+                _logger.LogWarning("Rubric ID is null in Details action");
                 return NotFound();
             }
 
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-
-            var rubrics = await _context.Rubrics
-                .FirstOrDefaultAsync(m => m.RubricsId == id);
-            if (rubrics == null)
+            try
             {
-                return NotFound();
-            }
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
 
-            // Get the related RubricTasks
-            var rubricTasks = await _context.RubricTask
-                .Where(rt => rt.RubricsId == id)
-                .ToListAsync();
+                var rubrics = await _context.Rubrics
+                    .FirstOrDefaultAsync(m => m.RubricsId == id);
+                if (rubrics == null)
+                {
+                    _logger.LogWarning("Rubric not found for ID: {RubricId}", id);
+                    return NotFound();
+                }
 
-            // Get the related RubricCriteria
-            List<RubricCriteria> rubricCriteria = new List<RubricCriteria>();
-            foreach (RubricTask rt in rubricTasks)
-            {
-                var rubricCriteriaTemp = await _context.RubricCriteria
-                .Where(rct => rct.RubricTaskId == rt.RubricTaskId)
-                .ToListAsync();
-                rubricCriteria.AddRange(rubricCriteriaTemp);
-            }
+                _logger.LogDebug("Found rubric: {RubricName} (ID: {RubricId})", rubrics.RubricName, id);
 
-            //Get the related RubricCriteriaScore
-            List<RubricCriteriaScore> rubricCriteriaScores = new List<RubricCriteriaScore>();
-            foreach (RubricCriteria rc in rubricCriteria)
-            {
-                var rubricCriteriaScoreTemp = await _context.RubricCriteriaScore
-                    .Where(rcst => rcst.RubricCriteriaId == rc.RubricCriteriaId)
+                // Get the related RubricTasks
+                var rubricTasks = await _context.RubricTask
+                    .Where(rt => rt.RubricsId == id)
                     .ToListAsync();
-                rubricCriteriaScores.AddRange(rubricCriteriaScoreTemp);
+
+                _logger.LogDebug("Found {TaskCount} tasks for rubric {RubricId}", rubricTasks.Count, id);
+
+                // Get the related RubricCriteria
+                List<RubricCriteria> rubricCriteria = new List<RubricCriteria>();
+                foreach (RubricTask rt in rubricTasks)
+                {
+                    var rubricCriteriaTemp = await _context.RubricCriteria
+                    .Where(rct => rct.RubricTaskId == rt.RubricTaskId)
+                    .ToListAsync();
+                    rubricCriteria.AddRange(rubricCriteriaTemp);
+                }
+
+                _logger.LogDebug("Found {CriteriaCount} criteria for rubric {RubricId}", rubricCriteria.Count, id);
+
+                //Get the related RubricCriteriaScore
+                List<RubricCriteriaScore> rubricCriteriaScores = new List<RubricCriteriaScore>();
+                foreach (RubricCriteria rc in rubricCriteria)
+                {
+                    var rubricCriteriaScoreTemp = await _context.RubricCriteriaScore
+                        .Where(rcst => rcst.RubricCriteriaId == rc.RubricCriteriaId)
+                        .ToListAsync();
+                    rubricCriteriaScores.AddRange(rubricCriteriaScoreTemp);
+                }
+
+                _logger.LogDebug("Found {ScoreCount} scores for rubric {RubricId}", rubricCriteriaScores.Count, id);
+
+                // Create the ViewModel
+                var viewModel = new RubricDetailsViewModel
+                {
+                    Rubric = rubrics,
+                    RubricTasks = rubricTasks,
+                    RubricCriterias = rubricCriteria,
+                    RubricCriteriaScores = rubricCriteriaScores
+                };
+
+                _logger.LogInformation("Successfully loaded details for rubric {RubricId} with {TaskCount} tasks, {CriteriaCount} criteria, {ScoreCount} scores",
+                    id, rubricTasks.Count, rubricCriteria.Count, rubricCriteriaScores.Count);
+
+                return View(viewModel);
             }
-
-            // Create the ViewModel
-            var viewModel = new RubricDetailsViewModel
+            catch (Exception ex)
             {
-                Rubric = rubrics,
-                RubricTasks = rubricTasks,
-                RubricCriterias = rubricCriteria,
-                RubricCriteriaScores = rubricCriteriaScores
-            };
-
-            return View(viewModel);
+                _logger.LogError(ex, "Error in Details action for rubric ID: {RubricId}", id);
+                throw;
+            }
         }
 
         // GET: Rubrics/Create
         public async Task<IActionResult> Create(string courseid = null, string role = null)
         {
-            var course = await _context.CourseRoles.FindAsync(int.Parse(courseid));
+            _logger.LogInformation("Create GET action called with courseId: {CourseId}, role: {Role}", courseid, role);
 
-            ViewBag.CourseCode = course.CourseCode;
-            ViewBag.CourseName = course.CourseName;
-            ViewBag.CourseTerm = course.TermName;
-            ViewBag.Programme = course.Programme;
-            ViewBag.Institution = course.Institution;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
+            try
+            {
+                if (string.IsNullOrEmpty(courseid) || !int.TryParse(courseid, out int parsedCourseId))
+                {
+                    _logger.LogWarning("Invalid or missing courseId in Create action: {CourseId}", courseid);
+                    return BadRequest("Valid course ID is required");
+                }
 
+                var course = await _context.CourseRoles.FindAsync(parsedCourseId);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course not found for ID: {CourseId}", courseid);
+                    return NotFound("Course not found");
+                }
 
-            return View();
+                _logger.LogDebug("Loading create form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
+
+                ViewBag.CourseCode = course.CourseCode;
+                ViewBag.CourseName = course.CourseName;
+                ViewBag.CourseTerm = course.TermName;
+                ViewBag.Programme = course.Programme;
+                ViewBag.Institution = course.Institution;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Create GET action for courseId: {CourseId}", courseid);
+                throw;
+            }
         }
 
         // POST: Rubrics/Create
@@ -166,61 +270,91 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(string courseId, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName, TermName,TotalMarks,SourceFile")] Rubrics rubrics)
         {
-            // Check if a rubric with the same name already exists for this course and term
-            var existingRubric = await _context.Rubrics
-                .FirstOrDefaultAsync(r => r.RubricName == rubrics.RubricName &&
-                                         r.CourseCode == rubrics.CourseCode &&
-                                         r.TermName == rubrics.TermName);
+            _logger.LogInformation("Create POST action called for rubric: {RubricName}, courseId: {CourseId}", rubrics?.RubricName, courseId);
 
-            if (existingRubric != null)
+            try
             {
-                ModelState.AddModelError("RubricName", "A rubric with this name already exists for this course and term.");
+                // Check if a rubric with the same name already exists for this course and term
+                var existingRubric = await _context.Rubrics
+                    .FirstOrDefaultAsync(r => r.RubricName == rubrics.RubricName &&
+                                             r.CourseCode == rubrics.CourseCode &&
+                                             r.TermName == rubrics.TermName);
 
-                // Re-populate ViewBag data for the view
-                if (!string.IsNullOrEmpty(courseId))
+                if (existingRubric != null)
                 {
-                    var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
-                    if (course != null)
+                    _logger.LogWarning("Attempted to create duplicate rubric: {RubricName} for course {CourseCode} in term {TermName}",
+                        rubrics.RubricName, rubrics.CourseCode, rubrics.TermName);
+
+                    ModelState.AddModelError("RubricName", "A rubric with this name already exists for this course and term.");
+
+                    // Re-populate ViewBag data for the view
+                    if (!string.IsNullOrEmpty(courseId))
                     {
-                        ViewBag.CourseCode = course.CourseCode;
-                        ViewBag.CourseName = course.CourseName;
-                        ViewBag.CourseTerm = course.TermName;
-                        ViewBag.Programme = course.Programme;
-                        ViewBag.Institution = course.Institution;
-                        ViewBag.CourseId = courseId;
-                        ViewBag.CurrentUserRole = role;
+                        var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
+                        if (course != null)
+                        {
+                            ViewBag.CourseCode = course.CourseCode;
+                            ViewBag.CourseName = course.CourseName;
+                            ViewBag.CourseTerm = course.TermName;
+                            ViewBag.Programme = course.Programme;
+                            ViewBag.Institution = course.Institution;
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                        }
                     }
+
+                    return View(rubrics);
                 }
 
-                return View(rubrics);
+                rubrics.TotalMarks = 0; // Set default value for TotalMarks
+                rubrics.SourceFile = ""; // Set default value for SourceFile
+
+                _context.Add(rubrics);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully created rubric: {RubricName} (ID: {RubricId}) for course {CourseCode}",
+                    rubrics.RubricName, rubrics.RubricsId, rubrics.CourseCode);
+
+                return RedirectToAction("Index", "Rubrics", new { courseId, role });
             }
-
-            rubrics.TotalMarks = 0; // Set default value for TotalMarks
-            rubrics.SourceFile = ""; // Set default value for SourceFile
-
-            _context.Add(rubrics);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Index", "Rubrics", new { courseId, role });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating rubric: {RubricName} for courseId: {CourseId}", rubrics?.RubricName, courseId);
+                throw;
+            }
         }
 
         // GET: Rubrics/Edit/5
         public async Task<IActionResult> Edit(int? id, string? courseid = null, string? role = null)
         {
+            _logger.LogInformation("Edit GET action called with id: {RubricId}, courseId: {CourseId}, role: {Role}", id, courseid, role);
+
             if (id == null)
             {
+                _logger.LogWarning("Rubric ID is null in Edit action");
                 return NotFound();
             }
 
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-
-            var rubrics = await _context.Rubrics.FindAsync(id);
-            if (rubrics == null)
+            try
             {
-                return NotFound();
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                var rubrics = await _context.Rubrics.FindAsync(id);
+                if (rubrics == null)
+                {
+                    _logger.LogWarning("Rubric not found for edit: ID {RubricId}", id);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading edit form for rubric: {RubricName} (ID: {RubricId})", rubrics.RubricName, id);
+                return View(rubrics);
             }
-            return View(rubrics);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Edit GET action for rubric ID: {RubricId}", id);
+                throw;
+            }
         }
 
         // POST: Rubrics/Edit/5
@@ -230,8 +364,11 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, string courseid, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName,TermName,TotalMarks,SourceFile")] Rubrics rubrics)
         {
+            _logger.LogInformation("Edit POST action called for rubric ID: {RubricId}", id);
+
             if (id != rubrics.RubricsId)
             {
+                _logger.LogWarning("ID mismatch in Edit POST: URL ID {UrlId} vs Model ID {ModelId}", id, rubrics.RubricsId);
                 return NotFound();
             }
 
@@ -241,11 +378,16 @@ namespace smart_feedback.Controllers
                 {
                     _context.Update(rubrics);
                     await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Successfully updated rubric: {RubricName} (ID: {RubricId})", rubrics.RubricName, id);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogWarning(ex, "Concurrency conflict while updating rubric ID: {RubricId}", id);
+
                     if (!RubricsExists(rubrics.RubricsId))
                     {
+                        _logger.LogWarning("Rubric {RubricId} no longer exists during update", rubrics.RubricsId);
                         return NotFound();
                     }
                     else
@@ -253,30 +395,53 @@ namespace smart_feedback.Controllers
                         throw;
                     }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating rubric ID: {RubricId}", id);
+                    throw;
+                }
                 return RedirectToAction("Index", "Rubrics", new { courseid, role });
             }
+
+            _logger.LogWarning("Model validation failed for rubric edit ID: {RubricId}. Errors: {ValidationErrors}",
+                id, string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+
             return RedirectToAction("Index", "Rubrics", new { courseid, role });
         }
 
         // GET: Rubrics/EditTask/5
         public async Task<IActionResult> EditTask(int? id, int? rubricId, string? courseid = null, string? role = null)
         {
+            _logger.LogInformation("EditTask GET action called with taskId: {TaskId}, rubricId: {RubricId}", id, rubricId);
+
             if (id == null)
             {
+                _logger.LogWarning("Task ID is null in EditTask action");
                 return NotFound();
             }
 
-            var rubricTask = await _context.RubricTask.FindAsync(id);
-            if (rubricTask == null)
+            try
             {
-                return NotFound();
+                var rubricTask = await _context.RubricTask.FindAsync(id);
+                if (rubricTask == null)
+                {
+                    _logger.LogWarning("Task not found for edit: ID {TaskId}", id);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading edit form for task: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                ViewBag.RubricId = rubricId;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                return View(rubricTask);
             }
-
-            ViewBag.RubricId = rubricId;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-
-            return View(rubricTask);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in EditTask GET action for task ID: {TaskId}", id);
+                throw;
+            }
         }
 
         // POST: Rubrics/EditTask/5
@@ -288,22 +453,30 @@ namespace smart_feedback.Controllers
 
         public async Task<IActionResult> EditTask(int id, int rubricId, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
+            _logger.LogInformation("EditTask POST action called for task ID: {TaskId}", id);
+
             if (id != rubricTask.RubricTaskId)
             {
+                _logger.LogWarning("ID mismatch in EditTask POST: URL ID {UrlId} vs Model ID {ModelId}", id, rubricTask.RubricTaskId);
                 return NotFound();
             }
 
-            //if (ModelState.IsValid)
-            //{
             try
             {
                 _context.Update(rubricTask);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated task: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
+                _logger.LogWarning(ex, "Concurrency conflict while updating task ID: {TaskId}", id);
+
                 if (!RubricTaskExists(rubricTask.RubricTaskId))
                 {
+                    _logger.LogWarning("Task {TaskId} no longer exists during update", rubricTask.RubricTaskId);
                     return NotFound();
                 }
                 else
@@ -311,36 +484,55 @@ namespace smart_feedback.Controllers
                     throw;
                 }
             }
-            return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
-            //}
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating task ID: {TaskId}", id);
+                throw;
+            }
         }
 
         // GET: Rubrics/EditCriteria/5
         public async Task<IActionResult> EditCriteria(int? criteriaId, int? rubricId, string? courseid = null, string? role = null)
         {
+            _logger.LogInformation("EditCriteria GET action called with criteriaId: {CriteriaId}, rubricId: {RubricId}", criteriaId, rubricId);
+
             if (criteriaId == null)
             {
+                _logger.LogWarning("Criteria ID is null in EditCriteria action");
                 return NotFound();
             }
 
-            var rubricCriteria = await _context.RubricCriteria.FindAsync(criteriaId);
-            if (rubricCriteria == null)
+            try
             {
-                return NotFound();
+                var rubricCriteria = await _context.RubricCriteria.FindAsync(criteriaId);
+                if (rubricCriteria == null)
+                {
+                    _logger.LogWarning("Criteria not found for edit: ID {CriteriaId}", criteriaId);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading edit form for criteria: {CriterionTitle} (ID: {CriteriaId})", rubricCriteria.CriterionTitle, criteriaId);
+
+                // Get existing scores for this criteria
+                var existingScores = await _context.RubricCriteriaScore
+                    .Where(rcs => rcs.RubricCriteriaId == criteriaId.Value)
+                    .OrderByDescending(rcs => rcs.CriterionScore)
+                    .ToListAsync();
+
+                _logger.LogDebug("Found {ScoreCount} existing scores for criteria {CriteriaId}", existingScores.Count, criteriaId);
+
+                ViewBag.RubricId = rubricId;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+                ViewBag.ExistingScores = existingScores;
+
+                return View(rubricCriteria);
             }
-
-            // Get existing scores for this criteria
-            var existingScores = await _context.RubricCriteriaScore
-                .Where(rcs => rcs.RubricCriteriaId == criteriaId.Value)
-                .OrderByDescending(rcs => rcs.CriterionScore)
-                .ToListAsync();
-
-            ViewBag.RubricId = rubricId;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-            ViewBag.ExistingScores = existingScores;
-
-            return View(rubricCriteria);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in EditCriteria GET action for criteria ID: {CriteriaId}", criteriaId);
+                throw;
+            }
         }
 
         // POST: Rubrics/EditCriteria/5
@@ -348,49 +540,62 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCriteria(int criteriaId, int rubricId, string courseid, string role, [Bind("RubricCriteriaId,RubricTaskId,CriterionTitle,Weight,MaxScore")] RubricCriteria rubricCriteria)
         {
+            _logger.LogInformation("EditCriteria POST action called for criteria ID: {CriteriaId}", criteriaId);
+
             if (criteriaId != rubricCriteria.RubricCriteriaId)
             {
+                _logger.LogWarning("ID mismatch in EditCriteria POST: URL ID {UrlId} vs Model ID {ModelId}", criteriaId, rubricCriteria.RubricCriteriaId);
                 return NotFound();
-            }
-
-            // VALIDATION: Check if total weight exceeds 100% (excluding the current criteria)
-            var existingCriterias = await _context.RubricCriteria
-                .Where(rc => rc.RubricTaskId == rubricCriteria.RubricTaskId && rc.RubricCriteriaId != criteriaId)
-                .ToListAsync();
-
-            var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
-            var newTotalWeight = currentTotalWeight + rubricCriteria.Weight;
-
-            if (newTotalWeight > 100)
-            {
-                ModelState.AddModelError("Weight", $"Updating this weight ({rubricCriteria.Weight}%) would exceed 100%. Current total (excluding this): {currentTotalWeight}%. Maximum allowed: {100 - currentTotalWeight}%");
-
-                // Re-populate ViewBag data for the view
-                ViewBag.RubricId = rubricId;
-                ViewBag.CourseId = courseid;
-                ViewBag.CurrentUserRole = role;
-
-                // Get existing scores for this criteria
-                var existingScores = await _context.RubricCriteriaScore
-                    .Where(rcs => rcs.RubricCriteriaId == criteriaId)
-                    .OrderByDescending(rcs => rcs.CriterionScore)
-                    .ToListAsync();
-
-                ViewBag.ExistingScores = existingScores;
-
-                return View(rubricCriteria);
             }
 
             try
             {
+                // VALIDATION: Check if total weight exceeds 100% (excluding the current criteria)
+                var existingCriterias = await _context.RubricCriteria
+                    .Where(rc => rc.RubricTaskId == rubricCriteria.RubricTaskId && rc.RubricCriteriaId != criteriaId)
+                    .ToListAsync();
+
+                var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
+                var newTotalWeight = currentTotalWeight + rubricCriteria.Weight;
+
+                _logger.LogDebug("Weight validation for criteria {CriteriaId}: current total {CurrentWeight}%, new total would be {NewWeight}%",
+                    criteriaId, currentTotalWeight, newTotalWeight);
+
+                if (newTotalWeight > 100)
+                {
+                    _logger.LogWarning("Weight validation failed for criteria {CriteriaId}: new total {NewWeight}% exceeds 100%",
+                        criteriaId, newTotalWeight);
+
+                    ModelState.AddModelError("Weight", $"Updating this weight ({rubricCriteria.Weight}%) would exceed 100%. Current total (excluding this): {currentTotalWeight}%. Maximum allowed: {100 - currentTotalWeight}%");
+
+                    // Re-populate ViewBag data for the view
+                    ViewBag.RubricId = rubricId;
+                    ViewBag.CourseId = courseid;
+                    ViewBag.CurrentUserRole = role;
+
+                    // Get existing scores for this criteria
+                    var existingScoresView = await _context.RubricCriteriaScore
+                        .Where(rcs => rcs.RubricCriteriaId == criteriaId)
+                        .OrderByDescending(rcs => rcs.CriterionScore)
+                        .ToListAsync();
+
+                    ViewBag.ExistingScores = existingScoresView;
+
+                    return View(rubricCriteria);
+                }
+
                 // Update the criteria
                 _context.Update(rubricCriteria);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated criteria: {CriterionTitle} (ID: {CriteriaId})", rubricCriteria.CriterionTitle, criteriaId);
 
                 // Update the scores
                 var existingScores = await _context.RubricCriteriaScore
                     .Where(rcs => rcs.RubricCriteriaId == criteriaId)
                     .ToListAsync();
+
+                _logger.LogDebug("Updating {ScoreCount} scores for criteria {CriteriaId}", existingScores.Count, criteriaId);
 
                 foreach (var existingScore in existingScores)
                 {
@@ -403,11 +608,17 @@ namespace smart_feedback.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                _logger.LogDebug("Successfully updated scores for criteria {CriteriaId}", criteriaId);
+
+                return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
+                _logger.LogWarning(ex, "Concurrency conflict while updating criteria ID: {CriteriaId}", criteriaId);
+
                 if (!RubricCriteriaExists(rubricCriteria.RubricCriteriaId))
                 {
+                    _logger.LogWarning("Criteria {CriteriaId} no longer exists during update", rubricCriteria.RubricCriteriaId);
                     return NotFound();
                 }
                 else
@@ -415,28 +626,45 @@ namespace smart_feedback.Controllers
                     throw;
                 }
             }
-            return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating criteria ID: {CriteriaId}", criteriaId);
+                throw;
+            }
         }
 
         // GET: Rubrics/Delete/5
         public async Task<IActionResult> Delete(int? id, string courseId, string role)
         {
+            _logger.LogInformation("Delete GET action called with id: {RubricId}, courseId: {CourseId}, role: {Role}", id, courseId, role);
+
             if (id == null)
             {
+                _logger.LogWarning("Rubric ID is null in Delete action");
                 return NotFound();
             }
 
-            ViewBag.CourseId = courseId;
-            ViewBag.CurrentUserRole = role;
-
-            var rubrics = await _context.Rubrics
-                .FirstOrDefaultAsync(m => m.RubricsId == id);
-            if (rubrics == null)
+            try
             {
-                return NotFound();
-            }
+                ViewBag.CourseId = courseId;
+                ViewBag.CurrentUserRole = role;
 
-            return View(rubrics);
+                var rubrics = await _context.Rubrics
+                    .FirstOrDefaultAsync(m => m.RubricsId == id);
+                if (rubrics == null)
+                {
+                    _logger.LogWarning("Rubric not found for delete: ID {RubricId}", id);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading delete confirmation for rubric: {RubricName} (ID: {RubricId})", rubrics.RubricName, id);
+                return View(rubrics);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Delete GET action for rubric ID: {RubricId}", id);
+                throw;
+            }
         }
 
         // POST: Rubrics/Delete/5
@@ -444,123 +672,51 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, string courseId, string role)
         {
-            var rubrics = await _context.Rubrics.FindAsync(id);
-            if (rubrics != null)
+            _logger.LogInformation("Delete POST action called for rubric ID: {RubricId}", id);
+
+            try
             {
-                // Check if rubric is being used in any assessments
-                var assessmentsUsingRubric = await _context.Assessments
-                    .Where(a => a.RubricsId == id)
-                    .ToListAsync();
-
-                if (assessmentsUsingRubric.Any())
+                var rubrics = await _context.Rubrics.FindAsync(id);
+                if (rubrics != null)
                 {
-                    TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it is being used in {assessmentsUsingRubric.Count} assessment(s). Please delete or reassign the assessments first.";
-                    return RedirectToAction("Index", "Rubrics", new { courseId, role });
-                }
+                    _logger.LogDebug("Found rubric to delete: {RubricName} (ID: {RubricId})", rubrics.RubricName, id);
 
-                // Get all tasks for this rubric
-                var rubricTasks = await _context.RubricTask
-                    .Where(rt => rt.RubricsId == id)
-                    .ToListAsync();
+                    // Check if rubric is being used in any assessments
+                    var assessmentsUsingRubric = await _context.Assessments
+                        .Where(a => a.RubricsId == id)
+                        .ToListAsync();
 
-                // Get all criteria for these tasks
-                var taskIds = rubricTasks.Select(rt => rt.RubricTaskId).ToList();
-                var rubricCriterias = await _context.RubricCriteria
-                    .Where(rc => taskIds.Contains(rc.RubricTaskId))
-                    .ToListAsync();
+                    if (assessmentsUsingRubric.Any())
+                    {
+                        _logger.LogWarning("Cannot delete rubric {RubricId} - in use by {AssessmentCount} assessments",
+                            id, assessmentsUsingRubric.Count);
 
-                // Get all scores for these criteria
-                var criteriaIds = rubricCriterias.Select(rc => rc.RubricCriteriaId).ToList();
-                var rubricCriteriaScores = await _context.RubricCriteriaScore
-                    .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
-                    .ToListAsync();
+                        TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it is being used in {assessmentsUsingRubric.Count} assessment(s). Please delete or reassign the assessments first.";
+                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                    }
 
-                // Check if any criteria are being used in student assessments
-                var studentScoresUsingCriteria = await _context.StudentAssessmentScores
-                    .Where(sas => criteriaIds.Contains(sas.RubricCriteriaId))
-                    .ToListAsync();
+                    // Get all tasks for this rubric
+                    var rubricTasks = await _context.RubricTask
+                        .Where(rt => rt.RubricsId == id)
+                        .ToListAsync();
 
-                if (studentScoresUsingCriteria.Any())
-                {
-                    TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
-                    return RedirectToAction("Index", "Rubrics", new { courseId, role });
-                }
+                    _logger.LogDebug("Found {TaskCount} tasks to delete for rubric {RubricId}", rubricTasks.Count, id);
 
-                // Delete in the correct order to maintain referential integrity
+                    // Get all criteria for these tasks
+                    var taskIds = rubricTasks.Select(rt => rt.RubricTaskId).ToList();
+                    var rubricCriterias = await _context.RubricCriteria
+                        .Where(rc => taskIds.Contains(rc.RubricTaskId))
+                        .ToListAsync();
 
-                // 1. Delete rubric criteria scores first
-                if (rubricCriteriaScores.Any())
-                {
-                    _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
-                }
+                    _logger.LogDebug("Found {CriteriaCount} criteria to delete for rubric {RubricId}", rubricCriterias.Count, id);
 
-                // 2. Delete rubric criteria
-                if (rubricCriterias.Any())
-                {
-                    _context.RubricCriteria.RemoveRange(rubricCriterias);
-                }
-
-                // 3. Delete rubric tasks
-                if (rubricTasks.Any())
-                {
-                    _context.RubricTask.RemoveRange(rubricTasks);
-                }
-
-                // 4. Finally delete the rubric itself
-                _context.Rubrics.Remove(rubrics);
-
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Rubric '{rubrics.RubricName}' and all its related data have been successfully deleted.";
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Rubric not found.";
-            }
-
-            return RedirectToAction("Index", "Rubrics", new { courseId, role });
-        }
-
-        // GET: Rubrics/DeleteTask/5
-        public async Task<IActionResult> DeleteTask(int? id, int? rubricId, string? courseid, string? role)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var rubricTask = await _context.RubricTask
-                .FirstOrDefaultAsync(m => m.RubricTaskId == id);
-            if (rubricTask == null)
-            {
-                return NotFound();
-            }
-
-            // Pass the rubricId to the view
-            ViewBag.RubricId = rubricId;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-
-            return View(rubricTask);
-        }
-
-        // POST: Rubrics/DeleteTask/5
-        [HttpPost, ActionName("DeleteTask")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteTaskConfirmed(int id, int rubricId, string courseid, string role)
-        {
-            var rubricTask = await _context.RubricTask.FindAsync(id);
-            if (rubricTask != null)
-            {
-                // Get all criteria for this task
-                var rubricCriterias = await _context.RubricCriteria
-                    .Where(rc => rc.RubricTaskId == id)
-                    .ToListAsync();
-
-                if (rubricCriterias.Any())
-                {
-                    // Get all criteria IDs for this task
+                    // Get all scores for these criteria
                     var criteriaIds = rubricCriterias.Select(rc => rc.RubricCriteriaId).ToList();
+                    var rubricCriteriaScores = await _context.RubricCriteriaScore
+                        .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
+                        .ToListAsync();
+
+                    _logger.LogDebug("Found {ScoreCount} scores to delete for rubric {RubricId}", rubricCriteriaScores.Count, id);
 
                     // Check if any criteria are being used in student assessments
                     var studentScoresUsingCriteria = await _context.StudentAssessmentScores
@@ -569,63 +725,222 @@ namespace smart_feedback.Controllers
 
                     if (studentScoresUsingCriteria.Any())
                     {
-                        TempData["ErrorMessage"] = $"Cannot delete task '{rubricTask.TaskTitle}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
-                        return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                        _logger.LogWarning("Cannot delete rubric {RubricId} - criteria in use by {StudentScoreCount} student assessments",
+                            id, studentScoresUsingCriteria.Count);
+
+                        TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
+                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
                     }
 
-                    // Get all scores for these criteria
-                    var rubricCriteriaScores = await _context.RubricCriteriaScore
-                        .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
-                        .ToListAsync();
-
                     // Delete in the correct order to maintain referential integrity
+                    _logger.LogInformation("Starting cascade delete for rubric {RubricId}: {ScoreCount} scores, {CriteriaCount} criteria, {TaskCount} tasks",
+                        id, rubricCriteriaScores.Count, rubricCriterias.Count, rubricTasks.Count);
 
                     // 1. Delete rubric criteria scores first
                     if (rubricCriteriaScores.Any())
                     {
                         _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                        _logger.LogDebug("Marked {ScoreCount} scores for deletion", rubricCriteriaScores.Count);
                     }
 
                     // 2. Delete rubric criteria
-                    _context.RubricCriteria.RemoveRange(rubricCriterias);
+                    if (rubricCriterias.Any())
+                    {
+                        _context.RubricCriteria.RemoveRange(rubricCriterias);
+                        _logger.LogDebug("Marked {CriteriaCount} criteria for deletion", rubricCriterias.Count);
+                    }
+
+                    // 3. Delete rubric tasks
+                    if (rubricTasks.Any())
+                    {
+                        _context.RubricTask.RemoveRange(rubricTasks);
+                        _logger.LogDebug("Marked {TaskCount} tasks for deletion", rubricTasks.Count);
+                    }
+
+                    // 4. Finally delete the rubric itself
+                    _context.Rubrics.Remove(rubrics);
+                    _logger.LogDebug("Marked rubric {RubricId} for deletion", id);
+
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Successfully deleted rubric {RubricName} (ID: {RubricId}) and all related data",
+                        rubrics.RubricName, id);
+
+                    TempData["SuccessMessage"] = $"Rubric '{rubrics.RubricName}' and all its related data have been successfully deleted.";
+                }
+                else
+                {
+                    _logger.LogWarning("Attempted to delete non-existent rubric ID: {RubricId}", id);
+                    TempData["ErrorMessage"] = "Rubric not found.";
                 }
 
-                // 3. Finally delete the task itself
-                _context.RubricTask.Remove(rubricTask);
-
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Task '{rubricTask.TaskTitle}' and all its related criteria and scores have been successfully deleted.";
+                return RedirectToAction("Index", "Rubrics", new { courseId, role });
             }
-            else
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Task not found.";
+                _logger.LogError(ex, "Error deleting rubric ID: {RubricId}", id);
+                throw;
+            }
+        }
+
+        // GET: Rubrics/DeleteTask/5
+        public async Task<IActionResult> DeleteTask(int? id, int? rubricId, string? courseid, string? role)
+        {
+            _logger.LogInformation("DeleteTask GET action called with taskId: {TaskId}, rubricId: {RubricId}", id, rubricId);
+
+            if (id == null)
+            {
+                _logger.LogWarning("Task ID is null in DeleteTask action");
+                return NotFound();
             }
 
-            return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+            try
+            {
+                var rubricTask = await _context.RubricTask
+                    .FirstOrDefaultAsync(m => m.RubricTaskId == id);
+                if (rubricTask == null)
+                {
+                    _logger.LogWarning("Task not found for delete: ID {TaskId}", id);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading delete confirmation for task: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                // Pass the rubricId to the view
+                ViewBag.RubricId = rubricId;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                return View(rubricTask);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DeleteTask GET action for task ID: {TaskId}", id);
+                throw;
+            }
+        }
+
+        // POST: Rubrics/DeleteTask/5
+        [HttpPost, ActionName("DeleteTask")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteTaskConfirmed(int id, int rubricId, string courseid, string role)
+        {
+            _logger.LogInformation("DeleteTask POST action called for task ID: {TaskId}", id);
+
+            try
+            {
+                var rubricTask = await _context.RubricTask.FindAsync(id);
+                if (rubricTask != null)
+                {
+                    _logger.LogDebug("Found task to delete: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                    // Get all criteria for this task
+                    var rubricCriterias = await _context.RubricCriteria
+                        .Where(rc => rc.RubricTaskId == id)
+                        .ToListAsync();
+
+                    _logger.LogDebug("Found {CriteriaCount} criteria to delete for task {TaskId}", rubricCriterias.Count, id);
+
+                    if (rubricCriterias.Any())
+                    {
+                        // Get all criteria IDs for this task
+                        var criteriaIds = rubricCriterias.Select(rc => rc.RubricCriteriaId).ToList();
+
+                        // Check if any criteria are being used in student assessments
+                        var studentScoresUsingCriteria = await _context.StudentAssessmentScores
+                            .Where(sas => criteriaIds.Contains(sas.RubricCriteriaId))
+                            .ToListAsync();
+
+                        if (studentScoresUsingCriteria.Any())
+                        {
+                            _logger.LogWarning("Cannot delete task {TaskId} - criteria in use by {StudentScoreCount} student assessments",
+                                id, studentScoresUsingCriteria.Count);
+
+                            TempData["ErrorMessage"] = $"Cannot delete task '{rubricTask.TaskTitle}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
+                            return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                        }
+
+                        // Get all scores for these criteria
+                        var rubricCriteriaScores = await _context.RubricCriteriaScore
+                            .Where(rcs => criteriaIds.Contains(rcs.RubricCriteriaId))
+                            .ToListAsync();
+
+                        _logger.LogDebug("Found {ScoreCount} scores to delete for task {TaskId}", rubricCriteriaScores.Count, id);
+
+                        // Delete in the correct order to maintain referential integrity
+                        _logger.LogInformation("Starting cascade delete for task {TaskId}: {ScoreCount} scores, {CriteriaCount} criteria",
+                            id, rubricCriteriaScores.Count, rubricCriterias.Count);
+
+                        // 1. Delete rubric criteria scores first
+                        if (rubricCriteriaScores.Any())
+                        {
+                            _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                        }
+
+                        // 2. Delete rubric criteria
+                        _context.RubricCriteria.RemoveRange(rubricCriterias);
+                    }
+
+                    // 3. Finally delete the task itself
+                    _context.RubricTask.Remove(rubricTask);
+
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Successfully deleted task {TaskTitle} (ID: {TaskId}) and all related data",
+                        rubricTask.TaskTitle, id);
+
+                    TempData["SuccessMessage"] = $"Task '{rubricTask.TaskTitle}' and all its related criteria and scores have been successfully deleted.";
+                }
+                else
+                {
+                    _logger.LogWarning("Attempted to delete non-existent task ID: {TaskId}", id);
+                    TempData["ErrorMessage"] = "Task not found.";
+                }
+
+                return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting task ID: {TaskId}", id);
+                throw;
+            }
         }
 
         // GET: Rubrics/DeleteCriteria/5
         public async Task<IActionResult> DeleteCriteria(int? criteriaId, int? rubricId, string? courseid = null, string? role = null)
         {
+            _logger.LogInformation("DeleteCriteria GET action called with criteriaId: {CriteriaId}, rubricId: {RubricId}", criteriaId, rubricId);
+
             if (criteriaId == null)
             {
+                _logger.LogWarning("Criteria ID is null in DeleteCriteria action");
                 return NotFound();
             }
 
-            var rubrics = await _context.RubricCriteria
-                .FirstOrDefaultAsync(m => m.RubricCriteriaId == criteriaId);
-            if (rubrics == null)
+            try
             {
-                return NotFound();
+                var rubrics = await _context.RubricCriteria
+                    .FirstOrDefaultAsync(m => m.RubricCriteriaId == criteriaId);
+                if (rubrics == null)
+                {
+                    _logger.LogWarning("Criteria not found for delete: ID {CriteriaId}", criteriaId);
+                    return NotFound();
+                }
+
+                _logger.LogDebug("Loading delete confirmation for criteria: {CriterionTitle} (ID: {CriteriaId})", rubrics.CriterionTitle, criteriaId);
+
+                // Pass the rubricId to the view
+                ViewBag.RubricId = rubricId;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                return View(rubrics);
             }
-
-            // Pass the rubricId to the view
-            ViewBag.RubricId = rubricId;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-
-            return View(rubrics);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DeleteCriteria GET action for criteria ID: {CriteriaId}", criteriaId);
+                throw;
+            }
         }
 
         // POST: Rubrics/DeleteCriteria/5
@@ -633,46 +948,71 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCriteriaConfirmed(int criteriaId, int rubricId, string courseid, string role)
         {
-            var rubricCriteria = await _context.RubricCriteria.FindAsync(criteriaId);
-            if (rubricCriteria != null)
-            {
-                // Check if this criteria is being used in student assessments
-                var studentScoresUsingCriteria = await _context.StudentAssessmentScores
-                    .Where(sas => sas.RubricCriteriaId == criteriaId)
-                    .ToListAsync();
+            _logger.LogInformation("DeleteCriteria POST action called for criteria ID: {CriteriaId}", criteriaId);
 
-                if (studentScoresUsingCriteria.Any())
+            try
+            {
+                var rubricCriteria = await _context.RubricCriteria.FindAsync(criteriaId);
+                if (rubricCriteria != null)
                 {
-                    TempData["ErrorMessage"] = $"Cannot delete criteria '{rubricCriteria.CriterionTitle}' because it is being used in student assessments. Please delete the related assessments first.";
-                    return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                    _logger.LogDebug("Found criteria to delete: {CriterionTitle} (ID: {CriteriaId})", rubricCriteria.CriterionTitle, criteriaId);
+
+                    // Check if this criteria is being used in student assessments
+                    var studentScoresUsingCriteria = await _context.StudentAssessmentScores
+                        .Where(sas => sas.RubricCriteriaId == criteriaId)
+                        .ToListAsync();
+
+                    if (studentScoresUsingCriteria.Any())
+                    {
+                        _logger.LogWarning("Cannot delete criteria {CriteriaId} - in use by {StudentScoreCount} student assessments",
+                            criteriaId, studentScoresUsingCriteria.Count);
+
+                        TempData["ErrorMessage"] = $"Cannot delete criteria '{rubricCriteria.CriterionTitle}' because it is being used in student assessments. Please delete the related assessments first.";
+                        return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
+                    }
+
+                    // Get all scores for this criteria
+                    var rubricCriteriaScores = await _context.RubricCriteriaScore
+                        .Where(rcs => rcs.RubricCriteriaId == criteriaId)
+                        .ToListAsync();
+
+                    _logger.LogDebug("Found {ScoreCount} scores to delete for criteria {CriteriaId}", rubricCriteriaScores.Count, criteriaId);
+
+                    // Delete in the correct order to maintain referential integrity
+                    _logger.LogInformation("Starting cascade delete for criteria {CriteriaId}: {ScoreCount} scores",
+                        criteriaId, rubricCriteriaScores.Count);
+
+                    // 1. Delete rubric criteria scores first
+                    if (rubricCriteriaScores.Any())
+                    {
+                        _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
+                        _logger.LogDebug("Marked {ScoreCount} scores for deletion", rubricCriteriaScores.Count);
+                    }
+
+                    // 2. Finally delete the criteria itself
+                    _context.RubricCriteria.Remove(rubricCriteria);
+                    _logger.LogDebug("Marked criteria {CriteriaId} for deletion", criteriaId);
+
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Successfully deleted criteria {CriterionTitle} (ID: {CriteriaId}) and all related scores",
+                        rubricCriteria.CriterionTitle, criteriaId);
+
+                    TempData["SuccessMessage"] = $"Criteria '{rubricCriteria.CriterionTitle}' and all its related scores have been successfully deleted.";
+                }
+                else
+                {
+                    _logger.LogWarning("Attempted to delete non-existent criteria ID: {CriteriaId}", criteriaId);
+                    TempData["ErrorMessage"] = "Criteria not found.";
                 }
 
-                // Get all scores for this criteria
-                var rubricCriteriaScores = await _context.RubricCriteriaScore
-                    .Where(rcs => rcs.RubricCriteriaId == criteriaId)
-                    .ToListAsync();
-
-                // Delete in the correct order to maintain referential integrity
-
-                // 1. Delete rubric criteria scores first
-                if (rubricCriteriaScores.Any())
-                {
-                    _context.RubricCriteriaScore.RemoveRange(rubricCriteriaScores);
-                }
-
-                // 2. Finally delete the criteria itself
-                _context.RubricCriteria.Remove(rubricCriteria);
-
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Criteria '{rubricCriteria.CriterionTitle}' and all its related scores have been successfully deleted.";
+                return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
             }
-            else
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Criteria not found.";
+                _logger.LogError(ex, "Error deleting criteria ID: {CriteriaId}", criteriaId);
+                throw;
             }
-
-            return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
         }
 
         private bool RubricsExists(int id)
@@ -693,10 +1033,28 @@ namespace smart_feedback.Controllers
         // GET: Rubrics/Task/CreateTask
         public async Task<IActionResult> CreateTask(int? id, string? courseid = null, string? role = null)
         {
-            ViewBag.RubricId = id;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
-            return View();
+            _logger.LogInformation("CreateTask GET action called with rubricId: {RubricId}, courseId: {CourseId}, role: {Role}", id, courseid, role);
+
+            try
+            {
+                if (id == null)
+                {
+                    _logger.LogWarning("Rubric ID is null in CreateTask action");
+                    return BadRequest("Rubric ID is required");
+                }
+
+                _logger.LogDebug("Loading create task form for rubric {RubricId}", id);
+
+                ViewBag.RubricId = id;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CreateTask GET action for rubric ID: {RubricId}", id);
+                throw;
+            }
         }
 
         [HttpPost]
@@ -705,65 +1063,101 @@ namespace smart_feedback.Controllers
 
         public async Task<IActionResult> CreateTask(int id, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
-            rubricTask.RubricsId = id;
-            _context.Add(rubricTask);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Rubrics", new { id, courseid, role });
+            _logger.LogInformation("CreateTask POST action called for rubric ID: {RubricId}, task: {TaskTitle}", id, rubricTask?.TaskTitle);
+
+            try
+            {
+                rubricTask.RubricsId = id;
+                _context.Add(rubricTask);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully created task: {TaskTitle} (ID: {TaskId}) for rubric {RubricId}",
+                    rubricTask.TaskTitle, rubricTask.RubricTaskId, id);
+
+                return RedirectToAction("Details", "Rubrics", new { id, courseid, role });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating task: {TaskTitle} for rubric ID: {RubricId}", rubricTask?.TaskTitle, id);
+                throw;
+            }
         }
 
         // GET: Rubrics/CreateTaskCriteria
-        // GET: Rubrics/CreateTaskCriteria
         public async Task<IActionResult> CreateCriteria(int? id, int? rubricsId, string? courseid = null, string? role = null)
         {
-            ViewBag.RubricTaskId = id;
-            ViewBag.RubricId = rubricsId;
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
+            _logger.LogInformation("CreateCriteria GET action called with taskId: {TaskId}, rubricId: {RubricId}", id, rubricsId);
 
-            // Get existing criteria and calculate current total weight
-            if (id.HasValue)
+            try
             {
-                var existingCriterias = await _context.RubricCriteria
-                    .Where(rc => rc.RubricTaskId == id.Value)
-                    .ToListAsync();
-
-                var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
-                var remainingWeight = 100 - currentTotalWeight;
-
-                ViewBag.CurrentTotalWeight = currentTotalWeight;
-                ViewBag.RemainingWeight = remainingWeight;
-
-                var firstExistingCriteria = existingCriterias.OrderBy(rc => rc.RubricCriteriaId).FirstOrDefault();
-
-                if (firstExistingCriteria != null)
+                if (id == null)
                 {
-                    // Get the scores for the first existing criteria
-                    var existingScores = await _context.RubricCriteriaScore
-                        .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteria.RubricCriteriaId)
-                        .OrderByDescending(rcs => rcs.CriterionScore)
+                    _logger.LogWarning("Task ID is null in CreateCriteria action");
+                    return BadRequest("Task ID is required");
+                }
+
+                ViewBag.RubricTaskId = id;
+                ViewBag.RubricId = rubricsId;
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                // Get existing criteria and calculate current total weight
+                if (id.HasValue)
+                {
+                    var existingCriterias = await _context.RubricCriteria
+                        .Where(rc => rc.RubricTaskId == id.Value)
                         .ToListAsync();
 
-                    ViewBag.FirstExistingCriteria = firstExistingCriteria;
-                    ViewBag.ExistingScores = existingScores;
-                    ViewBag.HasExistingCriteria = true;
+                    var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
+                    var remainingWeight = 100 - currentTotalWeight;
+
+                    _logger.LogDebug("Task {TaskId} weight analysis: current total {CurrentWeight}%, remaining {RemainingWeight}%",
+                        id, currentTotalWeight, remainingWeight);
+
+                    ViewBag.CurrentTotalWeight = currentTotalWeight;
+                    ViewBag.RemainingWeight = remainingWeight;
+
+                    var firstExistingCriteria = existingCriterias.OrderBy(rc => rc.RubricCriteriaId).FirstOrDefault();
+
+                    if (firstExistingCriteria != null)
+                    {
+                        // Get the scores for the first existing criteria
+                        var existingScores = await _context.RubricCriteriaScore
+                            .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteria.RubricCriteriaId)
+                            .OrderByDescending(rcs => rcs.CriterionScore)
+                            .ToListAsync();
+
+                        _logger.LogDebug("Found existing criteria template: {CriterionTitle} with {ScoreCount} scores",
+                            firstExistingCriteria.CriterionTitle, existingScores.Count);
+
+                        ViewBag.FirstExistingCriteria = firstExistingCriteria;
+                        ViewBag.ExistingScores = existingScores;
+                        ViewBag.HasExistingCriteria = true;
+                    }
+                    else
+                    {
+                        _logger.LogDebug("No existing criteria found for task {TaskId}", id);
+                        ViewBag.FirstExistingCriteria = null;
+                        ViewBag.ExistingScores = null;
+                        ViewBag.HasExistingCriteria = false;
+                    }
                 }
                 else
                 {
+                    ViewBag.CurrentTotalWeight = 0;
+                    ViewBag.RemainingWeight = 100;
                     ViewBag.FirstExistingCriteria = null;
                     ViewBag.ExistingScores = null;
                     ViewBag.HasExistingCriteria = false;
                 }
-            }
-            else
-            {
-                ViewBag.CurrentTotalWeight = 0;
-                ViewBag.RemainingWeight = 100;
-                ViewBag.FirstExistingCriteria = null;
-                ViewBag.ExistingScores = null;
-                ViewBag.HasExistingCriteria = false;
-            }
 
-            return View(new RubricCriteria());
+                return View(new RubricCriteria());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CreateCriteria GET action for task ID: {TaskId}", id);
+                throw;
+            }
         }
 
 
@@ -772,87 +1166,128 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCriteria(int id, int rubricsId, string courseid, string role, [Bind("RubricCriteriaId,RubricTaskId,CriterionTitle,Weight,MaxScore")] RubricCriteria rubricCriteria)
         {
-            // VALIDATION: Check if total weight exceeds 100%
-            var existingCriterias = await _context.RubricCriteria
-                .Where(rc => rc.RubricTaskId == id)
-                .ToListAsync();
+            _logger.LogInformation("CreateCriteria POST action called for task ID: {TaskId}, criteria: {CriterionTitle}", id, rubricCriteria?.CriterionTitle);
 
-            var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
-            var newTotalWeight = currentTotalWeight + rubricCriteria.Weight;
-
-            if (newTotalWeight > 100)
+            try
             {
-                ModelState.AddModelError("Weight", $"Adding this weight ({rubricCriteria.Weight}%) would exceed 100%. Current total: {currentTotalWeight}%. Maximum allowed: {100 - currentTotalWeight}%");
+                // VALIDATION: Check if total weight exceeds 100%
+                var existingCriterias = await _context.RubricCriteria
+                    .Where(rc => rc.RubricTaskId == id)
+                    .ToListAsync();
 
-                // Re-populate ViewBag data for the view
-                ViewBag.RubricTaskId = id;
-                ViewBag.RubricId = rubricsId;
-                ViewBag.CourseId = courseid;
-                ViewBag.CurrentUserRole = role;
+                var currentTotalWeight = existingCriterias.Sum(rc => rc.Weight);
+                var newTotalWeight = currentTotalWeight + rubricCriteria.Weight;
 
-                // Get existing criteria data again for display
-                var firstExistingCriteria = existingCriterias.OrderBy(rc => rc.RubricCriteriaId).FirstOrDefault();
-                if (firstExistingCriteria != null)
+                _logger.LogDebug("Weight validation for new criteria: current total {CurrentWeight}%, proposed weight {ProposedWeight}%, new total would be {NewWeight}%",
+                    currentTotalWeight, rubricCriteria.Weight, newTotalWeight);
+
+                if (newTotalWeight > 100)
                 {
+                    _logger.LogWarning("Weight validation failed: new total {NewWeight}% would exceed 100%", newTotalWeight);
+
+                    ModelState.AddModelError("Weight", $"Adding this weight ({rubricCriteria.Weight}%) would exceed 100%. Current total: {currentTotalWeight}%. Maximum allowed: {100 - currentTotalWeight}%");
+
+                    // Re-populate ViewBag data for the view
+                    ViewBag.RubricTaskId = id;
+                    ViewBag.RubricId = rubricsId;
+                    ViewBag.CourseId = courseid;
+                    ViewBag.CurrentUserRole = role;
+
+                    // Get existing criteria data again for display
+                    var firstExistingCriteria = existingCriterias.OrderBy(rc => rc.RubricCriteriaId).FirstOrDefault();
+                    if (firstExistingCriteria != null)
+                    {
+                        var existingScores = await _context.RubricCriteriaScore
+                            .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteria.RubricCriteriaId)
+                            .OrderByDescending(rcs => rcs.CriterionScore)
+                            .ToListAsync();
+
+                        ViewBag.FirstExistingCriteria = firstExistingCriteria;
+                        ViewBag.ExistingScores = existingScores;
+                        ViewBag.HasExistingCriteria = true;
+                    }
+                    else
+                    {
+                        ViewBag.FirstExistingCriteria = null;
+                        ViewBag.ExistingScores = null;
+                        ViewBag.HasExistingCriteria = false;
+                    }
+
+                    return View(rubricCriteria);
+                }
+
+                rubricCriteria.RubricTaskId = id;
+                _context.Add(rubricCriteria);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully created criteria: {CriterionTitle} (ID: {CriteriaId}) for task {TaskId}",
+                    rubricCriteria.CriterionTitle, rubricCriteria.RubricCriteriaId, id);
+
+                // Check if there's a first existing criteria in this rubric task
+                var firstExistingCriteriaForScores = await _context.RubricCriteria
+                    .Where(rc => rc.RubricTaskId == id && rc.RubricCriteriaId != rubricCriteria.RubricCriteriaId)
+                    .OrderBy(rc => rc.RubricCriteriaId)
+                    .FirstOrDefaultAsync();
+
+                if (firstExistingCriteriaForScores != null)
+                {
+                    _logger.LogDebug("Using existing criteria template for scores: {CriterionTitle}", firstExistingCriteriaForScores.CriterionTitle);
+
+                    // Get the scores from the first existing criteria
                     var existingScores = await _context.RubricCriteriaScore
-                        .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteria.RubricCriteriaId)
+                        .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteriaForScores.RubricCriteriaId)
                         .OrderByDescending(rcs => rcs.CriterionScore)
                         .ToListAsync();
 
-                    ViewBag.FirstExistingCriteria = firstExistingCriteria;
-                    ViewBag.ExistingScores = existingScores;
-                    ViewBag.HasExistingCriteria = true;
+                    _logger.LogDebug("Found {ExistingScoreCount} existing scores to copy", existingScores.Count);
+
+                    // Assign scores from the first criteria to the new criteria
+                    foreach (var existingScore in existingScores)
+                    {
+                        // Only create scores up to the new criteria's MaxScore
+                        if (existingScore.CriterionScore <= rubricCriteria.MaxScore)
+                        {
+                            var newScore = new RubricCriteriaScore
+                            {
+                                RubricCriteriaId = rubricCriteria.RubricCriteriaId,
+                                CriterionScore = existingScore.CriterionScore,
+                                ScoreTitle = existingScore.ScoreTitle,
+                                ScoreDescription = existingScore.ScoreDescription
+                            };
+                            _context.RubricCriteriaScore.Add(newScore);
+                        }
+                    }
+
+                    // If the new criteria has a higher MaxScore, fill in the remaining scores from form data
+                    var maxExistingScore = existingScores.Max(es => es.CriterionScore);
+                    if (rubricCriteria.MaxScore > maxExistingScore)
+                    {
+                        _logger.LogDebug("Creating additional scores from {StartScore} to {EndScore}", maxExistingScore + 1, rubricCriteria.MaxScore);
+
+                        for (int score = maxExistingScore + 1; score <= rubricCriteria.MaxScore; score++)
+                        {
+                            string scoreTitle = Request.Form["ScoreTitle_" + score];
+                            string scoreDescription = Request.Form["ScoreDescription_" + score];
+                            var rubricCriteriaScore = new RubricCriteriaScore
+                            {
+                                RubricCriteriaId = rubricCriteria.RubricCriteriaId,
+                                CriterionScore = score,
+                                ScoreTitle = scoreTitle,
+                                ScoreDescription = scoreDescription
+                            };
+                            _context.RubricCriteriaScore.Add(rubricCriteriaScore);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    _logger.LogDebug("Successfully saved scores for new criteria {CriteriaId}", rubricCriteria.RubricCriteriaId);
                 }
                 else
                 {
-                    ViewBag.FirstExistingCriteria = null;
-                    ViewBag.ExistingScores = null;
-                    ViewBag.HasExistingCriteria = false;
-                }
+                    _logger.LogDebug("No existing criteria found, creating scores from form data for max score {MaxScore}", rubricCriteria.MaxScore);
 
-                return View(rubricCriteria);
-            }
-
-            rubricCriteria.RubricTaskId = id;
-            _context.Add(rubricCriteria);
-            await _context.SaveChangesAsync();
-
-            // Check if there's a first existing criteria in this rubric task
-            var firstExistingCriteriaForScores = await _context.RubricCriteria
-                .Where(rc => rc.RubricTaskId == id && rc.RubricCriteriaId != rubricCriteria.RubricCriteriaId)
-                .OrderBy(rc => rc.RubricCriteriaId)
-                .FirstOrDefaultAsync();
-
-            if (firstExistingCriteriaForScores != null)
-            {
-                // Get the scores from the first existing criteria
-                var existingScores = await _context.RubricCriteriaScore
-                    .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteriaForScores.RubricCriteriaId)
-                    .OrderByDescending(rcs => rcs.CriterionScore)
-                    .ToListAsync();
-
-                // Assign scores from the first criteria to the new criteria
-                foreach (var existingScore in existingScores)
-                {
-                    // Only create scores up to the new criteria's MaxScore
-                    if (existingScore.CriterionScore <= rubricCriteria.MaxScore)
-                    {
-                        var newScore = new RubricCriteriaScore
-                        {
-                            RubricCriteriaId = rubricCriteria.RubricCriteriaId,
-                            CriterionScore = existingScore.CriterionScore,
-                            ScoreTitle = existingScore.ScoreTitle,
-                            ScoreDescription = existingScore.ScoreDescription
-                        };
-                        _context.RubricCriteriaScore.Add(newScore);
-                    }
-                }
-
-                // If the new criteria has a higher MaxScore, fill in the remaining scores from form data
-                var maxExistingScore = existingScores.Max(es => es.CriterionScore);
-                if (rubricCriteria.MaxScore > maxExistingScore)
-                {
-                    for (int score = maxExistingScore + 1; score <= rubricCriteria.MaxScore; score++)
+                    // No existing criteria, use the form data as before
+                    for (int score = rubricCriteria.MaxScore; score >= 0; score--)
                     {
                         string scoreTitle = Request.Form["ScoreTitle_" + score];
                         string scoreDescription = Request.Form["ScoreDescription_" + score];
@@ -864,42 +1299,56 @@ namespace smart_feedback.Controllers
                             ScoreDescription = scoreDescription
                         };
                         _context.RubricCriteriaScore.Add(rubricCriteriaScore);
+                        await _context.SaveChangesAsync();
                     }
+                    _logger.LogDebug("Successfully created {ScoreCount} new scores for criteria {CriteriaId}",
+                        rubricCriteria.MaxScore + 1, rubricCriteria.RubricCriteriaId);
                 }
 
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Completed criteria creation process for {CriterionTitle} (ID: {CriteriaId})",
+                    rubricCriteria.CriterionTitle, rubricCriteria.RubricCriteriaId);
+
+                return RedirectToAction("Details", "Rubrics", new { id = rubricsId, courseid, role });
             }
-            else
+            catch (Exception ex)
             {
-                // No existing criteria, use the form data as before
-                for (int score = rubricCriteria.MaxScore; score >= 0; score--)
-                {
-                    string scoreTitle = Request.Form["ScoreTitle_" + score];
-                    string scoreDescription = Request.Form["ScoreDescription_" + score];
-                    var rubricCriteriaScore = new RubricCriteriaScore
-                    {
-                        RubricCriteriaId = rubricCriteria.RubricCriteriaId,
-                        CriterionScore = score,
-                        ScoreTitle = scoreTitle,
-                        ScoreDescription = scoreDescription
-                    };
-                    _context.RubricCriteriaScore.Add(rubricCriteriaScore);
-                    await _context.SaveChangesAsync();
-                }
+                _logger.LogError(ex, "Error creating criteria: {CriterionTitle} for task ID: {TaskId}", rubricCriteria?.CriterionTitle, id);
+                throw;
             }
-
-            return RedirectToAction("Details", "Rubrics", new { id = rubricsId, courseid, role });
         }
 
         // GET: UploadRubrics
         public async Task<IActionResult> Upload(string courseid = null, string role = null)
         {
-            var course = await _context.CourseRoles.FindAsync(int.Parse(courseid));
+            _logger.LogInformation("Upload GET action called with courseId: {CourseId}, role: {Role}", courseid, role);
 
-            ViewBag.CourseId = courseid;
-            ViewBag.CurrentUserRole = role;
+            try
+            {
+                if (string.IsNullOrEmpty(courseid) || !int.TryParse(courseid, out int parsedCourseId))
+                {
+                    _logger.LogWarning("Invalid or missing courseId in Upload action: {CourseId}", courseid);
+                    return BadRequest("Valid course ID is required");
+                }
 
-            return View();
+                var course = await _context.CourseRoles.FindAsync(parsedCourseId);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course not found for ID: {CourseId}", courseid);
+                    return NotFound("Course not found");
+                }
+
+                _logger.LogDebug("Loading upload form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
+
+                ViewBag.CourseId = courseid;
+                ViewBag.CurrentUserRole = role;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Upload GET action for courseId: {CourseId}", courseid);
+                throw;
+            }
         }
 
         // POST: UploadRubrics
@@ -907,39 +1356,50 @@ namespace smart_feedback.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(string courseId, string role, IFormFile rubricsFile)
         {
-            if (rubricsFile == null || rubricsFile.Length == 0)
-            {
-                ModelState.AddModelError("rubricsFile", "Please upload your Rubrics File.");
-                return RedirectToAction("Upload", "Rubrics");
-            }
-
-            // Check file extension
-            var extension = Path.GetExtension(rubricsFile.FileName).ToLower();
-            if (extension != ".doc" && extension != ".docx")
-            {
-                ModelState.AddModelError("rubricsFile", "Only Word documents are allowed.");
-                return RedirectToAction("Upload", "Rubrics");
-            }
-
-            // Check file size (limit to 10MB)
-            if (rubricsFile.Length > 10 * 1024 * 1024)
-            {
-                ModelState.AddModelError("rubricsFile", "File size must be less than 10MB.");
-                return RedirectToAction("Upload", "Rubrics");
-            }
+            _logger.LogInformation("Upload POST action called for courseId: {CourseId}, file: {FileName}, size: {FileSize} bytes",
+                courseId, rubricsFile?.FileName, rubricsFile?.Length);
 
             try
-            {                
+            {
+                if (rubricsFile == null || rubricsFile.Length == 0)
+                {
+                    _logger.LogWarning("Upload attempted with null or empty file");
+                    ModelState.AddModelError("rubricsFile", "Please upload your Rubrics File.");
+                    return RedirectToAction("Upload", "Rubrics");
+                }
+
+                // Check file extension
+                var extension = Path.GetExtension(rubricsFile.FileName).ToLower();
+                if (extension != ".doc" && extension != ".docx")
+                {
+                    _logger.LogWarning("Upload attempted with invalid file extension: {Extension}", extension);
+                    ModelState.AddModelError("rubricsFile", "Only Word documents are allowed.");
+                    return RedirectToAction("Upload", "Rubrics");
+                }
+
+                // Check file size (limit to 10MB)
+                if (rubricsFile.Length > 10 * 1024 * 1024)
+                {
+                    _logger.LogWarning("Upload attempted with oversized file: {FileSize} bytes", rubricsFile.Length);
+                    ModelState.AddModelError("rubricsFile", "File size must be less than 10MB.");
+                    return RedirectToAction("Upload", "Rubrics");
+                }
+
+                _logger.LogDebug("File validation passed, processing document: {FileName}", rubricsFile.FileName);
+
                 var rubric = new Rubrics();
                 List<string> rubricsParagraphs = new List<string>();
                 List<RubricTask> rubricTasks = new List<RubricTask>();
                 List<RubricCriteria> rubricCriterias = new List<RubricCriteria>();
                 List<RubricCriteriaScore> rubricCriteriaScores = new List<RubricCriteriaScore>();
+
                 if (extension == ".docx")
                 {
                     using (var stream = rubricsFile.OpenReadStream())
                     {
                         XWPFDocument docx = new XWPFDocument(stream);
+                        _logger.LogDebug("Successfully opened DOCX document with {ParagraphCount} paragraphs and {TableCount} tables",
+                            docx.Paragraphs.Count, docx.Tables.Count);
 
                         // Extract rubrics paragraphs
                         foreach (var para in docx.Paragraphs)
@@ -952,13 +1412,18 @@ namespace smart_feedback.Controllers
                             }
                         }
 
+                        _logger.LogDebug("Extracted {ParagraphCount} paragraphs from document", rubricsParagraphs.Count);
+
                         // Extract rubric criteria from tables
                         int tableIndex = 0;
                         int taskIndex = 0;
                         bool isTableRead = false;
+
                         foreach (var table in docx.Tables)
                         {
                             isTableRead = false;
+                            _logger.LogDebug("Processing table {TableIndex} with {RowCount} rows", tableIndex, table.Rows.Count);
+
                             // Extract rubric criteria from ONLY the first table
                             if (docx.Tables.Count > 0)
                             {
@@ -986,6 +1451,7 @@ namespace smart_feedback.Controllers
                                             if (!string.IsNullOrWhiteSpace(task.TaskTitle))
                                             {
                                                 rubricTasks.Add(task);
+                                                _logger.LogDebug("Added task: {TaskTitle} with {MaxMarks} marks", task.TaskTitle, task.MaxMarks);
                                             }
 
                                             isTableRead = true;
@@ -998,7 +1464,7 @@ namespace smart_feedback.Controllers
                                     var rows = table.Rows;
 
                                     // Extract score headers from the first row (header row)
-                                    var headerRow = rows[0];                                    
+                                    var headerRow = rows[0];
                                     var headerCells = headerRow.GetTableCells();
 
                                     if (headerCells.Count >= 4) // Ensure we have at least 4 columns
@@ -1008,7 +1474,6 @@ namespace smart_feedback.Controllers
                                         string[] scoreHeaders = new string[headerCells.Count];
                                         int maxScore = -1;
 
-                                    
                                         for (int col = 2; col < headerCells.Count; col++)
                                         {
                                             if (GetCellText(checkCells[col]).Trim() == "")
@@ -1022,7 +1487,8 @@ namespace smart_feedback.Controllers
                                             scoreHeaders[col - 2] = scoreHeader;
                                             maxScore++;
                                         }
-                                    
+
+                                        _logger.LogDebug("Extracted {ScoreHeaderCount} score headers for table {TableIndex}", maxScore + 1, tableIndex);
 
                                         // Skip header row (index 0) and process data rows
                                         for (int i = 1; i < rows.Count; i++)
@@ -1038,6 +1504,9 @@ namespace smart_feedback.Controllers
                                                 MaxScore = maxScore
                                             };
                                             rubricCriterias.Add(rubricCriteria);
+
+                                            _logger.LogDebug("Added criteria: {CriterionTitle} with weight {Weight}% and max score {MaxScore}",
+                                                rubricCriteria.CriterionTitle, rubricCriteria.Weight, rubricCriteria.MaxScore);
 
                                             // Extract scores for this criterion
                                             for (int j = 0; j <= maxScore; j++)
@@ -1056,48 +1525,67 @@ namespace smart_feedback.Controllers
                                         }
                                     }
                                 }
+
                                 string fullText = rubricsParagraphs.Count > 1 ? rubricsParagraphs[1] : "";
                                 int firstSpaceIndex = fullText.IndexOf(' ');
 
                                 var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
+                                if (course == null)
+                                {
+                                    _logger.LogWarning("Course not found for ID: {CourseId} during upload", courseId);
+                                    ModelState.AddModelError("", "Course not found");
+                                    ViewBag.CourseId = courseId;
+                                    ViewBag.CurrentUserRole = role;
+                                    return View();
+                                }
 
                                 rubric.Institution = course.Institution;
                                 rubric.Programme = rubricsParagraphs[0];
                                 rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
                                 rubric.CourseName = firstSpaceIndex > 0 ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
                                 rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
-                                rubric.TermName = rubricsParagraphs[3].Replace(" ","");
+                                rubric.TermName = rubricsParagraphs[3].Replace(" ", "");
                                 rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
                                 rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
+
+                                _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Term: {TermName}, Total Marks: {TotalMarks}",
+                                    rubric.RubricName, rubric.CourseCode, rubric.TermName, rubric.TotalMarks);
 
                                 // VALIDATION 1: Check if course information matches current course context
                                 if (!string.IsNullOrEmpty(courseId))
                                 {
-                                    
                                     if (course != null)
                                     {
                                         bool hasValidationError = false;
 
                                         if (!string.Equals(rubric.Programme, course.Programme, StringComparison.OrdinalIgnoreCase))
                                         {
+                                            _logger.LogWarning("Programme mismatch: Document has '{DocumentProgramme}' but expected '{CourseProgramme}'",
+                                                rubric.Programme, course.Programme);
                                             ModelState.AddModelError("", $"Programme mismatch: Document has '{rubric.Programme}' but expected '{course.Programme}'");
                                             hasValidationError = true;
                                         }
 
                                         if (!string.Equals(rubric.CourseCode, course.CourseCode, StringComparison.OrdinalIgnoreCase))
                                         {
+                                            _logger.LogWarning("Course Code mismatch: Document has '{DocumentCourseCode}' but expected '{CourseCourseCode}'",
+                                                rubric.CourseCode, course.CourseCode);
                                             ModelState.AddModelError("", $"Course Code mismatch: Document has '{rubric.CourseCode}' but expected '{course.CourseCode}'");
                                             hasValidationError = true;
                                         }
 
                                         if (!string.Equals(rubric.CourseName, course.CourseName, StringComparison.OrdinalIgnoreCase))
                                         {
+                                            _logger.LogWarning("Course Name mismatch: Document has '{DocumentCourseName}' but expected '{CourseCourseName}'",
+                                                rubric.CourseName, course.CourseName);
                                             ModelState.AddModelError("", $"Course Name mismatch: Document has '{rubric.CourseName}' but expected '{course.CourseName}'");
                                             hasValidationError = true;
                                         }
 
                                         if (!string.Equals(rubric.TermName, course.TermName, StringComparison.OrdinalIgnoreCase))
                                         {
+                                            _logger.LogWarning("Term Name mismatch: Document has '{DocumentTermName}' but expected '{CourseTermName}'",
+                                                rubric.TermName, course.TermName);
                                             ModelState.AddModelError("", $"Term Name mismatch: Document has '{rubric.TermName}' but expected '{course.TermName}'");
                                             hasValidationError = true;
                                         }
@@ -1119,6 +1607,9 @@ namespace smart_feedback.Controllers
 
                                 if (existingRubric != null)
                                 {
+                                    _logger.LogWarning("Duplicate rubric upload attempted: {RubricName} for course {CourseCode} in term {TermName}",
+                                        rubric.RubricName, rubric.CourseCode, rubric.TermName);
+
                                     ModelState.AddModelError("", $"A rubric with the name '{rubric.RubricName}' already exists for course '{rubric.CourseCode}' in term '{rubric.TermName}'");
 
                                     ViewBag.CourseId = courseId;
@@ -1131,12 +1622,15 @@ namespace smart_feedback.Controllers
                                     tableIndex++;
                                 }
                             }
-
                         }
+
+                        _logger.LogInformation("Document processing completed. Extracted: {TaskCount} tasks, {CriteriaCount} criteria, {ScoreCount} scores",
+                            rubricTasks.Count, rubricCriterias.Count, rubricCriteriaScores.Count);
 
                         // Save rubric first to get the RubricsId
                         _context.Add(rubric);
                         await _context.SaveChangesAsync();
+                        _logger.LogDebug("Saved rubric with ID: {RubricId}", rubric.RubricsId);
 
                         // Save rubric tasks with the rubric ID
                         foreach (var task in rubricTasks)
@@ -1145,6 +1639,7 @@ namespace smart_feedback.Controllers
                             _context.RubricTask.Add(task);
                         }
                         await _context.SaveChangesAsync();
+                        _logger.LogDebug("Saved {TaskCount} tasks", rubricTasks.Count);
 
                         // Save rubric criterias with the correct RubricTaskId
                         foreach (var criteria in rubricCriterias)
@@ -1154,6 +1649,7 @@ namespace smart_feedback.Controllers
                             _context.RubricCriteria.Add(criteria);
                         }
                         await _context.SaveChangesAsync();
+                        _logger.LogDebug("Saved {CriteriaCount} criteria", rubricCriterias.Count);
 
                         // Save rubric criteria scores with the correct RubricCriteriaId
                         foreach (var score in rubricCriteriaScores)
@@ -1163,15 +1659,21 @@ namespace smart_feedback.Controllers
                             _context.RubricCriteriaScore.Add(score);
                         }
                         await _context.SaveChangesAsync();
+                        _logger.LogDebug("Saved {ScoreCount} scores", rubricCriteriaScores.Count);
+
+                        _logger.LogInformation("Successfully uploaded and processed rubric: {RubricName} (ID: {RubricId}) with {TaskCount} tasks",
+                            rubric.RubricName, rubric.RubricsId, rubricTasks.Count);
 
                         TempData["SuccessMessage"] = $"Your rubrics has been submitted successfully! {rubricTasks.Count} tasks extracted.";
                     }
                 }
-                return RedirectToAction("Details", "Rubrics", new {id = rubric.RubricsId, courseId, role });
+                return RedirectToAction("Details", "Rubrics", new { id = rubric.RubricsId, courseId, role });
             }
             catch (Exception ex)
-
             {
+                _logger.LogError(ex, "Error occurred during rubric upload for courseId: {CourseId}, filename: {FileName}",
+                    courseId, rubricsFile?.FileName);
+
                 ModelState.AddModelError("", $"An error occurred while uploading your Rubrics: {ex.Message}");
                 ViewBag.CourseId = courseId;
                 ViewBag.CurrentUserRole = role;

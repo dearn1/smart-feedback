@@ -7,6 +7,8 @@
     var courseTerm = ViewBag.FilteredCourseTerm as string;
     var courseId = ViewBag.CourseId as string;
     var userRole = ViewBag.CurrentUserRole as string;
+    var lecturerName = ViewBag.LecturerName as string;
+    var moderatorName = ViewBag.ModeratorName as string;
 }
 
 @if (!string.IsNullOrEmpty(courseCode) || !string.IsNullOrEmpty(courseTerm))
@@ -19,6 +21,14 @@
         @if (!string.IsNullOrEmpty(courseTerm))
         {
             <p><strong>Term:</strong> @courseTerm</p>
+        }
+        @if (!string.IsNullOrEmpty(lecturerName))
+        {
+            <p><strong>Lecturer:</strong> @lecturerName</p>
+        }
+        @if (!string.IsNullOrEmpty(moderatorName))
+        {
+            <p><strong>Moderator:</strong> @moderatorName</p>
         }
         @if (!string.IsNullOrEmpty(userRole))
         {
