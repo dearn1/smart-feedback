@@ -30,6 +30,18 @@
 
                 @if (Model.Role != "Moderator")
                 {
+                    <!-- Upload Excel Button -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#uploadExcelModal">
+                                <i class="fas fa-file-excel"></i> Upload Excel File
+                            </button>
+                            <a asp-action="DownloadTemplate" asp-route-courseId="@Model.CourseRolesId" class="btn btn-outline-success">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <!-- Available Students -->
                         <div class="col-md-6">
@@ -228,6 +240,96 @@
     <input type="hidden" id="bulkStudentIds" name="studentIds" />
 </form>
 
+<!-- Upload Excel Modal -->
+<div class="modal fade" id="uploadExcelModal" tabindex="-1" role="dialog" aria-labelledby="uploadExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="uploadExcelModalLabel">
+                    <i class="fas fa-file-excel"></i> Upload Student List from Excel
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form asp-controller="CourseStudents" asp-action="UploadExcel" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="courseId" value="@Model.CourseRolesId" />
+                    <input type="hidden" name="role" value="@Model.Role" />
+                    
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Upload an Excel file (.xlsx or .xls)</li>
+                            <li><strong>Column A:</strong> Course Code (must match: <span class="badge badge-primary">@Model.CourseCode</span>)</li>
+                            <li><strong>Column B:</strong> Term Name (must match: <span class="badge badge-primary">@Model.TermName</span>)</li>
+                            <li><strong>Column C:</strong> Student ID (required)</li>
+                            <li>Columns D & E are optional (Name and Email for reference)</li>
+                            <li>Download the template for correct format with pre-filled course details</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Validation:</strong><br>
+                        Each row must have the correct Course Code and Term Name. Rows with mismatched values will be rejected.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="excelFile">Select Excel File:</label>
+                        <input type="file" class="form-control-file" id="excelFile" name="excelFile" accept=".xlsx,.xls" required />
+                        <small class="form-text text-muted">Maximum file size: 5MB</small>
+                    </div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-table"></i> Expected Excel Format:</h6>
+                            <table class="table table-sm table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>A</th>
+                                        <th>B</th>
+                                        <th>C</th>
+                                        <th>D</th>
+                                        <th>E</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-secondary">
+                                        <td><small>Course Code</small></td>
+                                        <td><small>Term Name</small></td>
+                                        <td><small>Student ID</small></td>
+                                        <td><small>Name</small></td>
+                                        <td><small>Email</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><small>@Model.CourseCode</small></td>
+                                        <td><small>@Model.TermName</small></td>
+                                        <td><small>S001</small></td>
+                                        <td><small>John Doe</small></td>
+                                        <td><small>john@example.com</small></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-2">
+                        <i class="fas fa-check-circle"></i> Students already enrolled will be skipped automatically.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Upload and Enroll
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // Search functionality for available students
@@ -312,5 +414,9 @@
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
+    }
+
+    .modal-lg {
+        max-width: 800px;
     }
 </style>
