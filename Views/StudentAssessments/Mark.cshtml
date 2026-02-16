@@ -123,7 +123,7 @@
                                             <i class="fas fa-tasks"></i> @task.TaskTitle
                                             <span class="badge badge-light ml-2">@task.MaxMarks marks</span>
                                         </h5>
-                                        <small class="text-white-50">@task.TaskDescription</small>
+                                        <small class="text-white">@task.TaskDescription</small>
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
@@ -198,7 +198,7 @@
 
                                                             <!-- Weight -->
                                                             <td class="text-center align-middle">
-                                                                <span class="badge badge-info">@criteria.Weight%</span>
+                                                                <span class="badge badge-info weighted-score">@criteria.Weight%</span>
                                                             </td>
 
                                                             <!-- Score Radio Buttons - Individual Columns -->
@@ -209,29 +209,27 @@
                                                                 var scoreTitle = Model.CriteriaScores
                                                                 .FirstOrDefault(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId && cs.CriterionScore == i)?.ScoreTitle;
 
-                                                                <td class="text-center align-top">
-                                                                    <input type="radio" class="btn-check score-radio"
-                                                                           name="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)"
-                                                                           id="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)_@i"
-                                                                           value="@i"
-                                                                           checked="@(currentScore > 0 && currentScore == i)"
-                                                                           data-student="@currentStudent.Id"
-                                                                           data-criteria="@criteria.RubricCriteriaId"
-                                                                           data-task="@task.RubricTaskId"
-                                                                           data-weight="@criteria.Weight"
-                                                                           data-max-score="@maxScore"
-                                                                           disabled="@(!canEditScores)">
-                                                                    <label class="btn btn-outline-primary btn-sm w-100 @(!canEditScores ? "disabled" : "")"
-                                                                           for="score_@(currentStudent.Id)_@(criteria.RubricCriteriaId)_@i"
-                                                                           title="@scoreTitle: @scoreDescription">
-                                                                        <i class="fas fa-check"></i>
-                                                                    </label>
-                                                                    @if (!string.IsNullOrEmpty(scoreDescription))
-                                                                    {
-                                                                        <div class="mt-1">
-                                                                            <small class="text-muted">@scoreDescription</small>
+                                                                <td class="text-center align-top score-cell @(currentScore > 0 && currentScore == i ? "score-selected" : "") @(!canEditScores ? "score-disabled" : "")"
+                                                                    data-score="@i"
+                                                                    data-student="@currentStudent.Id"
+                                                                    data-criteria="@criteria.RubricCriteriaId"
+                                                                    data-task="@task.RubricTaskId"
+                                                                    data-weight="@criteria.Weight"
+                                                                    data-max-score="@maxScore"
+                                                                    data-score-title="@scoreTitle"
+                                                                    data-score-description="@scoreDescription"
+                                                                    style="cursor: @(canEditScores ? "pointer" : "not-allowed");">
+                                                                    <div class="score-content">
+                                                                        <div class="score-indicator">
+                                                                            <i class="fas fa-check"></i>
                                                                         </div>
-                                                                    }
+                                                                        @if (!string.IsNullOrEmpty(scoreDescription))
+                                                                        {
+                                                                            <div class="mt-1">
+                                                                                <small class="text-muted">@scoreDescription</small>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
                                                                 </td>
                                                             }
 
@@ -449,27 +447,38 @@
             // Add anti-forgery token for AJAX requests
             $('body').append('<input type="hidden" name="__RequestVerificationToken" value="' + $('[name="__RequestVerificationToken"]').val() + '">');
 
-            // Calculate totals when scores change
-            $('.score-radio').on('change', function() {
-                if (!canEditScores) {
+
+            // Handle score cell clicks
+            $('.score-cell').on('click', function() {
+                if (!canEditScores || $(this).hasClass('score-disabled')) {
                     return false;
                 }
-                var studentId = $(this).data('student');
-                console.log('Score changed for student:', studentId); // Debug log
+
+                var $cell = $(this);
+                var studentId = $cell.data('student');
+                var criteriaId = $cell.data('criteria');
+                var score = $cell.data('score');
+                var rowSelector = '.score-cell[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]';
+
+                // Remove selection from all cells in this row
+                $(rowSelector).removeClass('score-selected');
+
+                // Add selection to clicked cell
+                $cell.addClass('score-selected');
+
+                console.log('Score changed for student:', studentId, 'criteria:', criteriaId, 'score:', score);
+                
                 calculateStudentTotal(studentId);
                 calculateTaskTotals(studentId);
             });
 
-            // Prevent clicking on disabled radio buttons
-            $('.score-radio:disabled').on('click', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // Prevent clicking on disabled labels
-            $('.btn.disabled').on('click', function(e) {
-                e.preventDefault();
-                return false;
+            // Hover effect for enabled cells
+            $('.score-cell:not(.score-disabled)').on('mouseenter', function() {
+                if (canEditScores) {
+                    $(this).addClass('score-hover');
+                }
+            }).on('mouseleave', function() {
+                $(this).removeClass('score-hover');
             });
 
             // Initial calculation on page load
@@ -482,7 +491,6 @@
             // Save scores with validation
             $('#saveScores').on('click', function() {
                 if (canEditScores) {
-                    // Check if all criteria are marked before saving
                     var allMarked = validateAllCriteriaMarked();
                     if (!allMarked) {
                         if (typeof toastr !== 'undefined') {
@@ -552,7 +560,6 @@
                                 } else {
                                     alert('Success: ' + response.message);
                                 }
-                                // Optionally redirect or refresh
                                 setTimeout(function() {
                                     window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
                                 }, 1500);
@@ -643,9 +650,9 @@
                 var studentId = $(this).data('student');
                 var criteriaTitle = $(this).find('strong').first().text();
                 
-                var hasCheckedScore = $(this).find('.score-radio:checked').length > 0;
+                var hasSelectedScore = $(this).find('.score-cell.score-selected').length > 0;
                 
-                if (hasCheckedScore) {
+                if (hasSelectedScore) {
                     markedCriteria++;
                 } else {
                     unmarkedCriteria.push(criteriaTitle);
@@ -657,10 +664,9 @@
             if (unmarkedCriteria.length > 0) {
                 console.log('Unmarked criteria:', unmarkedCriteria);
                 
-                // Highlight unmarked criteria
                 allCriteriaRows.each(function() {
-                    var hasCheckedScore = $(this).find('.score-radio:checked').length > 0;
-                    if (!hasCheckedScore) {
+                    var hasSelectedScore = $(this).find('.score-cell.score-selected').length > 0;
+                    if (!hasSelectedScore) {
                         $(this).addClass('table-danger').effect('shake', { times: 2, distance: 5 }, 500);
                     } else {
                         $(this).removeClass('table-danger');
@@ -670,7 +676,6 @@
                 return false;
             }
 
-            // Remove any previous highlighting
             allCriteriaRows.removeClass('table-danger');
             return true;
         }
@@ -685,7 +690,6 @@
 
             console.log('Calculating total for student:', studentId);
 
-            // Get all unique task IDs
             var taskIds = [];
             $('tr[data-student="' + studentId + '"][data-task]').each(function() {
                 var taskId = $(this).data('task');
@@ -694,7 +698,6 @@
                 }
             });
 
-            // Calculate totals for each task
             taskIds.forEach(function(taskId) {
                 var taskWeightedTotal = 0;
                 var taskRawTotal = 0;
@@ -702,8 +705,6 @@
                 var taskMaxWeighted = 0;
                 var taskMaxScore = 0;
                 
-
-                // Get task max marks from the badge
                 var taskMaxMarks = parseInt($('.task-summary-card[data-task="' + taskId + '"]').data('max-marks')) || 0;
         
                 taskMaxMarksFromHTML = 0;
@@ -715,7 +716,6 @@
                     }
                 });
 
-                // Process each criteria in this task
                 $('tr[data-student="' + studentId + '"][data-task="' + taskId + '"]').each(function() {
                     var criteriaRow = $(this);
                     var criteriaId = criteriaRow.data('criteria');
@@ -726,14 +726,16 @@
                     taskMaxWeighted += (maxScore * weight) / 100;
                     taskMaxRaw += maxScore;
 
-                    var checkedRadio = criteriaRow.find('.score-radio:checked');
-                    if (checkedRadio.length > 0) {
-                        var score = parseInt(checkedRadio.val()) || 0;
+                    var selectedCell = criteriaRow.find('.score-cell.score-selected');
+                    if (selectedCell.length > 0) {
+                        var score = parseInt(selectedCell.data('score')) || 0;
                         var weightedScore = (score * weight) / 100;
                         taskWeightedTotal += weightedScore;
                         taskRawTotal += score;
 
                         $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
+                            .text(weightedScore.toFixed(2));
+                            $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
                             .text(weightedScore.toFixed(2));
                             
                     } else {
@@ -749,7 +751,6 @@
                 percentageAll += (taskWeightedTotal / taskMaxScore * taskMaxMarks);
             });
 
-            
             console.log('Overall Totals:', {
                 overallWeightedTotal,
                 overallRawTotal,
@@ -758,17 +759,11 @@
                 percentageAll
             });
 
-            // Use weighted totals for display (aligns with task calculations)
             $('.student-weighted-total[data-student="' + studentId + '"]').text(percentageAll.toFixed(2));
-
-            // Calculate percentage based on weighted scores
             $('.student-percentage[data-student="' + studentId + '"]').text(percentageAll.toFixed(2));
         }
 
-
-
         function calculateTaskTotals(studentId) {
-            // Get all unique task IDs
             var taskIds = [];
             $('tr[data-student="' + studentId + '"][data-task]').each(function() {
                 var taskId = $(this).data('task');
@@ -779,7 +774,6 @@
 
             console.log('Task IDs found:', taskIds);
 
-            // Calculate totals for each task
             taskIds.forEach(function(taskId) {
                 var taskWeightedTotal = 0;
                 var taskMaxWeightedTotal = 0;
@@ -793,18 +787,16 @@
                     var weight = parseFloat($(this).data('weight')) || 0;
                     var maxScore = parseInt($(this).data('max-score')) || 0;
 
-                    // Weighted calculations
                     taskMaxWeightedTotal += (maxScore * weight) / 100;
                     taskMaxScore = maxScore;
 
-                    var checkedRadio = $(this).find('.score-radio:checked');
-                    if (checkedRadio.length > 0) {
-                        var score = parseInt(checkedRadio.val()) || 0;
+                    var selectedCell = $(this).find('.score-cell.score-selected');
+                    if (selectedCell.length > 0) {
+                        var score = parseInt(selectedCell.data('score')) || 0;
                         taskWeightedTotal += (score * weight) / 100;                        
                         taskRawTotal += score;
                     }
 
-                    // Raw score totals for progress calculation
                     taskMaxRawTotal += maxScore;
                 });
 
@@ -812,20 +804,17 @@
 
                 console.log('Task', taskId, 'totals:', { taskWeightedTotal, taskMaxWeightedTotal, taskRawTotal, taskMaxRawTotal, taskMarks, taskMaxMarks });
 
-                // Update displays
                 $('.task-total-score[data-student="' + studentId + '"][data-task="' + taskId + '"]')
                     .text(taskMarks.toFixed(2));
                 $('.task-subtotal[data-student="' + studentId + '"][data-task="' + taskId + '"]')
                     .text(taskWeightedTotal.toFixed(2));
 
-                // Percentage based on weighted scores
                 var taskPercentage = taskMaxWeightedTotal > 0 ? (taskWeightedTotal / taskMaxWeightedTotal * 100) : 0;
                 $('.task-percentage[data-student="' + studentId + '"][data-task="' + taskId + '"]')
                     .text(taskPercentage.toFixed(2) + '% of 100%');
                 $('.task-subtotal-percentage[data-student="' + studentId + '"][data-task="' + taskId + '"]')
                     .text(taskPercentage.toFixed(2) + '%');
 
-                // Progress bar based on raw scores to align with MaxMarks
                 var progressBar = $('.task-progress[data-student="' + studentId + '"][data-task="' + taskId + '"]');
                 var rawPercentage = taskMaxRawTotal > 0 ? (taskRawTotal / taskMaxRawTotal * 100) : 0;
 
@@ -835,21 +824,19 @@
             });
         }
 
-
-
-
         function saveScores() {
-            // Disable button to prevent double-clicking
             $('#saveScores').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
             var scores = {};
             var comments = {};
 
-            // Collect scores
-            $('.score-radio:checked').each(function() {
-                var name = $(this).attr('name');
-                var value = $(this).val();
-                scores[name] = value;
+            // Collect scores from selected cells
+            $('.score-cell.score-selected').each(function() {
+                var studentId = $(this).data('student');
+                var criteriaId = $(this).data('criteria');
+                var score = $(this).data('score');
+                var name = 'score_' + studentId + '_' + criteriaId;
+                scores[name] = score;
             });
 
             // Collect comments
@@ -872,14 +859,12 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Show success message
                         if (typeof toastr !== 'undefined') {
                             toastr.success(response.message);
                         } else {
                             alert('Success: ' + response.message);
                         }
                     } else {
-                        // Show error message with details about unmarked criteria
                         var errorMessage = response.message || 'Failed to save scores';
                         
                         if (response.unmarkedCriteria && response.unmarkedCriteria.length > 0) {
@@ -910,7 +895,6 @@
                     }
                 },
                 complete: function() {
-                    // Restore button state
                     $('#saveScores').prop('disabled', false).html('<i class="fas fa-save"></i> Save Scores');
                 }
             });
@@ -919,7 +903,6 @@
         function saveModeratorComments() {
             var moderatorComments = {};
 
-            // Collect moderator comments
             $('textarea[name^="moderator_comment_"]').each(function() {
                 var name = $(this).attr('name');
                 var value = $(this).val();
@@ -972,25 +955,6 @@
                 }
             });
         }
-
-        // Debug function - remove in production
-        function debugScoreData() {
-            console.log('Score radio buttons:', $('.score-radio').length);
-            console.log('Score selections:', $('.score-selection').length);
-            
-            $('.score-selection').each(function() {
-                console.log('Score selection data:', {
-                    student: $(this).data('student'),
-                    criteria: $(this).data('criteria'),
-                    task: $(this).data('task'),
-                    weight: $(this).data('weight'),
-                    maxScore: $(this).data('max-score')
-                });
-            });
-        }
-
-        // Call debug function (remove in production)
-        // debugScoreData();
     </script>
 }
 
@@ -1001,38 +965,47 @@
         font-weight: bold;
     }
 
-    .btn-check:checked + .btn {
+    /* Score cell styling */
+    .score-cell {
+        padding: 10px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background-color: #ffffff;
+    }
+
+    .score-cell:not(.score-disabled):hover {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+    }
+
+    .score-cell.score-selected {
         background-color: #28a745 !important;
-        border-color: #28a745 !important;
         color: white !important;
+        border-color: #1e7e34 !important;
     }
 
-        .btn-check:checked + .btn:hover,
-        .btn-check:checked + .btn:focus,
-        .btn-check:checked + .btn:active {
-            background-color: #218838 !important;
-            border-color: #1e7e34 !important;
-            color: white !important;
-        }
-
-    /* General button styling for score buttons */
-    .score-radio + label.btn {
-        min-width: 40px;
-        min-height: 35px;
-        transition: all 0.2s ease;
+    .score-cell.score-selected .text-muted {
+        color: rgba(255, 255, 255, 0.8) !important;
     }
 
-        .score-radio + label.btn:hover {
-            background-color: #e3f2fd;
-            border-color: #2196f3;
-        }
+    .score-cell.score-selected .score-indicator {
+        display: block;
+    }
 
-    /* Disabled state styling */
-    .score-radio:disabled + label.btn,
-    .btn.disabled {
+    .score-cell.score-disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        pointer-events: none;
+        background-color: #f5f5f5;
+    }
+
+    .score-indicator {
+        display: none;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+
+    .score-content {
+        text-align: center;
     }
 
     textarea[readonly] {
@@ -1040,17 +1013,16 @@
         cursor: not-allowed;
     }
 
-    /* Moderator comment editable styling */
     .moderator-comment.moderator-editable {
         background-color: #fff3cd;
         border-color: #ffc107;
     }
 
-        .moderator-comment.moderator-editable:focus {
-            background-color: #ffffff;
-            border-color: #ffc107;
-            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
-        }
+    .moderator-comment.moderator-editable:focus {
+        background-color: #ffffff;
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    }
 
     .student-weighted-total {
         font-size: 1.2rem;
@@ -1073,10 +1045,10 @@
         transition: transform 0.2s ease-in-out;
     }
 
-        .task-summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+    .task-summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
 
     .task-subtotal {
         font-size: 1.1rem;
@@ -1096,19 +1068,19 @@
         font-size: 0.9rem;
     }
 
-        .score-header strong {
-            display: block;
-            font-size: 1.1rem;
-            color: #495057;
-        }
+    .score-header strong {
+        display: block;
+        font-size: 1.1rem;
+        color: #FFFFFF;
+    }
 
-        .score-header small {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .score-header small {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #FFFFFF !important;
+    }
 
-    /* Task section styling */
     .card-header.bg-info {
         background-color: #17a2b8 !important;
     }
@@ -1116,15 +1088,4 @@
     .overall-progress .progress-bar {
         transition: width 0.3s ease;
     }
-
-    .btn-outline-primary {
-        border-width: 2px;
-    }
-
-        .btn-outline-primary.active,
-        .btn-outline-primary:active {
-            background-color: #28a745 !important;
-            border-color: #28a745 !important;
-            color: white !important;
-        }
 </style>
