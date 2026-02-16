@@ -29,6 +29,21 @@
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="Programme" class="control-label"></label>
+                <input asp-for="Programme" class="form-control" />
+                <span asp-validation-for="Programme" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="YearEnrolled" class="control-label"></label>
+                <input asp-for="YearEnrolled" class="form-control" />
+                <span asp-validation-for="YearEnrolled" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TrimesterEnrolled" class="control-label"></label>
+                <input asp-for="TrimesterEnrolled" class="form-control" />
+                <span asp-validation-for="TrimesterEnrolled" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
