@@ -11,5 +11,8 @@ namespace smart_feedback.Models
         public string StudentId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
+        public string Programme { get; set; }
+        public int YearEnrolled { get; set; }
+        public int TrimesterEnrolled { get; set; }
     }
 }

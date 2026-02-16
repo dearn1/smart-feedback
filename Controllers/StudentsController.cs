@@ -20,9 +20,52 @@ namespace smart_feedback.Controllers
         }
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string programme, int? yearEnrolled, int? trimesterEnrolled)
         {
-            return View(await _context.Student.ToListAsync());
+            var students = from s in _context.Student
+                           select s;
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(programme))
+            {
+                students = students.Where(s => s.Programme == programme);
+            }
+
+            if (yearEnrolled.HasValue)
+            {
+                students = students.Where(s => s.YearEnrolled == yearEnrolled.Value);
+            }
+
+            if (trimesterEnrolled.HasValue)
+            {
+                students = students.Where(s => s.TrimesterEnrolled == trimesterEnrolled.Value);
+            }
+
+            // Get distinct values for dropdowns
+            ViewBag.Programmes = new SelectList(await _context.Student
+                .Select(s => s.Programme)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToListAsync());
+
+            ViewBag.Years = new SelectList(await _context.Student
+                .Select(s => s.YearEnrolled)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync());
+
+            ViewBag.Trimesters = new SelectList(await _context.Student
+                .Select(s => s.TrimesterEnrolled)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync());
+
+            // Preserve current filter values
+            ViewBag.CurrentProgramme = programme;
+            ViewBag.CurrentYear = yearEnrolled;
+            ViewBag.CurrentTrimester = trimesterEnrolled;
+
+            return View(await students.ToListAsync());
         }
 
         // GET: Students/Details/5
@@ -54,7 +97,7 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,StudentId,Name,Email")] Student student)
+        public async Task<IActionResult> Create([Bind("Id,StudentId,Name,Email,Programme,YearEnrolled,TrimesterEnrolled")] Student student)
         {
             if (ModelState.IsValid)
             {
@@ -86,7 +129,7 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,StudentId,Name,Email")] Student student)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,StudentId,Name,Email,Programme,YearEnrolled,TrimesterEnrolled")] Student student)
         {
             if (id != student.Id)
             {

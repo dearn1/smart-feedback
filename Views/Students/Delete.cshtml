@@ -29,6 +29,24 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Email)
         </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Programme)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Programme)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.YearEnrolled)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.YearEnrolled)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.TrimesterEnrolled)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.TrimesterEnrolled)
+        </dd>
     </dl>
     
     <form asp-action="Delete">
