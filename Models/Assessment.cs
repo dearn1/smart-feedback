@@ -10,7 +10,8 @@ namespace smart_feedback.Models
         [Required]
         public string AssessmentName { get; set; }
         public string CourseCode { get; set; }
-        public string TermName { get; set; }
+        public int Year { get; set; }
+        public int Trimester { get; set; }
         public int RubricsId { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }

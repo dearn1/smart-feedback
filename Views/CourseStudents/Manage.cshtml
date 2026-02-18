@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-users"></i> Manage Students - @Model.CourseCode @Model.CourseName (@Model.TermName)
+                    <i class="fas fa-users"></i> Manage Students - @Model.CourseCode @Model.CourseName (@Model.Trimester @Model.Year)
                 </h3>
                 <div class="card-tools">
                     <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-sm">
@@ -21,7 +21,7 @@
                     <div class="col-md-12">
                         <div class="alert alert-info">
                             <strong>Course:</strong> @Model.CourseCode - @Model.CourseName <br />
-                            <strong>Term:</strong> @Model.TermName <br />
+                            <strong>Term:</strong> @Model.Trimester @Model.Year <br />
                             <strong>Programme:</strong> @Model.Programme <br />
                             <strong>Enrolled Students:</strong> @Model.EnrolledStudents.Count
                         </div>
@@ -262,16 +262,17 @@
                         <ul class="mb-0 mt-2">
                             <li>Upload an Excel file (.xlsx or .xls)</li>
                             <li><strong>Column A:</strong> Course Code (must match: <span class="badge badge-primary">@Model.CourseCode</span>)</li>
-                            <li><strong>Column B:</strong> Term Name (must match: <span class="badge badge-primary">@Model.TermName</span>)</li>
-                            <li><strong>Column C:</strong> Student ID (required)</li>
-                            <li>Columns D & E are optional (Name and Email for reference)</li>
+                            <li><strong>Column B:</strong> Year (must match: <span class="badge badge-primary">@Model.Year</span>)</li>
+                            <li><strong>Column C:</strong> Trimester (must match: <span class="badge badge-primary">@Model.Trimester</span>)</li>
+                            <li><strong>Column D:</strong> Student ID (required)</li>
+                            <li>Columns E & F are optional (Name and Email for reference)</li>
                             <li>Download the template for correct format with pre-filled course details</li>
                         </ul>
                     </div>
 
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i> <strong>Validation:</strong><br>
-                        Each row must have the correct Course Code and Term Name. Rows with mismatched values will be rejected.
+                        Each row must have the correct Course Code, Year, and Trimester. Rows with mismatched values will be rejected.
                     </div>
 
                     <div class="form-group">
@@ -291,19 +292,22 @@
                                         <th>C</th>
                                         <th>D</th>
                                         <th>E</th>
+                                        <th>F</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="table-secondary">
                                         <td><small>Course Code</small></td>
-                                        <td><small>Term Name</small></td>
+                                        <td><small>Year</small></td>
+                                        <td><small>Trimester</small></td>
                                         <td><small>Student ID</small></td>
                                         <td><small>Name</small></td>
                                         <td><small>Email</small></td>
                                     </tr>
                                     <tr>
                                         <td><small>@Model.CourseCode</small></td>
-                                        <td><small>@Model.TermName</small></td>
+                                        <td><small>@Model.Year</small></td>
+                                        <td><small>@Model.Trimester</small></td>
                                         <td><small>S001</small></td>
                                         <td><small>John Doe</small></td>
                                         <td><small>john@example.com</small></td>

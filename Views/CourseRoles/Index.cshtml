@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Course Roles";
+    var activeCourseRoles = Model?.Where(cr => cr.Status == "Active") ?? Enumerable.Empty<smart_feedback.Models.CourseRoles>();
+    var archivedCourseRoles = Model?.Where(cr => cr.Status == "Archived") ?? Enumerable.Empty<smart_feedback.Models.CourseRoles>();
 }
 
 <!-- Filter Form -->
@@ -20,32 +22,42 @@
     <div class="card-body bg-light">
         <form asp-action="Index" method="get" id="filterForm">
             <div class="row g-3 align-items-end">
-                <!-- Term Name Filter -->
-                <div class="col-lg-4 col-md-6">
+                <!-- Year Filter -->
+                <div class="col-lg-3 col-md-6">
                     <div class="form-group mb-0">
-                        <label for="termNameFilter" class="form-label fw-semibold">
-                            <i class="fas fa-calendar-alt text-primary me-1"></i>
-                            Term Name
+                        <label for="yearFilter" class="form-label fw-semibold">
+                            <i class="fas fa-calendar text-primary me-1"></i>
+                            Year
                         </label>
-                        <div class="input-group">
-                            <input type="text"
-                                   class="form-control form-control-sm"
-                                   id="termNameFilter"
-                                   name="termName"
-                                   value="@ViewData["CurrentTermFilter"]"
-                                   placeholder="Enter term name..."
-                                   autocomplete="off">
-                            <div class="input-group-append">
-                                <span class="input-group-text bg-white border-start-0">
-                                    <i class="fas fa-search text-muted"></i>
-                                </span>
-                            </div>
-                        </div>
+                        <select class="form-select form-select-sm" id="yearFilter" name="year">
+                            <option value="">-- All Years --</option>
+                            @foreach (var year in ViewBag.Years as SelectList)
+                            {
+                                <option value="@year.Text" selected="@(year.Text == ViewBag.CurrentYear?.ToString())">@year.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Trimester Filter -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-group mb-0">
+                        <label for="trimesterFilter" class="form-label fw-semibold">
+                            <i class="fas fa-calendar-alt text-info me-1"></i>
+                            Trimester
+                        </label>
+                        <select class="form-select form-select-sm" id="trimesterFilter" name="trimester">
+                            <option value="">-- All Trimesters --</option>
+                            @foreach (var trimester in ViewBag.Trimesters as SelectList)
+                            {
+                                <option value="@trimester.Text" selected="@(trimester.Text == ViewBag.CurrentTrimester?.ToString())">@trimester.Text</option>
+                            }
+                        </select>
                     </div>
                 </div>
 
                 <!-- Programme Filter -->
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-6">
                     <div class="form-group mb-0">
                         <label for="programmeFilter" class="form-label fw-semibold">
                             <i class="fas fa-graduation-cap text-success me-1"></i>
@@ -61,7 +73,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="col-lg-4 col-md-12">
+                <div class="col-lg-3 col-md-12">
                     <div class="d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary btn-sm flex-fill">
                             <i class="fas fa-search me-1"></i>
@@ -83,149 +95,413 @@
 
 <!-- Action Buttons -->
 <div class="d-flex gap-2 mb-3">
-    <a asp-action="Upload" class="btn btn-info">
-        <i class="fas fa-upload"></i> Upload CSV
+    <a asp-action="DownloadData"
+       asp-route-sortOrder="@ViewData["CurrentSort"]"
+       asp-route-year="@ViewData["CurrentYearFilter"]"
+       asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+       asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+       class="btn btn-info">
+        <i class="fas fa-file-excel"></i> Download Data
+    </a>
+    <a asp-action="Upload" class="btn btn-success">
+        <i class="fas fa-file-excel"></i> Upload Excel
+    </a>
+    <a asp-action="DownloadTemplate" class="btn btn-outline-success">
+        <i class="fas fa-download"></i> Download Template
     </a>
     <a asp-action="Create" class="btn btn-primary">
         <i class="fas fa-plus"></i> Create New
     </a>
 </div>
 
-
-<!-- Course Roles Table -->
-<div class="card shadow-sm">
+<!-- Active Course Roles Table -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Active Course Roles
+                <span class="badge bg-white text-success ms-2">@activeCourseRoles.Count()</span>
+            </h5>
+        </div>
+        <div id="bulkActionsActive" style="display: none;">
+            <button type="button" class="btn btn-dark btn-sm" id="archiveSelectedBtn">
+                <i class="fas fa-archive me-1"></i>
+                Archive Selected (<span id="selectedCountActive">0</span>)
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm" id="clearSelectionActiveBtn">
+                <i class="fas fa-times me-1"></i>
+                Clear
+            </button>
+        </div>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>
-                            <a asp-action="Index"
-                               asp-route-sortOrder="@ViewData["CourseCodeSortParm"]"
-                               asp-route-termName="@ViewData["CurrentTermFilter"]"
-                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
-                               class="text-white text-decoration-none">
-                                Course Code
-                                <i class="fas fa-sort"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a asp-action="Index"
-                               asp-route-sortOrder="@ViewData["CourseNameSortParm"]"
-                               asp-route-termName="@ViewData["CurrentTermFilter"]"
-                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
-                               class="text-white text-decoration-none">
-                                Course Name
-                                <i class="fas fa-sort"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a asp-action="Index"
-                               asp-route-sortOrder="@ViewData["TermNameSortParm"]"
-                               asp-route-termName="@ViewData["CurrentTermFilter"]"
-                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
-                               class="text-white text-decoration-none">
-                                Term Name
-                                <i class="fas fa-sort"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a asp-action="Index"
-                               asp-route-sortOrder="@ViewData["ProgrammeSortParm"]"
-                               asp-route-termName="@ViewData["CurrentTermFilter"]"
-                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
-                               class="text-white text-decoration-none">
-                                Programme
-                                <i class="fas fa-sort"></i>
-                            </a>
-                        </th>
-                        <th>Institution</th>
-                        <th>Role Lecturer</th>
-                        <th>Role Moderator</th>
-                        <th width="200px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        @foreach (var item in Model)
+            <form id="bulkArchiveForm" asp-action="BulkArchive" method="post">
+                @Html.AntiForgeryToken()
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllActive" class="form-check-input" title="Select All">
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["CourseCodeSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Course Code
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["CourseNameSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Course Name
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["YearSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Year
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["TrimesterSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Trimester
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["ProgrammeSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Programme
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>Institution</th>
+                            <th>Role Lecturer</th>
+                            <th>Role Moderator</th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["TotalAssessmentSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Total Assessment
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th width="200px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (activeCourseRoles.Any())
+                        {
+                            @foreach (var item in activeCourseRoles)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="selectedIds" value="@item.CourseRolesId" class="form-check-input row-checkbox-active">
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.CourseCode)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.CourseName)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Year)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Trimester)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Programme)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Institution)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoleLecturer)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoleModerator)
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            @Html.DisplayFor(modelItem => item.TotalAssessment)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group" aria-label="Actions">
+                                            <a asp-action="Edit" class="btn btn-warning btn-sm" asp-route-id="@item.CourseRolesId" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Details" class="btn btn-info btn-sm" asp-route-id="@item.CourseRolesId" title="Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Delete" class="btn btn-danger btn-sm" asp-route-id="@item.CourseRolesId" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            <form asp-action="Archive" asp-route-id="@item.CourseRolesId" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-dark btn-sm" title="Archive" onclick="return confirm('Are you sure you want to archive this course role?');">
+                                                    <i class="fas fa-archive"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.CourseCode)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.CourseName)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.TermName)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Programme)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.Institution)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.RoleLecturer)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(modelItem => item.RoleModerator)
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group" aria-label="Actions">
-                                        <a asp-action="Edit" class="btn btn-warning btn-sm" asp-route-id="@item.CourseRolesId" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a asp-action="Details" class="btn btn-info btn-sm" asp-route-id="@item.CourseRolesId" title="Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a asp-action="Delete" class="btn btn-danger btn-sm" asp-route-id="@item.CourseRolesId" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                        <a href="#" class="btn btn-dark btn-sm" title="Archive" onclick="return false;">
-                                            <i class="fas fa-archive"></i>
-                                        </a>
+                                <td colspan="11" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                        <h5>No active course roles found</h5>
+                                        @if (ViewData["CurrentYearFilter"] != null || ViewData["CurrentTrimesterFilter"] != null || !string.IsNullOrEmpty(ViewData["CurrentProgrammeFilter"]?.ToString()))
+                                        {
+                                            <p>No active results match your current filters.</p>
+                                        }
+                                        else
+                                        {
+                                            <p>Get started by creating a new course role or uploading an Excel file.</p>
+                                            <div class="mt-3">
+                                                <a asp-action="Create" class="btn btn-primary me-2">
+                                                    <i class="fas fa-plus me-1"></i>
+                                                    Create New
+                                                </a>
+                                                <a asp-action="Upload" class="btn btn-success me-2">
+                                                    <i class="fas fa-file-excel me-1"></i>
+                                                    Upload Excel
+                                                </a>
+                                                <a asp-action="DownloadTemplate" class="btn btn-outline-success">
+                                                    <i class="fas fa-download me-1"></i>
+                                                    Download Template
+                                                </a>
+                                            </div>
+                                        }
                                     </div>
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Archived Course Roles Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">
+                <i class="fas fa-archive me-2"></i>
+                Archived Course Roles
+                <span class="badge bg-white text-secondary ms-2">@archivedCourseRoles.Count()</span>
+            </h5>
+        </div>
+        <div id="bulkActionsArchived" style="display: none;">
+            <button type="button" class="btn btn-success btn-sm" id="unarchiveSelectedBtn">
+                <i class="fas fa-undo me-1"></i>
+                Unarchive Selected (<span id="selectedCountArchived">0</span>)
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm" id="clearSelectionArchivedBtn">
+                <i class="fas fa-times me-1"></i>
+                Clear
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <form id="bulkUnarchiveForm" asp-action="BulkUnarchive" method="post">
+                @Html.AntiForgeryToken()
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
                         <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-info-circle fa-2x mb-3"></i>
-                                    <h5>No course roles found</h5>
-                                    @if (!string.IsNullOrEmpty(ViewData["CurrentTermFilter"]?.ToString()) || !string.IsNullOrEmpty(ViewData["CurrentProgrammeFilter"]?.ToString()))
-                                    {
-                                        <p>No results match your current filters.</p>
-                                        <a asp-action="Index" class="btn btn-outline-primary">
-                                            <i class="fas fa-times me-1"></i>
-                                            Clear Filters
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <p>Get started by creating a new course role or uploading a CSV file.</p>
-                                        <div class="mt-3">
-                                            <a asp-action="Create" class="btn btn-primary me-2">
-                                                <i class="fas fa-plus me-1"></i>
-                                                Create New
-                                            </a>
-                                            <a asp-action="Upload" class="btn btn-outline-info">
-                                                <i class="fas fa-upload me-1"></i>
-                                                Upload CSV
-                                            </a>
-                                        </div>
-                                    }
-                                </div>
-                            </td>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllArchived" class="form-check-input" title="Select All">
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["CourseCodeSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Course Code
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["CourseNameSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Course Name
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["YearSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Year
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["TrimesterSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Trimester
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["ProgrammeSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Programme
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th>Institution</th>
+                            <th>Role Lecturer</th>
+                            <th>Role Moderator</th>
+                            <th>
+                                <a asp-action="Index"
+                                   asp-route-sortOrder="@ViewData["TotalAssessmentSortParm"]"
+                                   asp-route-year="@ViewData["CurrentYearFilter"]"
+                                   asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
+                                   asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                                   class="text-white text-decoration-none">
+                                    Total Assessment
+                                    <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th width="200px">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (archivedCourseRoles.Any())
+                        {
+                            @foreach (var item in archivedCourseRoles)
+                            {
+                                <tr class="table-secondary">
+                                    <td>
+                                        <input type="checkbox" name="selectedIds" value="@item.CourseRolesId" class="form-check-input row-checkbox-archived">
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.CourseCode)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.CourseName)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Year)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Trimester)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Programme)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Institution)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoleLecturer)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoleModerator)
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            @Html.DisplayFor(modelItem => item.TotalAssessment)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group" aria-label="Actions">
+                                            <a asp-action="Edit" class="btn btn-warning btn-sm" asp-route-id="@item.CourseRolesId" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Details" class="btn btn-info btn-sm" asp-route-id="@item.CourseRolesId" title="Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Delete" class="btn btn-danger btn-sm" asp-route-id="@item.CourseRolesId" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            <form asp-action="Unarchive" asp-route-id="@item.CourseRolesId" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-success btn-sm" title="Unarchive" onclick="return confirm('Are you sure you want to activate this course role?');">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="11" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-box-open fa-2x mb-3"></i>
+                                        <h5>No archived course roles</h5>
+                                        @if (ViewData["CurrentYearFilter"] != null || ViewData["CurrentTrimesterFilter"] != null || !string.IsNullOrEmpty(ViewData["CurrentProgrammeFilter"]?.ToString()))
+                                        {
+                                            <p>No archived results match your current filters.</p>
+                                        }
+                                        else
+                                        {
+                                            <p>All course roles are currently active.</p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </form>
         </div>
     </div>
 </div>
@@ -235,15 +511,6 @@
     .form-label {
         margin-bottom: 0.25rem;
         font-size: 0.875rem;
-    }
-
-    .input-group-text {
-        border-left: none;
-    }
-
-    .form-control:focus + .input-group-append .input-group-text {
-        border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
 
     .card-header.bg-gradient-primary {
@@ -263,24 +530,209 @@
         text-decoration: underline;
     }
 
-    .btn-group .btn {
+    .btn-group .btn,
+    .btn-group form button {
         border-radius: 0;
     }
 
-    .btn-group .btn:first-child {
+    .btn-group .btn:first-child,
+    .btn-group form:first-child button {
         border-top-left-radius: 0.375rem;
         border-bottom-left-radius: 0.375rem;
     }
 
-    .btn-group .btn:last-child {
+    .btn-group .btn:last-child,
+    .btn-group form:last-child button,
+    .btn-group > :last-child button {
         border-top-right-radius: 0.375rem;
         border-bottom-right-radius: 0.375rem;
     }
 
+    .card-header.bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .card-header.bg-secondary {
+        background-color: #6c757d !important;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    tr.selected-row {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ==================== ACTIVE TABLE ====================
+        const selectAllActive = document.getElementById('selectAllActive');
+        const rowCheckboxesActive = document.querySelectorAll('.row-checkbox-active');
+        const bulkActionsActive = document.getElementById('bulkActionsActive');
+        const selectedCountActiveSpan = document.getElementById('selectedCountActive');
+        const archiveSelectedBtn = document.getElementById('archiveSelectedBtn');
+        const clearSelectionActiveBtn = document.getElementById('clearSelectionActiveBtn');
+        const bulkArchiveForm = document.getElementById('bulkArchiveForm');
+
+        // Select/Deselect all active rows
+        if (selectAllActive) {
+            selectAllActive.addEventListener('change', function() {
+                rowCheckboxesActive.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    updateRowHighlight(checkbox);
+                });
+                updateBulkActionsActive();
+            });
+        }
+
+        // Handle individual checkbox changes for active rows
+        rowCheckboxesActive.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateRowHighlight(this);
+                updateBulkActionsActive();
+                
+                // Update select all checkbox
+                if (selectAllActive) {
+                    selectAllActive.checked = Array.from(rowCheckboxesActive).every(cb => cb.checked);
+                }
+            });
+        });
+
+        // Update bulk actions visibility for active table
+        function updateBulkActionsActive() {
+            const selectedCount = Array.from(rowCheckboxesActive).filter(cb => cb.checked).length;
+            selectedCountActiveSpan.textContent = selectedCount;
+            
+            if (selectedCount > 0) {
+                bulkActionsActive.style.display = 'block';
+            } else {
+                bulkActionsActive.style.display = 'none';
+            }
+        }
+
+        // Clear selection for active rows
+        if (clearSelectionActiveBtn) {
+            clearSelectionActiveBtn.addEventListener('click', function() {
+                rowCheckboxesActive.forEach(checkbox => {
+                    checkbox.checked = false;
+                    updateRowHighlight(checkbox);
+                });
+                if (selectAllActive) {
+                    selectAllActive.checked = false;
+                }
+                updateBulkActionsActive();
+            });
+        }
+
+        // Archive selected rows
+        if (archiveSelectedBtn) {
+            archiveSelectedBtn.addEventListener('click', function() {
+                const selectedCount = Array.from(rowCheckboxesActive).filter(cb => cb.checked).length;
+                
+                if (selectedCount === 0) {
+                    alert('Please select at least one course role to archive.');
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to archive ${selectedCount} course role(s)?`)) {
+                    bulkArchiveForm.submit();
+                }
+            });
+        }
+
+        // ==================== ARCHIVED TABLE ====================
+        const selectAllArchived = document.getElementById('selectAllArchived');
+        const rowCheckboxesArchived = document.querySelectorAll('.row-checkbox-archived');
+        const bulkActionsArchived = document.getElementById('bulkActionsArchived');
+        const selectedCountArchivedSpan = document.getElementById('selectedCountArchived');
+        const unarchiveSelectedBtn = document.getElementById('unarchiveSelectedBtn');
+        const clearSelectionArchivedBtn = document.getElementById('clearSelectionArchivedBtn');
+        const bulkUnarchiveForm = document.getElementById('bulkUnarchiveForm');
+
+        // Select/Deselect all archived rows
+        if (selectAllArchived) {
+            selectAllArchived.addEventListener('change', function() {
+                rowCheckboxesArchived.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    updateRowHighlight(checkbox);
+                });
+                updateBulkActionsArchived();
+            });
+        }
+
+        // Handle individual checkbox changes for archived rows
+        rowCheckboxesArchived.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateRowHighlight(this);
+                updateBulkActionsArchived();
+                
+                // Update select all checkbox
+                if (selectAllArchived) {
+                    selectAllArchived.checked = Array.from(rowCheckboxesArchived).every(cb => cb.checked);
+                }
+            });
+        });
+
+        // Update bulk actions visibility for archived table
+        function updateBulkActionsArchived() {
+            const selectedCount = Array.from(rowCheckboxesArchived).filter(cb => cb.checked).length;
+            selectedCountArchivedSpan.textContent = selectedCount;
+            
+            if (selectedCount > 0) {
+                bulkActionsArchived.style.display = 'block';
+            } else {
+                bulkActionsArchived.style.display = 'none';
+            }
+        }
+
+        // Clear selection for archived rows
+        if (clearSelectionArchivedBtn) {
+            clearSelectionArchivedBtn.addEventListener('click', function() {
+                rowCheckboxesArchived.forEach(checkbox => {
+                    checkbox.checked = false;
+                    updateRowHighlight(checkbox);
+                });
+                if (selectAllArchived) {
+                    selectAllArchived.checked = false;
+                }
+                updateBulkActionsArchived();
+            });
+        }
+
+        // Unarchive selected rows
+        if (unarchiveSelectedBtn) {
+            unarchiveSelectedBtn.addEventListener('click', function() {
+                const selectedCount = Array.from(rowCheckboxesArchived).filter(cb => cb.checked).length;
+                
+                if (selectedCount === 0) {
+                    alert('Please select at least one course role to unarchive.');
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to unarchive ${selectedCount} course role(s)?`)) {
+                    bulkUnarchiveForm.submit();
+                }
+            });
+        }
+
+        // ==================== SHARED FUNCTIONS ====================
+        // Update row highlight
+        function updateRowHighlight(checkbox) {
+            const row = checkbox.closest('tr');
+            if (checkbox.checked) {
+                row.classList.add('selected-row');
+            } else {
+                row.classList.remove('selected-row');
+            }
+        }
+
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             // Ctrl/Cmd + Enter to submit form
@@ -291,35 +743,8 @@
 
             // Escape to clear filters
             if (e.key === 'Escape') {
-                const clearBtn = document.querySelector('a[asp-action="Index"]:not([asp-route-sortOrder])');
-                if (clearBtn) {
-                    window.location.href = clearBtn.href;
-                }
+                window.location.href = '@Url.Action("Index", "CourseRoles")';
             }
-        });
-
-        // Focus enhancement
-        const termInput = document.getElementById('termNameFilter');
-        if (termInput) {
-            termInput.addEventListener('focus', function() {
-                this.parentElement.classList.add('shadow-sm');
-            });
-
-            termInput.addEventListener('blur', function() {
-                this.parentElement.classList.remove('shadow-sm');
-            });
-        }
-
-        // Table row hover effect
-        const tableRows = document.querySelectorAll('tbody tr');
-        tableRows.forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = '#f8f9fa';
-            });
-
-            row.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = '';
-            });
         });
     });
 </script>

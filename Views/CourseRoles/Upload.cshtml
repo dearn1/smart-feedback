@@ -1,17 +1,128 @@
 ﻿@{
-    ViewData["Title"] = "Upload Course Roles CSV";
+    ViewData["Title"] = "Upload Course Roles from Excel";
 }
 
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-excel"></i> Upload Course Roles from Excel
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Success/Error Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["SuccessMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
 
-<form asp-action="Upload" enctype="multipart/form-data" method="post">
-    <div class="form-group">
-        <label for="csvFile">Select CSV file</label>
-        <input type="file" name="csvFile" id="csvFile" class="form-control" accept=".csv" required />
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["ErrorMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["WarningMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Upload an Excel file (.xlsx or .xls)</li>
+                            <li><strong>Column A:</strong> Course Code (required)</li>
+                            <li><strong>Column B:</strong> Course Name (required)</li>
+                            <li><strong>Column C:</strong> Year (required, 4-digit year)</li>
+                            <li><strong>Column D:</strong> Trimester (required, 1-3)</li>
+                            <li><strong>Column E:</strong> Programme (required)</li>
+                            <li><strong>Column F:</strong> Institution (required)</li>
+                            <li><strong>Column G:</strong> Role Lecturer (required)</li>
+                            <li><strong>Column H:</strong> Role Moderator (required)</li>
+                            <li>Download the template for correct format with sample data</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Validation:</strong><br>
+                        All fields are required. Rows with missing/invalid data will be skipped.
+                    </div>
+
+                    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="excelFile" class="form-label fw-bold">Select Excel File:</label>
+                            <input type="file" class="form-control" id="excelFile" name="excelFile" accept=".xlsx,.xls" required />
+                            <small class="form-text text-muted">Maximum file size: 5MB</small>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-table"></i> Expected Excel Format:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>A</th>
+                                                <th>B</th>
+                                                <th>C</th>
+                                                <th>D</th>
+                                                <th>E</th>
+                                                <th>F</th>
+                                                <th>G</th>
+                                                <th>H</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="table-secondary">
+                                                <td><small>Course Code</small></td>
+                                                <td><small>Course Name</small></td>
+                                                <td><small>Year</small></td>
+                                                <td><small>Trimester</small></td>
+                                                <td><small>Programme</small></td>
+                                                <td><small>Institution</small></td>
+                                                <td><small>Role Lecturer</small></td>
+                                                <td><small>Role Moderator</small></td>
+                                            </tr>
+                                            <tr class="table-warning">
+                                                <td><small>CS101</small></td>
+                                                <td><small>Intro to Programming</small></td>
+                                                <td><small>2025</small></td>
+                                                <td><small>1</small></td>
+                                                <td><small>BSc Computer Science</small></td>
+                                                <td><small>XYZ University</small></td>
+                                                <td><small>lecturer@uni.edu</small></td>
+                                                <td><small>moderator@uni.edu</small></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Upload Excel File
+                            </button>
+                            <a asp-action="DownloadTemplate" class="btn btn-outline-success">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary mt-2">Upload</button>
-</form>
-
-@if (ViewBag.Message != null)
-{
-    <div class="alert alert-info mt-2">@ViewBag.Message</div>
-}
+</div>

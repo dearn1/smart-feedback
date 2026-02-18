@@ -72,7 +72,8 @@ namespace smart_feedback.Controllers
                 CourseRolesId = courseId,
                 CourseCode = course.CourseCode,
                 CourseName = course.CourseName,
-                TermName = course.TermName,
+                Year = course.Year,
+                Trimester = course.Trimester,   
                 Programme = course.Programme,
                 Role = role,
                 AllStudents = allStudents,
@@ -314,10 +315,11 @@ namespace smart_feedback.Controllers
 
                     // Expected format: 
                     // Column A = Course Code
-                    // Column B = Term Name
-                    // Column C = Student ID
-                    // Column D = Name (optional)
-                    // Column E = Email (optional)
+                    // Column B = Term Year
+                    // Column C = Trimester
+                    // Column D = Student ID
+                    // Column E = Name (optional)
+                    // Column F = Email (optional)
 
                     int startRow = 0;
                     IRow firstRow = worksheet.GetRow(0);
@@ -340,11 +342,13 @@ namespace smart_feedback.Controllers
 
                         var courseCodeCell = GetCellValue(currentRow.GetCell(0))?.Trim();
                         var termNameCell = GetCellValue(currentRow.GetCell(1))?.Trim();
-                        var studentIdCell = GetCellValue(currentRow.GetCell(2))?.Trim();
+                        var trimesterCell = GetCellValue(currentRow.GetCell(2))?.Trim();
+                        var studentIdCell = GetCellValue(currentRow.GetCell(3))?.Trim();
 
                         // Skip empty rows
                         if (string.IsNullOrWhiteSpace(courseCodeCell) && 
                             string.IsNullOrWhiteSpace(termNameCell) && 
+                            string.IsNullOrWhiteSpace(trimesterCell) &&     
                             string.IsNullOrWhiteSpace(studentIdCell))
                         {
                             _logger.LogDebug("Skipping empty row {Row}", rowNumber);
@@ -367,19 +371,35 @@ namespace smart_feedback.Controllers
                             continue;
                         }
 
-                        // Validate Term Name
+                        // Validate Year
                         if (string.IsNullOrWhiteSpace(termNameCell))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Missing Term Name");
-                            _logger.LogWarning("Row {Row}: Missing Term Name", rowNumber);
+                            rowErrors.Add($"Row {rowNumber}: Missing Year");
+                            _logger.LogWarning("Row {Row}: Missing Year", rowNumber);
                             continue;
                         }
 
-                        if (!termNameCell.Equals(course.TermName, StringComparison.OrdinalIgnoreCase))
+                        if (!termNameCell.Equals(course.Year.ToString(), StringComparison.OrdinalIgnoreCase))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Invalid Term Name '{termNameCell}' (Expected: '{course.TermName}')");
-                            _logger.LogWarning("Row {Row}: Term Name mismatch - got '{TermNameCell}', expected '{ExpectedTerm}'", 
-                                rowNumber, termNameCell, course.TermName);
+                            rowErrors.Add($"Row {rowNumber}: Invalid Year '{termNameCell}' (Expected: '{course.Year}')");
+                            _logger.LogWarning("Row {Row}: Year mismatch - got '{YearCell}', expected '{ExpectedYear}'", 
+                                rowNumber, termNameCell, course.Year);
+                            continue;
+                        }
+
+                        // Validate Trimester
+                        if (string.IsNullOrWhiteSpace(trimesterCell))
+                        {
+                            rowErrors.Add($"Row {rowNumber}: Missing Trimester");
+                            _logger.LogWarning("Row {Row}: Missing Trimester", rowNumber);
+                            continue;
+                        }
+
+                        if (!trimesterCell.Equals(course.Trimester.ToString(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            rowErrors.Add($"Row {rowNumber}: Invalid Trimester '{trimesterCell}' (Expected: '{course.Trimester}')");
+                            _logger.LogWarning("Row {Row}: Trimester mismatch - got '{TrimesterCell}', expected '{ExpectedTrimester}'", 
+                                rowNumber, trimesterCell, course.Trimester);
                             continue;
                         }
 
@@ -568,15 +588,24 @@ namespace smart_feedback.Controllers
                 cell1_0.CellStyle = yellowStyle;
                 
                 ICell cell1_1 = row1.CreateCell(1);
-                cell1_1.SetCellValue(course.TermName);
+                cell1_1.SetCellValue(course.Year);
                 cell1_1.CellStyle = yellowStyle;
 
                 ICell cell1_2 = row1.CreateCell(2);
-                cell1_2.SetCellValue("20250001");
-                cell1_2.CellStyle = yellowStyle;
+                cell1_2.SetCellValue(course.Trimester);
+                cell1_2.CellStyle = yellowStyle;   
 
-                row1.CreateCell(3).SetCellValue("John Doe");
-                row1.CreateCell(4).SetCellValue("john.doe@example.com");
+                ICell cell1_3 = row1.CreateCell(3);
+                cell1_3.SetCellValue("20250001");
+                cell1_3.CellStyle = yellowStyle;
+
+                ICell cell1_4 = row1.CreateCell(4);
+                cell1_4.SetCellValue("John Doe");
+                cell1_4.CellStyle = yellowStyle;
+
+                ICell cell1_5 = row1.CreateCell(5);
+                cell1_5.SetCellValue("john.doe@example.com");
+                cell1_5.CellStyle = yellowStyle;
 
                 IRow row2 = worksheet.CreateRow(2);
                 ICell cell2_0 = row2.CreateCell(0);
@@ -585,15 +614,24 @@ namespace smart_feedback.Controllers
                 
                 
                 ICell cell2_1 = row2.CreateCell(1);
-                cell2_1.SetCellValue(course.TermName);
+                cell2_1.SetCellValue(course.Year);
                 cell2_1.CellStyle = yellowStyle;
 
                 ICell cell2_2 = row2.CreateCell(2);
-                cell2_2.SetCellValue("20250002");
+                cell2_2.SetCellValue(course.Trimester);
                 cell2_2.CellStyle = yellowStyle;
                 
-                row2.CreateCell(3).SetCellValue("Jane Smith");
-                row2.CreateCell(4).SetCellValue("jane.smith@example.com");
+                ICell cell2_3 = row2.CreateCell(3);
+                cell2_3.SetCellValue("20250002");
+                cell2_3.CellStyle = yellowStyle;
+                
+                ICell cell2_4 = row2.CreateCell(4);
+                cell2_4.SetCellValue("Jane Smith");
+                cell2_4.CellStyle = yellowStyle;
+                
+                ICell cell2_5 = row2.CreateCell(5);
+                cell2_5.SetCellValue("jane.smith@example.com");
+                cell2_5.CellStyle = yellowStyle;
 
                 // Auto-size columns
                 for (int i = 0; i < headers.Length; i++)
@@ -618,17 +656,20 @@ namespace smart_feedback.Controllers
                 {
                     "1. Column A (Course Code) is REQUIRED",
                     "2. Column B (Term Name) is REQUIRED",
-                    "3. Column C (Student ID) is REQUIRED and must match existing student records",
-                    "4. Columns D and E (Name and Email) are optional and for reference only",
-                    "5. Delete the sample rows (2 and 3) and add your actual student data",
-                    "6. Each row will be validated - rows with incorrect Course Code or Term Name will be rejected",
-                    "7. Students already enrolled in the course will be automatically skipped"
+                    "3. Column C (Trimester) is REQUIRED",
+                    "4. Column D (Student ID) is REQUIRED and must match existing student records",
+                    "5. Columns E and F (Name and Email) are optional and for reference only",
+                    "6. Delete the sample rows (2 and 3) and add your actual student data",
+                    "7. Each row will be validated - rows with incorrect Course Code or Term Name will be rejected",
+                    "8. Students already enrolled in the course will be automatically skipped"
                 };
 
                 for (int i = 0; i < instructions.Length; i++)
                 {
                     IRow instructionRow = worksheet2.CreateRow(1 + i);
-                    instructionRow.CreateCell(0).SetCellValue(instructions[i]);
+                    ICell instructionCellTemp = instructionRow.CreateCell(0);
+                    instructionCellTemp.SetCellValue(instructions[i]);
+                    instructionCellTemp.CellStyle = boldStyle;
                 }
 
                 
