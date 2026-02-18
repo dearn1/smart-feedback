@@ -80,10 +80,16 @@ namespace smart_feedback.Controllers
                     _logger.LogDebug("Filtered by course code: {CourseCode}", course.CourseCode);
                 }
 
-                if (!string.IsNullOrEmpty(course.TermName))
+                if (course.Year > 0)
                 {
-                    rubricsQuery = rubricsQuery.Where(r => r.TermName == course.TermName);
-                    _logger.LogDebug("Filtered by term name: {TermName}", course.TermName);
+                    rubricsQuery = rubricsQuery.Where(r => r.Year == course.Year);
+                    _logger.LogDebug("Filtered by year: {Year}", course.Year);
+                }
+
+                if (course.Trimester > 0)
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.Trimester == course.Trimester);
+                    _logger.LogDebug("Filtered by trimester: {Trimester}", course.Trimester);
                 }
 
                 // Apply user authorization check
@@ -94,7 +100,8 @@ namespace smart_feedback.Controllers
                     // Verify user has the specified role for the course
                     var hasAccess = await _context.CourseRoles
                         .AnyAsync(cr => cr.CourseCode == course.CourseCode &&
-                                       cr.TermName == course.TermName &&
+                                       cr.Year == course.Year &&
+                                       cr.Trimester == course.Trimester &&
                                        ((role == "Lecturer" && cr.RoleLecturer == userId) ||
                                         (role == "Moderator" && cr.RoleModerator == userId) ||
                                         (role == "Admin")));
@@ -133,7 +140,8 @@ namespace smart_feedback.Controllers
                 // Set ViewBag data for the view to display filtering context
                 ViewBag.FilteredCourseCode = course.CourseCode;
                 ViewBag.FilteredCourseName = course.CourseName;
-                ViewBag.FilteredCourseTerm = course.TermName;
+                ViewBag.FilteredCourseYear = course.Year;
+                ViewBag.FilteredCourseTrimester = course.Trimester;
                 ViewBag.CourseId = course.CourseRolesId.ToString();
                 ViewBag.CurrentUserRole = role;
                 ViewBag.LecturerName = lecturerFullName;
@@ -250,7 +258,8 @@ namespace smart_feedback.Controllers
 
                 ViewBag.CourseCode = course.CourseCode;
                 ViewBag.CourseName = course.CourseName;
-                ViewBag.CourseTerm = course.TermName;
+                ViewBag.CourseYear = course.Year;
+                ViewBag.CourseTrimester = course.Trimester;
                 ViewBag.Programme = course.Programme;
                 ViewBag.Institution = course.Institution;
                 ViewBag.CourseId = courseid;
@@ -274,16 +283,17 @@ namespace smart_feedback.Controllers
 
             try
             {
-                // Check if a rubric with the same name already exists for this course and term
+                // Check if a rubric with the same name already exists for this course and year/trimester
                 var existingRubric = await _context.Rubrics
                     .FirstOrDefaultAsync(r => r.RubricName == rubrics.RubricName &&
                                              r.CourseCode == rubrics.CourseCode &&
-                                             r.TermName == rubrics.TermName);
+                                             r.Year == rubrics.Year &&
+                                             r.Trimester == rubrics.Trimester);
 
                 if (existingRubric != null)
                 {
-                    _logger.LogWarning("Attempted to create duplicate rubric: {RubricName} for course {CourseCode} in term {TermName}",
-                        rubrics.RubricName, rubrics.CourseCode, rubrics.TermName);
+                    _logger.LogWarning("Attempted to create duplicate rubric: {RubricName} for course {CourseCode} in year {Year}, trimester {Trimester}",
+                        rubrics.RubricName, rubrics.CourseCode, rubrics.Year, rubrics.Trimester);
 
                     ModelState.AddModelError("RubricName", "A rubric with this name already exists for this course and term.");
 
@@ -295,7 +305,8 @@ namespace smart_feedback.Controllers
                         {
                             ViewBag.CourseCode = course.CourseCode;
                             ViewBag.CourseName = course.CourseName;
-                            ViewBag.CourseTerm = course.TermName;
+                            ViewBag.CourseYear = course.Year;
+                            ViewBag.CourseTrimester = course.Trimester;
                             ViewBag.Programme = course.Programme;
                             ViewBag.Institution = course.Institution;
                             ViewBag.CourseId = courseId;
@@ -1544,12 +1555,13 @@ namespace smart_feedback.Controllers
                                 rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
                                 rubric.CourseName = firstSpaceIndex > 0 ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
                                 rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
-                                rubric.TermName = rubricsParagraphs[3].Replace(" ", "");
+                                rubric.Year = course.Year;
+                                rubric.Trimester = course.Trimester;
                                 rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
                                 rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
 
-                                _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Term: {TermName}, Total Marks: {TotalMarks}",
-                                    rubric.RubricName, rubric.CourseCode, rubric.TermName, rubric.TotalMarks);
+                                _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Year: {Year}, Trimester: {Trimester}, Total Marks: {TotalMarks}",
+                                    rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester, rubric.TotalMarks);
 
                                 // VALIDATION 1: Check if course information matches current course context
                                 if (!string.IsNullOrEmpty(courseId))
@@ -1582,11 +1594,19 @@ namespace smart_feedback.Controllers
                                             hasValidationError = true;
                                         }
 
-                                        if (!string.Equals(rubric.TermName, course.TermName, StringComparison.OrdinalIgnoreCase))
+                                        if (rubric.Year != course.Year)
                                         {
-                                            _logger.LogWarning("Term Name mismatch: Document has '{DocumentTermName}' but expected '{CourseTermName}'",
-                                                rubric.TermName, course.TermName);
-                                            ModelState.AddModelError("", $"Term Name mismatch: Document has '{rubric.TermName}' but expected '{course.TermName}'");
+                                            _logger.LogWarning("Year mismatch: Document has '{DocumentYear}' but expected '{CourseYear}'",
+                                                rubric.Year, course.Year);
+                                            ModelState.AddModelError("", $"Year mismatch: Document has '{rubric.Year}' but expected '{course.Year}'");
+                                            hasValidationError = true;
+                                        }
+
+                                        if (rubric.Trimester != course.Trimester)
+                                        {
+                                            _logger.LogWarning("Trimester mismatch: Document has '{DocumentTrimester}' but expected '{CourseTrimester}'",
+                                                rubric.Trimester, course.Trimester);
+                                            ModelState.AddModelError("", $"Trimester mismatch: Document has '{rubric.Trimester}' but expected '{course.Trimester}'");
                                             hasValidationError = true;
                                         }
 
@@ -1602,15 +1622,16 @@ namespace smart_feedback.Controllers
                                 // VALIDATION 2: Check if rubric with same course code, term name, and rubric name already exists
                                 var existingRubric = await _context.Rubrics
                                     .FirstOrDefaultAsync(r => r.CourseCode == rubric.CourseCode &&
-                                                             r.TermName == rubric.TermName &&
+                                                             r.Year == rubric.Year &&
+                                                             r.Trimester == rubric.Trimester &&
                                                              r.RubricName == rubric.RubricName);
 
                                 if (existingRubric != null)
                                 {
-                                    _logger.LogWarning("Duplicate rubric upload attempted: {RubricName} for course {CourseCode} in term {TermName}",
-                                        rubric.RubricName, rubric.CourseCode, rubric.TermName);
+                                    _logger.LogWarning("Duplicate rubric upload attempted: {RubricName} for course {CourseCode} in year {Year}, trimester {Trimester}",
+                                        rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester);
 
-                                    ModelState.AddModelError("", $"A rubric with the name '{rubric.RubricName}' already exists for course '{rubric.CourseCode}' in term '{rubric.TermName}'");
+                                    ModelState.AddModelError("", $"A rubric with the name '{rubric.RubricName}' already exists for course '{rubric.CourseCode}' in year '{rubric.Year}', trimester '{rubric.Trimester}'");
 
                                     ViewBag.CourseId = courseId;
                                     ViewBag.CurrentUserRole = role;

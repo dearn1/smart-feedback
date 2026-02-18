@@ -72,7 +72,10 @@
                     Rubric Name
                 </th>
                 <th>
-                    Term Name
+                    Year
+                </th>
+                <th>
+                    Trimester
                 </th>
                 <th>Action</th>
             </tr>
@@ -96,7 +99,10 @@
                         @Html.DisplayFor(modelItem => item.RubricName)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.TermName)
+                        @Html.DisplayFor(modelItem => item.Year)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Trimester)
                     </td>
                     <td>
                         @if (userRole != "Moderator")

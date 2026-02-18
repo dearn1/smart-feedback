@@ -5,7 +5,8 @@
         public int CourseRolesId { get; set; }
         public string CourseCode { get; set; }
         public string CourseName { get; set; }
-        public string TermName { get; set; }
+        public int Year { get; set; }
+        public int Trimester { get; set; }
         public string Role { get; set; }
         public List<Assessment> Assessments { get; set; } = new();
         public List<Student> Students { get; set; } = new();
@@ -23,7 +24,8 @@
         public List<RubricCriteriaScore> CriteriaScores { get; set; } = new();
         public Dictionary<int, Dictionary<int, StudentAssessmentScore>> StudentScores { get; set; } = new();
         public string CourseCode { get; set; }
-        public string TermName { get; set; }
+        public int Year { get; set; }
+        public int Trimester { get; set; }
         public int CourseRolesId { get; set; }
         public string Role { get; set; }
 
@@ -54,7 +56,8 @@
         public string Role { get; set; }
         public string CourseCode { get; set; }
         public string CourseName { get; set; }
-        public string TermName { get; set; }
+        public int Year { get; set; }
+        public int Trimester { get; set; }
     }
 
     public class TaskScoreSummary

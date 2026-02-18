@@ -1,60 +1,163 @@
 ﻿@model smart_feedback.Models.CourseRoles
 
 @{
-    ViewData["Title"] = "Course Roles";
+    ViewData["Title"] = "Create Course Role";
 }
 
-<h4>Create</h4>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Course Role
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label>Course Code</label>
-                <input asp-for="CourseCode" class="form-control" />
-                <span asp-validation-for="CourseCode" class="text-danger"></span>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CourseCode" class="form-label fw-semibold">
+                                        <i class="fas fa-code text-primary me-1"></i>Course Code
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="CourseCode" class="form-control" placeholder="e.g., CS101" />
+                                    <span asp-validation-for="CourseCode" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="CourseName" class="form-label fw-semibold">
+                                        <i class="fas fa-book text-success me-1"></i>Course Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="CourseName" class="form-control" placeholder="e.g., Introduction to Programming" />
+                                    <span asp-validation-for="CourseName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Year" class="form-label fw-semibold">
+                                        <i class="fas fa-calendar text-info me-1"></i>Year
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Year" type="number" class="form-control" min="1900" max="2100" placeholder="@DateTime.Now.Year" />
+                                    <span asp-validation-for="Year" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Trimester" class="form-label fw-semibold">
+                                        <i class="fas fa-calendar-alt text-warning me-1"></i>Trimester
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select asp-for="Trimester" class="form-select">
+                                        <option value="">-- Select Trimester --</option>
+                                        <option value="1">Trimester 1</option>
+                                        <option value="2">Trimester 2</option>
+                                        <option value="3">Trimester 3</option>
+                                    </select>
+                                    <span asp-validation-for="Trimester" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="TotalAssessment" class="form-label fw-semibold">
+                                        <i class="fas fa-tasks text-secondary me-1"></i>Total Assessment
+                                    </label>
+                                    <input asp-for="TotalAssessment" type="number" class="form-control" min="0" value="0" />
+                                    <span asp-validation-for="TotalAssessment" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Programme" class="form-label fw-semibold">
+                                        <i class="fas fa-graduation-cap text-success me-1"></i>Programme
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Programme" class="form-control" placeholder="e.g., Bachelor of Computer Science" />
+                                    <span asp-validation-for="Programme" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Institution" class="form-label fw-semibold">
+                                        <i class="fas fa-university text-primary me-1"></i>Institution
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Institution" class="form-control" placeholder="e.g., XYZ University" />
+                                    <span asp-validation-for="Institution" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="RoleLecturer" class="form-label fw-semibold">
+                                        <i class="fas fa-chalkboard-teacher text-info me-1"></i>Role Lecturer
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="RoleLecturer" class="form-control" type="email" placeholder="lecturer@university.edu" />
+                                    <span asp-validation-for="RoleLecturer" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="RoleModerator" class="form-label fw-semibold">
+                                        <i class="fas fa-user-tie text-warning me-1"></i>Role Moderator
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="RoleModerator" class="form-control" type="email" placeholder="moderator@university.edu" />
+                                    <span asp-validation-for="RoleModerator" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Status" class="form-label fw-semibold">
+                                        <i class="fas fa-toggle-on text-success me-1"></i>Status
+                                    </label>
+                                    <select asp-for="Status" class="form-select">
+                                        <option value="Active" selected>Active</option>
+                                        <option value="Archived">Archived</option>
+                                    </select>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Create Course Role
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Course Name</label>
-                <input asp-for="CourseName" class="form-control" />
-                <span asp-validation-for="CourseName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Term Name</label>
-                <input asp-for="TermName" class="form-control" />
-                <span asp-validation-for="TermName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Programme</label>
-                <input asp-for="Programme" class="form-control" />
-                <span asp-validation-for="Programme" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Institution</label>
-                <input asp-for="Institution" class="form-control" />
-                <span asp-validation-for="Institution" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Role Lecturer</label>
-                <input asp-for="RoleLecturer" class="form-control" />
-                <span asp-validation-for="RoleLecturer" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Role Moderator</label>
-                <input asp-for="RoleModerator" class="form-control" />
-                <span asp-validation-for="RoleModerator" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

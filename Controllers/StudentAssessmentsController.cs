@@ -64,7 +64,7 @@ namespace smart_feedback.Controllers
 
             var assessments = await _context.Assessments
                 .Include(a => a.Rubric)
-                .Where(a => a.CourseCode == course.CourseCode && a.TermName == course.TermName)
+                .Where(a => a.CourseCode == course.CourseCode && a.Year == course.Year && a.Trimester == course.Trimester)
                 .ToListAsync();
 
             // *** CHANGED: Fetch students from CourseStudent table for this specific course ***
@@ -76,7 +76,7 @@ namespace smart_feedback.Controllers
                 .ToListAsync();
 
             var availableRubrics = await _context.Rubrics
-                .Where(r => r.CourseCode == course.CourseCode && r.TermName == course.TermName)
+                .Where(r => r.CourseCode == course.CourseCode && r.Year == course.Year && r.Trimester == course.Trimester)
                 .ToListAsync();
 
             // Get marking status for each assessment
@@ -119,7 +119,8 @@ namespace smart_feedback.Controllers
                 CourseRolesId = course.CourseRolesId,
                 CourseCode = course.CourseCode,
                 CourseName = course.CourseName,
-                TermName = course.TermName,
+                Year = course.Year,
+                Trimester = course.Trimester,   
                 Role = role,
                 Assessments = assessments,
                 Students = students,
@@ -143,12 +144,12 @@ namespace smart_feedback.Controllers
 
             // Get all rubrics for this course
             var allRubrics = await _context.Rubrics
-                .Where(r => r.CourseCode == course.CourseCode && r.TermName == course.TermName)
+                .Where(r => r.CourseCode == course.CourseCode && r.Year == course.Year && r.Trimester == course.Trimester)
                 .ToListAsync();
 
             // Get rubrics that already have assessments
             var rubricsWithAssessments = await _context.Assessments
-                .Where(a => a.CourseCode == course.CourseCode && a.TermName == course.TermName)
+                .Where(a => a.CourseCode == course.CourseCode && a.Year == course.Year && a.Trimester == course.Trimester)
                 .Select(a => a.RubricsId)
                 .ToListAsync();
 
@@ -161,7 +162,8 @@ namespace smart_feedback.Controllers
             ViewBag.CourseId = courseId;
             ViewBag.Role = role;
             ViewBag.CourseCode = course.CourseCode;
-            ViewBag.TermName = course.TermName;
+            ViewBag.Year = course.Year;
+            ViewBag.Trimester = course.Trimester;
 
             return View();
         }
@@ -177,8 +179,8 @@ namespace smart_feedback.Controllers
             var existingAssessment = await _context.Assessments
                 .FirstOrDefaultAsync(a => a.RubricsId == assessment.RubricsId && 
                                          a.CourseCode == assessment.CourseCode && 
-                                         a.TermName == assessment.TermName);
-
+                                         a.Year == assessment.Year && 
+                                         a.Trimester == assessment.Trimester);
             var availableRubrics = new List<Rubrics>();
 
             if (existingAssessment != null)
@@ -187,11 +189,11 @@ namespace smart_feedback.Controllers
                 
                 // Reload available rubrics (only those without assessments)
                 var allRubrics = await _context.Rubrics
-                    .Where(r => r.CourseCode == course.CourseCode && r.TermName == course.TermName)
+                    .Where(r => r.CourseCode == course.CourseCode && r.Year == course.Year && r.Trimester == course.Trimester)
                     .ToListAsync();
 
                 var rubricsWithAssessments = await _context.Assessments
-                    .Where(a => a.CourseCode == course.CourseCode && a.TermName == course.TermName)
+                    .Where(a => a.CourseCode == course.CourseCode && a.Year == course.Year && a.Trimester == course.Trimester)
                     .Select(a => a.RubricsId)
                     .ToListAsync();
 
@@ -203,7 +205,8 @@ namespace smart_feedback.Controllers
                 ViewBag.CourseId = courseId;
                 ViewBag.Role = role;
                 ViewBag.CourseCode = course?.CourseCode;
-                ViewBag.TermName = course?.TermName;
+                ViewBag.Year = course?.Year;
+                ViewBag.Trimester = course?.Trimester;  
 
                 return View(assessment);
             }
@@ -225,7 +228,8 @@ namespace smart_feedback.Controllers
             ViewBag.CourseId = courseId;
             ViewBag.Role = role;
             ViewBag.CourseCode = course?.CourseCode;
-            ViewBag.TermName = course?.TermName;
+            ViewBag.Year = course?.Year;
+            ViewBag.Trimester = course?.Trimester;
 
             return View(assessment);
         }
@@ -407,7 +411,8 @@ namespace smart_feedback.Controllers
                 CriteriaScores = criteriaScores,
                 StudentScores = studentScores,
                 CourseCode = course?.CourseCode,
-                TermName = course?.TermName,
+                Year = course.Year,
+                Trimester = course.Trimester,
                 CourseRolesId = int.Parse(courseId),
                 Role = role,
                 // Add pagination info
@@ -682,7 +687,8 @@ namespace smart_feedback.Controllers
                 currentFeedback.Role = role;
                 currentFeedback.CourseCode = assessment.CourseCode;
                 currentFeedback.CourseName = assessment.Rubric?.CourseName;
-                currentFeedback.TermName = assessment.TermName;
+                currentFeedback.Year = assessment.Year;
+                currentFeedback.Trimester = assessment.Trimester;
 
                 return View(currentFeedback);
             }

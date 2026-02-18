@@ -4,7 +4,8 @@
     ViewData["Title"] = "Rubrics";
     var courseCode = ViewBag.CourseCode as string;
     var courseName = ViewBag.CourseName as string;
-    var courseTerm = ViewBag.CourseTerm as string;
+    var courseYear = ViewBag.CourseYear as string;
+    var courseTrimester = ViewBag.CourseTrimester as string;
     var programme = ViewBag.Programme as string;
     var institution = ViewBag.Institution as string;
     var courseId = ViewBag.CourseId as string;
@@ -41,14 +42,15 @@
                 <span asp-validation-for="CourseName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label>Term Name</label>
-                <input asp-for="TermName" class="form-control" value="@courseTerm" readonly />
-                <span asp-validation-for="TermName" class="text-danger"></span>
+                <label>Year</label>
+                <input asp-for="Year" class="form-control" value="@courseYear" readonly />
+                <span asp-validation-for="Year" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label>Rubric Name</label>
-                <input asp-for="RubricName" class="form-control" />
-                <span asp-validation-for="RubricName" class="text-danger"></span>
+                <label>Trimester</label>
+                <input asp-for="Trimester" class="form-control" value="@courseTrimester" readonly />
+                <span asp-validation-for="Trimester" class="text-danger"></span>
             </div>
             <div class="d-flex gap-2 mb-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
