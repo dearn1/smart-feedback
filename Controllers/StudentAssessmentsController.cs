@@ -16,14 +16,22 @@ namespace smart_feedback.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFeedbackGenerationService _feedbackService;
+        private readonly IPuterAIService _puterAIService; // ADD THIS
         private readonly ILogger<StudentAssessmentsController> _logger; 
         private readonly Microsoft.AspNetCore.Hosting.IWebHostEnvironment _environment;
 
-        public StudentAssessmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IFeedbackGenerationService feedbackService, ILogger<StudentAssessmentsController> logger, Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment)
+        public StudentAssessmentsController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            IFeedbackGenerationService feedbackService, 
+            IPuterAIService puterAIService, // ADD THIS
+            ILogger<StudentAssessmentsController> logger, 
+            Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
             _feedbackService = feedbackService;
+            _puterAIService = puterAIService; // ADD THIS
             _logger = logger;
             _environment = environment;
         }
@@ -734,10 +742,9 @@ namespace smart_feedback.Controllers
             var criteriaResults = new List<StudentCriteriaResult>();
             var taskSummaries = new Dictionary<string, TaskScoreSummary>();
             
-            // NEW: Track total actual marks across all tasks
             double totalActualMarks = 0;
             double totalMaxMarks = 0;
-
+                
             foreach (var task in rubricTasks)
             {
                 var taskCriterias = rubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId).ToList();
@@ -751,7 +758,6 @@ namespace smart_feedback.Controllers
                     var maxScore = criteriaScores.Where(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId)
                         .Max(cs => cs.CriterionScore);
 
-                    // Calculate weighted scores
                     double weightedScore = (score * criteria.Weight) / 100.0;
                     double maxWeightedScore = (maxScore * criteria.Weight) / 100.0;
 
@@ -761,6 +767,7 @@ namespace smart_feedback.Controllers
                     var scoreDescription = criteriaScores.FirstOrDefault(cs =>
                         cs.RubricCriteriaId == criteria.RubricCriteriaId && cs.CriterionScore == score)?.ScoreDescription ?? "";
 
+                    // CHANGED: Use rule-based feedback for criteria (not AI)
                     var generatedFeedback = GenerateFeedbackComment(criteria, score, scoreDescription);
 
                     criteriaResults.Add(new StudentCriteriaResult
@@ -778,15 +785,12 @@ namespace smart_feedback.Controllers
                     });
                 }
 
-                // Calculate actual marks for this task based on weighted scores and task max marks
                 double taskPercentage = taskMaxWeightedScore > 0 ? (taskWeightedScore / taskMaxWeightedScore * 100) : 0;
                 double actualMarks = (taskPercentage / 100.0) * task.MaxMarks;
                 
-                // NEW: Accumulate totals
                 totalActualMarks += actualMarks;
                 totalMaxMarks += task.MaxMarks;
 
-                // Add task summary
                 taskSummaries[task.TaskTitle] = new TaskScoreSummary
                 {
                     TaskTitle = task.TaskTitle,
@@ -799,9 +803,10 @@ namespace smart_feedback.Controllers
                 };
             }
 
-            // FIXED: Calculate percentage based on sum of actual marks from all tasks
             var percentage = totalMaxMarks > 0 ? (totalActualMarks / totalMaxMarks * 100) : 0;
-            var overallFeedback = GenerateOverallFeedback(percentage, criteriaResults);
+            
+            // CHANGED: Use fallback for overall feedback (AI will be called from JavaScript)
+            var overallFeedback = await _puterAIService.GenerateOverallConstructiveFeedbackAsync(percentage, criteriaResults);
 
             return new StudentFeedbackViewModel
             {
@@ -809,8 +814,8 @@ namespace smart_feedback.Controllers
                 Assessment = assessment,
                 CriteriaResults = criteriaResults,
                 TaskSummaries = taskSummaries,
-                TotalScore = (int)Math.Round(totalActualMarks),  // CHANGED: Use totalActualMarks instead of raw score
-                MaxPossibleScore = (int)Math.Round(totalMaxMarks),  // CHANGED: Use totalMaxMarks
+                TotalScore = (int)Math.Round(totalActualMarks),
+                MaxPossibleScore = (int)Math.Round(totalMaxMarks),
                 Percentage = percentage,
                 OverallFeedback = overallFeedback
             };

@@ -39,6 +39,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 builder.Services.AddScoped<IFeedbackGenerationService, MLFeedbackGenerationService>();
 builder.Services.AddScoped<MLModelTrainer>();
+builder.Services.AddScoped<IPuterAIService, PuterAIService>();
 var app = builder.Build();
 
 // Seed roles and admin user
