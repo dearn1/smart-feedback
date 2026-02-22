@@ -346,19 +346,31 @@
                                 </div>
                             </div>
                             <div class="card-body feedback-content">
-                                @if (!string.IsNullOrEmpty(Model.OverallFeedback))
-                                {
-                                    <div class="feedback-text">
-                                        @Html.Raw(Model.OverallFeedback.Replace("\n", "<br />"))
+                                <div class="overall-feedback-container"
+                                     data-percentage="@Model.Percentage"
+                                     data-strengths="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score >= (cr.MaxScore * 0.75)).Select(cr => cr.CriteriaTitle))"
+                                     data-improvements="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score < (cr.MaxScore * 0.5)).Select(cr => cr.CriteriaTitle))">
+                                    
+                                    @if (!string.IsNullOrEmpty(Model.OverallFeedback))
+                                    {
+                                        <div class="original-overall-feedback feedback-text">
+                                            @Html.Raw(Model.OverallFeedback.Replace("\n", "<br />"))
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info mb-0">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            No overall feedback has been generated yet.
+                                        </div>
+                                    }
+                                    
+                                    <div class="ai-overall-feedback" style="display: none;"></div>
+                                    <div class="overall-ai-loading" style="display: block; text-align: center; padding: 20px;">
+                                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                                        <p class="mt-2 text-muted">Generating personalized feedback...</p>
                                     </div>
-                                }
-                                else
-                                {
-                                    <div class="alert alert-info mb-0">
-                                        <i class="fas fa-info-circle mr-2"></i>
-                                        No overall feedback has been generated yet.
-                                    </div>
-                                }
+                                </div>
                             </div>
                             <div class="card-footer bg-light">
                                 <div class="row align-items-center">
@@ -673,41 +685,168 @@
                 </div>
             </div>
         }
-    </div>  <!-- Close printAllContent div -->
-}  <!-- <-- Add this closing brace to properly close the if block -->
+    </div>
+}
 
 @section Scripts {
+    <script src="https://js.puter.com/v2/"></script>
     <script>
+        // Enhanced AI feedback with proper response extraction
+        $(document).ready(function() {
+            @if (!Model.IsBatchMode)
+            {
+                <text>
+                $('[data-toggle="tooltip"]').tooltip();
+                </text>
+            }
+
+            console.log('Puter SDK loaded:', typeof puter !== 'undefined');
+            console.log('Puter AI available:', typeof puter?.ai !== 'undefined');
+
+            // Automatically enhance overall feedback when page loads
+            enhanceOverallFeedbackWithAI();
+        });
+
+        async function enhanceOverallFeedbackWithAI() {
+            console.log('=== Starting AI Feedback Enhancement ===');
+            
+            const container = document.querySelector('.overall-feedback-container');
+            if (!container) {
+                console.error('Container not found');
+                return;
+            }
+
+            if (typeof puter === 'undefined' || typeof puter.ai === 'undefined') {
+                console.error('Puter AI not available');
+                showFallbackFeedback(container, 'AI service not available');
+                return;
+            }
+
+            const percentage = parseFloat(container.dataset.percentage);
+            const strengths = container.dataset.strengths;
+            const improvements = container.dataset.improvements;
+
+            const loadingDiv = container.querySelector('.overall-ai-loading');
+            const aiFeedbackDiv = container.querySelector('.ai-overall-feedback');
+            const originalDiv = container.querySelector('.original-overall-feedback');
+
+            if (loadingDiv) loadingDiv.style.display = 'block';
+            if (originalDiv) originalDiv.style.opacity = '0.5';
+
+            const prompt = `Generate constructive overall assessment feedback using paragraphs style.
+The feedback should be divided into two parts:
+
+1. Strengths: What the student excelled at across all criteria
+2. Areas for Improvement: What areas need attention (if any)
+
+Context:
+- Overall Score: ${percentage.toFixed(1)}%
+- Strong Areas: ${strengths || 'None identified'}
+- Areas Needing Improvement: ${improvements || 'None identified'}
+
+Please provide encouraging, comprehensive feedback that summarizes the student's overall performance and provides actionable guidance for improvement. Write in a supportive, professional tone suitable for student feedback.`;
+
+            console.log('Calling Puter AI...');
+
+            try {
+                // Call Puter AI
+                const response = await puter.ai.chat(prompt, { model: "gpt-5-nano" });
+                
+                console.log('Response received');
+                
+                // Extract the text from the response object
+                // Puter AI can return different formats:
+                // Format 1: { role: "assistant", content: "...", ... }
+                // Format 2: { message: { role: "assistant", content: "..." }, ... }
+                let feedbackText = '';
+                
+                if (typeof response === 'string') {
+                    // Direct string response
+                    feedbackText = response;
+                } else if (response && typeof response === 'object') {
+                    // Try to extract from various possible locations
+                    feedbackText = response.message?.content ||  // Format 2: nested in message
+                                   response.content ||           // Format 1: direct content
+                                   response.text || 
+                                   response.message?.text ||
+                                   response.data ||
+                                   response.output ||
+                                   response.result ||
+                                   '';
+                    
+                    console.log('Extracted feedback successfully');
+                }
+                
+                if (!feedbackText || typeof feedbackText !== 'string' || feedbackText.trim() === '') {
+                    console.error('No valid text extracted');
+                    console.error('Response structure:', response);
+                    throw new Error('No valid text received from AI');
+                }
+                
+                console.log('Feedback length:', feedbackText.length);
+                
+                // Hide loading, show AI feedback
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                if (originalDiv) originalDiv.style.display = 'none';
+                
+                // Format with HTML - split by \n for better readability
+                const formattedResponse = feedbackText
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0)
+                    .join('<br><br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                if (aiFeedbackDiv) {
+                    aiFeedbackDiv.innerHTML = `
+                        <div class="feedback-text">
+                            <div class="mb-3">
+                                <span class="badge badge-success">
+                                    <i class="fas fa-robot"></i> Personalized Feedback
+                                </span>
+                            </div>
+                            ${formattedResponse}
+                        </div>`;
+                    aiFeedbackDiv.style.display = 'block';
+                }
+
+                console.log('=== AI Feedback Successfully Displayed ===');
+                
+            } catch (error) {
+                console.error('=== AI Feedback Error ===');
+                console.error('Error:', error);
+                showFallbackFeedback(container, error.message);
+            }
+        }
+
+        function showFallbackFeedback(container, errorMessage) {
+            console.log('Showing fallback feedback. Error:', errorMessage);
+            
+            const loadingDiv = container.querySelector('.overall-ai-loading');
+            const originalDiv = container.querySelector('.original-overall-feedback');
+
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            if (originalDiv) {
+                originalDiv.style.opacity = '1';
+                originalDiv.style.display = 'block';
+            }
+
+            console.info('Using rule-based feedback as fallback');
+        }
+
         function navigateToStudent(index) {
             var url = '@Url.Action("GenerateFeedback", "StudentAssessments")?id=@Model.Assessment.AssessmentId&courseId=@Model.CourseRolesId&role=@Model.Role&studentIndex=' + index;
             window.location.href = url;
         }
 
         function printAllStudents() {
-            // Get the hidden content
             var printContent = document.getElementById('printAllContent').innerHTML;
             var originalContent = document.body.innerHTML;
-
-            // Replace body with print content
             document.body.innerHTML = printContent;
-            
-            // Print
             window.print();
-            
-            // Restore original content
             document.body.innerHTML = originalContent;
-            
-            // Reload to restore functionality
             location.reload();
-        }
-
-        @if (!Model.IsBatchMode)
-        {
-            <text>
-            $(document).ready(function() {
-                $('[data-toggle="tooltip"]').tooltip();
-            });
-            </text>
         }
     </script>
 }
@@ -850,6 +989,12 @@
         .progress-bar {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+
+        /* Hide AI loading and errors when printing */
+        .overall-ai-loading,
+        .ai-overall-feedback .alert {
+            display: none !important;
         }
     }
 </style>
