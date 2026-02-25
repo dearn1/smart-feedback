@@ -23,6 +23,7 @@ namespace smart_feedback.Models
         public DateTime? StatusChangedDate { get; set; }
 
         public string StatusChangedBy { get; set; }
+        public decimal ProportionalMarks { get; set; }
 
         // Helper property for enum conversion
         [NotMapped]

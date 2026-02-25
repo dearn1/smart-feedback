@@ -1,0 +1,282 @@
+@model smart_feedback.Models.ViewModels.AssessmentRubricManagementViewModel
+
+@{
+    ViewData["Title"] = "Assessment Rubric Management";
+}
+
+<div class="container-fluid">
+    <!-- Course Information Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-book me-2"></i>
+                Course Information
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>Programme:</strong> @Model.Programme</p>
+                    <p class="mb-2"><strong>Course Code:</strong> @Model.CourseCode</p>
+                    <p class="mb-0"><strong>Course Name:</strong> @Model.CourseName</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>Year:</strong> @Model.Year</p>
+                    <p class="mb-2"><strong>Trimester:</strong> @Model.Trimester</p>
+                    <p class="mb-0"><strong>Total Assessments:</strong> @Model.TotalAssessment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validation Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Please correct the following errors:</strong>
+            <ul class="mb-0 mt-2">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Assessment Rubric Assignment Form -->
+    <form asp-action="AssessmentManagement" method="post" id="assessmentForm">
+        <input type="hidden" asp-for="CourseRolesId" />
+        <input type="hidden" asp-for="CourseCode" />
+        <input type="hidden" asp-for="CourseName" />
+        <input type="hidden" asp-for="Year" />
+        <input type="hidden" asp-for="Trimester" />
+        <input type="hidden" asp-for="Programme" />
+        <input type="hidden" asp-for="TotalAssessment" />
+        <input type="hidden" asp-for="UserRole" />
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>
+                    Assessment Rubric Assignments
+                </h5>
+                <div>
+                    <span class="badge bg-white text-success">
+                        Total: <span id="totalMarks">0</span>%
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="30%">Assessment Name</th>
+                                <th width="45%">Rubric</th>
+                                <th width="20%">Proportional Marks (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.AssessmentRows.Count; i++)
+                            {
+                                <tr>
+                                    <td class="align-middle text-center">
+                                        <strong>@Model.AssessmentRows[i].Index</strong>
+                                        <input type="hidden" asp-for="AssessmentRows[i].Index" />
+                                    </td>
+                                    <td class="align-middle">
+                                        <input type="text" 
+                                               asp-for="AssessmentRows[i].AssessmentName" 
+                                               class="form-control form-control-sm" 
+                                               placeholder="Enter assessment name" 
+                                               required />
+                                        <span asp-validation-for="AssessmentRows[i].AssessmentName" class="text-danger small"></span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="input-group input-group-sm">
+                                            <select asp-for="AssessmentRows[i].RubricId" 
+                                                    class="form-select form-select-sm rubric-select"
+                                                    id="rubricSelect_@i">
+                                                <option value="">-- Select Rubric --</option>
+                                                <optgroup label="Recommended (Same Programme & Course)">
+                                                    @foreach (var rubric in Model.AvailableRubrics)
+                                                    {
+                                                        <option value="@rubric.RubricsId" 
+                                                                data-marks="@rubric.TotalMarks"
+                                                                selected="@(Model.AssessmentRows[i].RubricId == rubric.RubricsId)">
+                                                            @rubric.RubricName (@rubric.TotalMarks marks)
+                                                        </option>
+                                                    }
+                                                </optgroup>
+                                                <optgroup label="Other Rubrics">
+                                                    @foreach (var rubric in Model.AllRubrics.Where(r => !Model.AvailableRubrics.Any(ar => ar.RubricsId == r.RubricsId)))
+                                                    {
+                                                        <option value="@rubric.RubricsId" 
+                                                                data-marks="@rubric.TotalMarks"
+                                                                selected="@(Model.AssessmentRows[i].RubricId == rubric.RubricsId)">
+                                                            @rubric.Programme - @rubric.CourseCode: @rubric.RubricName (@rubric.TotalMarks marks)
+                                                        </option>
+                                                    }
+                                                </optgroup>
+                                            </select>
+                                            <button type="button" 
+                                                    class="btn btn-outline-secondary btn-sm view-rubric-btn"
+                                                    data-rubric-id="@Model.AssessmentRows[i].RubricId"
+                                                    data-index="@i"
+                                                    title="View Rubric Details"
+                                                    @(Model.AssessmentRows[i].RubricId.HasValue ? "" : "disabled")>
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="AssessmentRows[i].RubricId" class="text-danger small"></span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <input type="number" 
+                                               asp-for="AssessmentRows[i].ProportionalMarks" 
+                                               class="form-control form-control-sm proportional-marks" 
+                                               min="0" 
+                                               max="100" 
+                                               step="0.01"
+                                               placeholder="0.00"
+                                               required />
+                                        <span asp-validation-for="AssessmentRows[i].ProportionalMarks" class="text-danger small"></span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total Proportional Marks:</strong></td>
+                                <td colspan="2">
+                                    <span class="badge @(Model.TotalProportionalMarks == 100 ? "bg-success" : "bg-warning") fs-6" id="totalMarksBadge">
+                                        <span id="totalMarksFooter">0</span>%
+                                    </span>
+                                    <small class="text-muted ms-2">(Must equal 100%)</small>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success" id="saveBtn">
+                <i class="fas fa-save me-1"></i>
+                Save Assignments
+            </button>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Calculate total proportional marks
+            function calculateTotal() {
+                let total = 0;
+                $('.proportional-marks').each(function() {
+                    const value = parseFloat($(this).val()) || 0;
+                    total += value;
+                });
+                
+                $('#totalMarks').text(total.toFixed(2));
+                $('#totalMarksFooter').text(total.toFixed(2));
+                
+                // Update badge color
+                const badge = $('#totalMarksBadge');
+                if (Math.abs(total - 100) < 0.01) {
+                    badge.removeClass('bg-warning bg-danger').addClass('bg-success');
+                } else if (total > 100) {
+                    badge.removeClass('bg-warning bg-success').addClass('bg-danger');
+                } else {
+                    badge.removeClass('bg-success bg-danger').addClass('bg-warning');
+                }
+                
+                return total;
+            }
+            
+            // Update total on input change
+            $('.proportional-marks').on('input change', function() {
+                calculateTotal();
+            });
+            
+            // Handle rubric selection change
+            $('.rubric-select').on('change', function() {
+                const index = $(this).attr('id').split('_')[1];
+                const viewBtn = $(this).closest('tr').find('.view-rubric-btn');
+                const selectedValue = $(this).val();
+                
+                if (selectedValue) {
+                    viewBtn.prop('disabled', false);
+                    viewBtn.attr('data-rubric-id', selectedValue);
+                } else {
+                    viewBtn.prop('disabled', true);
+                    viewBtn.attr('data-rubric-id', '');
+                }
+            });
+            
+            // View rubric details
+            $('.view-rubric-btn').on('click', function() {
+                const rubricId = $(this).attr('data-rubric-id');
+                const courseId = '@Model.CourseRolesId';
+                const role = '@Model.UserRole';
+                
+                if (rubricId) {
+                    window.open('@Url.Action("Details", "Rubrics")?id=' + rubricId + '&courseid=' + courseId + '&role=' + role, '_blank');
+                }
+            });           
+            
+            // Form validation
+            $('#assessmentForm').on('submit', function(e) {
+                const total = calculateTotal();
+                if (Math.abs(total - 100) > 0.01) {
+                    e.preventDefault();
+                    alert('Total proportional marks must equal 100%. Current total: ' + total.toFixed(2) + '%');
+                    return false;
+                }
+            });
+            
+            // Initial calculation
+            calculateTotal();
+        });
+    </script>
+}
+
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    
+    .form-control-sm, .form-select-sm {
+        font-size: 0.875rem;
+    }
+    
+    .view-rubric-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    
+    #totalMarksBadge {
+        padding: 0.5rem 1rem;
+        font-weight: bold;
+    }
+</style>

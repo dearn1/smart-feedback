@@ -72,11 +72,11 @@
                                             <td>@course.ModeratorFullName</td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    <a asp-controller="Rubrics" asp-action="Index" 
+                                                    <a asp-controller="Rubrics" asp-action="AssessmentManagement" 
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Admin"
                                                        class="btn btn-outline-primary btn-sm" 
-                                                       title="Manage Rubrics">
+                                                       title="Manage Assessment Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
                                                     <a asp-controller="CourseStudents" asp-action="Manage"
@@ -151,11 +151,11 @@
                                             <td>@course.ModeratorFullName</td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    <a asp-controller="Rubrics" asp-action="Index" 
+                                                    <a asp-controller="Rubrics" asp-action="AssessmentManagement"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Lecturer"
                                                        class="btn btn-outline-primary btn-sm"
-                                                       title="Manage Rubrics">
+                                                       title="Manage Assessment Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
                                                     <a asp-controller="CourseStudents" asp-action="Manage"
@@ -227,11 +227,11 @@
                                             <td>@course.LecturerFullName</td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    <a asp-controller="Rubrics" asp-action="Index"
+                                                    <a asp-controller="Rubrics" asp-action="AssessmentManagement"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Moderator"
-                                                       class="btn btn-outline-warning btn-sm"
-                                                       title="View Rubrics">
+                                                       class="btn btn-outline-primary btn-sm"
+                                                       title="Manage Assessment Rubrics">
                                                         <i class="fas fa-list me-1"></i> Rubrics
                                                     </a>
                                                     <a asp-controller="StudentAssessments" asp-action="Index"

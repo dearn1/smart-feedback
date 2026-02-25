@@ -241,29 +241,23 @@ namespace smart_feedback.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(courseid) || !int.TryParse(courseid, out int parsedCourseId))
+                if (!string.IsNullOrEmpty(courseid) && int.TryParse(courseid, out int parsedCourseId))
                 {
-                    _logger.LogWarning("Invalid or missing courseId in Create action: {CourseId}", courseid);
-                    return BadRequest("Valid course ID is required");
+                    var course = await _context.CourseRoles.FindAsync(parsedCourseId);
+                    if (course != null)
+                    {
+                        _logger.LogDebug("Loading create form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
+
+                        ViewBag.CourseCode = course.CourseCode;
+                        ViewBag.CourseName = course.CourseName;
+                        ViewBag.CourseYear = course.Year;
+                        ViewBag.CourseTrimester = course.Trimester;
+                        ViewBag.Programme = course.Programme;
+                        ViewBag.Institution = course.Institution;
+                        ViewBag.CourseId = courseid;
+                        ViewBag.CurrentUserRole = role;
+                    }
                 }
-
-                var course = await _context.CourseRoles.FindAsync(parsedCourseId);
-                if (course == null)
-                {
-                    _logger.LogWarning("Course not found for ID: {CourseId}", courseid);
-                    return NotFound("Course not found");
-                }
-
-                _logger.LogDebug("Loading create form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
-
-                ViewBag.CourseCode = course.CourseCode;
-                ViewBag.CourseName = course.CourseName;
-                ViewBag.CourseYear = course.Year;
-                ViewBag.CourseTrimester = course.Trimester;
-                ViewBag.Programme = course.Programme;
-                ViewBag.Institution = course.Institution;
-                ViewBag.CourseId = courseid;
-                ViewBag.CurrentUserRole = role;
 
                 return View();
             }
@@ -1335,23 +1329,22 @@ namespace smart_feedback.Controllers
 
             try
             {
-                if (string.IsNullOrEmpty(courseid) || !int.TryParse(courseid, out int parsedCourseId))
+                if (!string.IsNullOrEmpty(courseid) && int.TryParse(courseid, out int parsedCourseId))
                 {
-                    _logger.LogWarning("Invalid or missing courseId in Upload action: {CourseId}", courseid);
-                    return BadRequest("Valid course ID is required");
-                }
+                    var course = await _context.CourseRoles.FindAsync(parsedCourseId);
+                    if (course != null)
+                    {
+                        _logger.LogDebug("Loading upload form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
 
-                var course = await _context.CourseRoles.FindAsync(parsedCourseId);
-                if (course == null)
+                        ViewBag.CourseId = courseid;
+                        ViewBag.CurrentUserRole = role;
+                    }
+                }
+                else
                 {
-                    _logger.LogWarning("Course not found for ID: {CourseId}", courseid);
-                    return NotFound("Course not found");
+                    ViewBag.CourseId = courseid;
+                    ViewBag.CurrentUserRole = role;
                 }
-
-                _logger.LogDebug("Loading upload form for course: {CourseCode} - {CourseName}", course.CourseCode, course.CourseName);
-
-                ViewBag.CourseId = courseid;
-                ViewBag.CurrentUserRole = role;
 
                 return View();
             }
@@ -1728,6 +1721,342 @@ namespace smart_feedback.Controllers
             }
 
             return 0;
+        }
+
+        // GET: Rubrics/Management
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Management(string sortOrder, int? year, int? trimester, string searchTerm)
+        {
+            _logger.LogInformation("Management action called with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}, SortOrder: {SortOrder}",
+                year, trimester, searchTerm, sortOrder);
+
+            try
+            {
+                // Set up ViewData for sorting links
+                ViewData["CurrentSort"] = sortOrder;
+                ViewData["RubricNameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "rubricName_desc" : "";
+                ViewData["CourseCodeSortParm"] = sortOrder == "courseCode" ? "courseCode_desc" : "courseCode";
+                ViewData["CourseNameSortParm"] = sortOrder == "courseName" ? "courseName_desc" : "courseName";
+                ViewData["YearSortParm"] = sortOrder == "year" ? "year_desc" : "year";
+                ViewData["TrimesterSortParm"] = sortOrder == "trimester" ? "trimester_desc" : "trimester";
+                ViewData["ProgrammeSortParm"] = sortOrder == "programme" ? "programme_desc" : "programme";
+                ViewData["TotalMarksSortParm"] = sortOrder == "totalMarks" ? "totalMarks_desc" : "totalMarks";
+
+                // Set up ViewData for current filter values
+                ViewData["CurrentYearFilter"] = year;
+                ViewData["CurrentTrimesterFilter"] = trimester;
+                ViewData["CurrentSearchTerm"] = searchTerm;
+
+                // Get distinct years and trimesters for dropdowns
+                ViewBag.Years = new SelectList(await _context.Rubrics
+                    .Select(r => r.Year)
+                    .Distinct()
+                    .OrderByDescending(y => y)
+                    .ToListAsync());
+
+                ViewBag.Trimesters = new SelectList(await _context.Rubrics
+                    .Select(r => r.Trimester)
+                    .Distinct()
+                    .OrderBy(t => t)
+                    .ToListAsync());
+
+                // Preserve current filter values for dropdowns
+                ViewBag.CurrentYear = year;
+                ViewBag.CurrentTrimester = trimester;
+
+                // Start with all rubrics (NO course code filtering)
+                var rubricsQuery = _context.Rubrics.AsQueryable();
+
+                // Apply filters
+                if (year.HasValue)
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.Year == year.Value);
+                    _logger.LogDebug("Applied year filter: {Year}", year);
+                }
+
+                if (trimester.HasValue)
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.Trimester == trimester.Value);
+                    _logger.LogDebug("Applied trimester filter: {Trimester}", trimester);
+                }
+
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => 
+                        r.RubricName.Contains(searchTerm) || 
+                        r.CourseCode.Contains(searchTerm) || 
+                        r.CourseName.Contains(searchTerm) ||
+                        r.Programme.Contains(searchTerm));
+                    _logger.LogDebug("Applied search filter: {SearchTerm}", searchTerm);
+                }
+
+                // Apply sorting
+                switch (sortOrder)
+                {
+                    case "rubricName_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.RubricName);
+                        break;
+                    case "courseCode":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.CourseCode);
+                        break;
+                    case "courseCode_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.CourseCode);
+                        break;
+                    case "courseName":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.CourseName);
+                        break;
+                    case "courseName_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.CourseName);
+                        break;
+                    case "year":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.Year);
+                        break;
+                    case "year_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.Year);
+                        break;
+                    case "trimester":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.Trimester);
+                        break;
+                    case "trimester_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.Trimester);
+                        break;
+                    case "programme":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.Programme);
+                        break;
+                    case "programme_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.Programme);
+                        break;
+                    case "totalMarks":
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.TotalMarks);
+                        break;
+                    case "totalMarks_desc":
+                        rubricsQuery = rubricsQuery.OrderByDescending(r => r.TotalMarks);
+                        break;
+                    default:
+                        rubricsQuery = rubricsQuery.OrderBy(r => r.RubricName);
+                        break;
+                }
+
+                var rubrics = await rubricsQuery.ToListAsync();
+
+                _logger.LogInformation("Successfully retrieved {RubricCount} rubrics for management (filtered: Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Search={HasSearchFilter})",
+                    rubrics.Count, year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(searchTerm));
+
+                return View(rubrics);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Management action with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}",
+                    year, trimester, searchTerm);
+                throw;
+            }
+        }
+
+        // GET: Rubrics/AssessmentManagement
+        [Authorize]
+        public async Task<IActionResult> AssessmentManagement(int? courseId, string role = null)
+        {
+            _logger.LogInformation("AssessmentManagement GET action called with courseId: {CourseId}, role: {Role}", courseId, role);
+
+            try
+            {
+                if (!courseId.HasValue)
+                {
+                    _logger.LogWarning("CourseId is null in AssessmentManagement");
+                    return BadRequest("Course ID is required");
+                }
+
+                var course = await _context.CourseRoles.FindAsync(courseId.Value);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course not found for ID: {CourseId}", courseId);
+                    return NotFound("Course not found");
+                }
+
+                // Get current user
+                var currentUser = await _userManager.GetUserAsync(User);
+                var userId = currentUser?.UserName;
+
+                // Verify access
+                if (!string.IsNullOrEmpty(role))
+                {
+                    var hasAccess = await _context.CourseRoles
+                        .AnyAsync(cr => cr.CourseRolesId == courseId.Value &&
+                                       ((role == "Lecturer" && cr.RoleLecturer == userId) ||
+                                        (role == "Moderator" && cr.RoleModerator == userId) ||
+                                        (role == "Admin")));
+
+                    if (!hasAccess && role != "Admin")
+                    {
+                        _logger.LogWarning("Access denied for user {UserId} with role {Role} for course {CourseCode}", userId, role, course.CourseCode);
+                        TempData["ErrorMessage"] = "You don't have permission to manage assessments for this course.";
+                        return RedirectToAction("Index", "Home");
+                    }
+                }
+
+                var viewModel = new smart_feedback.Models.ViewModels.AssessmentRubricManagementViewModel
+                {
+                    CourseRolesId = course.CourseRolesId,
+                    CourseCode = course.CourseCode,
+                    CourseName = course.CourseName,
+                    Year = course.Year,
+                    Trimester = course.Trimester,
+                    Programme = course.Programme,
+                    TotalAssessment = course.TotalAssessment,
+                    UserRole = role
+                };
+
+                // Get existing assessments for this course
+                var existingAssessments = await _context.Assessments
+                    .Where(a => a.CourseCode == course.CourseCode && 
+                               a.Year == course.Year && 
+                               a.Trimester == course.Trimester)
+                    .ToListAsync();
+
+                _logger.LogDebug("Found {AssessmentCount} existing assessments for course {CourseCode}", existingAssessments.Count, course.CourseCode);
+
+                // Create assessment rows based on TotalAssessment
+                for (int i = 0; i < course.TotalAssessment; i++)
+                {
+                    var existingAssessment = existingAssessments.ElementAtOrDefault(i);
+                    viewModel.AssessmentRows.Add(new smart_feedback.Models.ViewModels.AssessmentRubricRow
+                    {
+                        Index = i + 1,
+                        AssessmentName = existingAssessment?.AssessmentName ?? $"Assessment {i + 1}",
+                        RubricId = existingAssessment?.RubricsId,
+                        ProportionalMarks = 0 // Will need to add this field to Assessment model
+                    });
+                }
+
+                // Get available rubrics filtered by Programme and Course Code
+                viewModel.AvailableRubrics = await _context.Rubrics
+                    .Where(r => r.Programme == course.Programme && 
+                               r.CourseCode == course.CourseCode &&
+                               r.Year == course.Year &&
+                               r.Trimester == course.Trimester)
+                    .OrderBy(r => r.RubricName)
+                    .ToListAsync();
+
+                // Get all rubrics for optional selection
+                viewModel.AllRubrics = await _context.Rubrics
+                    .Where(r => r.Year == course.Year && r.Trimester == course.Trimester)
+                    .OrderBy(r => r.Programme)
+                    .ThenBy(r => r.CourseCode)
+                    .ThenBy(r => r.RubricName)
+                    .ToListAsync();
+
+                _logger.LogInformation("Successfully loaded assessment management for course {CourseCode} with {AssessmentCount} assessments",
+                    course.CourseCode, course.TotalAssessment);
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AssessmentManagement GET action for courseId: {CourseId}", courseId);
+                throw;
+            }
+        }
+
+        // POST: Rubrics/AssessmentManagement
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> AssessmentManagement(smart_feedback.Models.ViewModels.AssessmentRubricManagementViewModel model)
+        {
+            _logger.LogInformation("AssessmentManagement POST action called for course ID: {CourseId}", model.CourseRolesId);
+
+            try
+            {
+                // Validate total proportional marks = 100
+                if (model.TotalProportionalMarks != 100)
+                {
+                    _logger.LogWarning("Total proportional marks validation failed: {Total}% (expected 100%)", model.TotalProportionalMarks);
+                    ModelState.AddModelError("", $"Total proportional marks must equal 100%. Current total: {model.TotalProportionalMarks}%");
+                    
+                    // Reload data for view
+                    var courseData = await _context.CourseRoles.FindAsync(model.CourseRolesId);
+                    model.AvailableRubrics = await _context.Rubrics
+                        .Where(r => r.Programme == courseData.Programme && 
+                                   r.CourseCode == courseData.CourseCode &&
+                                   r.Year == courseData.Year &&
+                                   r.Trimester == courseData.Trimester)
+                        .OrderBy(r => r.RubricName)
+                        .ToListAsync();
+
+                    model.AllRubrics = await _context.Rubrics
+                        .Where(r => r.Year == courseData.Year && r.Trimester == courseData.Trimester)
+                        .OrderBy(r => r.Programme)
+                        .ThenBy(r => r.CourseCode)
+                        .ThenBy(r => r.RubricName)
+                        .ToListAsync();
+                    
+                    return View(model);
+                }
+
+                var course = await _context.CourseRoles.FindAsync(model.CourseRolesId);
+                if (course == null)
+                {
+                    return NotFound();
+                }
+
+                // Get current user
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                // Get existing assessments
+                var existingAssessments = await _context.Assessments
+                    .Where(a => a.CourseCode == course.CourseCode && 
+                               a.Year == course.Year && 
+                               a.Trimester == course.Trimester)
+                    .ToListAsync();
+
+                // Update or create assessments
+                for (int i = 0; i < model.AssessmentRows.Count; i++)
+                {
+                    var row = model.AssessmentRows[i];
+                    var existingAssessment = existingAssessments.ElementAtOrDefault(i);
+
+                    if (existingAssessment != null)
+                    {
+                        // Update existing assessment
+                        existingAssessment.AssessmentName = row.AssessmentName;
+                        existingAssessment.RubricsId = row.RubricId ?? 0;
+                        // TODO: Update ProportionalMarks when field is added to Assessment model
+                        _context.Update(existingAssessment);
+                        _logger.LogDebug("Updated assessment: {AssessmentName}", row.AssessmentName);
+                    }
+                    else if (row.RubricId.HasValue)
+                    {
+                        // Create new assessment
+                        var newAssessment = new Assessment
+                        {
+                            AssessmentName = row.AssessmentName,
+                            CourseCode = course.CourseCode,
+                            Year = course.Year,
+                            Trimester = course.Trimester,
+                            RubricsId = row.RubricId.Value,
+                            CreatedDate = DateTime.Now,
+                            CreatedBy = currentUser?.UserName ?? "System",
+                            Status = "Marking"
+                            // TODO: Add ProportionalMarks when field is added to Assessment model
+                        };
+                        _context.Add(newAssessment);
+                        _logger.LogDebug("Created new assessment: {AssessmentName}", row.AssessmentName);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully saved assessment rubric assignments for course {CourseCode}", course.CourseCode);
+                TempData["SuccessMessage"] = "Assessment rubric assignments saved successfully!";
+
+                return RedirectToAction("AssessmentManagement", new { courseId = model.CourseRolesId, role = model.UserRole });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AssessmentManagement POST action for course ID: {CourseId}", model.CourseRolesId);
+                ModelState.AddModelError("", "An error occurred while saving the assessment assignments.");
+                return View(model);
+            }
         }
     }
 }

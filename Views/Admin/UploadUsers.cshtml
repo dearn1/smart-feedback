@@ -1,0 +1,121 @@
+@{
+    ViewData["Title"] = "Upload Users from Excel";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-excel"></i> Upload Users from Excel
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Success/Error Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["SuccessMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["ErrorMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            @Html.Raw(TempData["WarningMessage"])
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Upload an Excel file (.xlsx or .xls)</li>
+                            <li><strong>Column A:</strong> Email (required, valid email format)</li>
+                            <li><strong>Column B:</strong> Full Name (required)</li>
+                            <li><strong>Column C:</strong> Department (optional)</li>
+                            <li><strong>Column D:</strong> Job Title (optional)</li>
+                            <li>All users will be created with temporary passwords</li>
+                            <li>Users will be assigned the 'Lecturer' role by default</li>
+                            <li>Email notifications will be sent with login credentials</li>
+                            <li>Download the template for correct format with sample data</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Validation:</strong><br>
+                        Email and Full Name are required. Users with duplicate emails will be skipped. Rows with missing/invalid data will be rejected.
+                    </div>
+
+                    <form asp-action="UploadUsers" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="excelFile" class="form-label fw-bold">Select Excel File:</label>
+                            <input type="file" class="form-control" id="excelFile" name="excelFile" accept=".xlsx,.xls" required />
+                            <small class="form-text text-muted">Maximum file size: 5MB</small>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-table"></i> Expected Excel Format:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>A</th>
+                                                <th>B</th>
+                                                <th>C</th>
+                                                <th>D</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="table-secondary">
+                                                <td><small>Email</small></td>
+                                                <td><small>Full Name</small></td>
+                                                <td><small>Department</small></td>
+                                                <td><small>Job Title</small></td>
+                                            </tr>
+                                            <tr class="table-warning">
+                                                <td><small>john.doe@university.edu</small></td>
+                                                <td><small>John Doe</small></td>
+                                                <td><small>Computer Science</small></td>
+                                                <td><small>Senior Lecturer</small></td>
+                                            </tr>
+                                            <tr class="table-warning">
+                                                <td><small>jane.smith@university.edu</small></td>
+                                                <td><small>Jane Smith</small></td>
+                                                <td><small>Information Technology</small></td>
+                                                <td><small>Associate Professor</small></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Upload Excel File
+                            </button>
+                            <a asp-action="DownloadUserTemplate" class="btn btn-outline-success">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                            <a asp-action="UserManagement" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to User Management
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
