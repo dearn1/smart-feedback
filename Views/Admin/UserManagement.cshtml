@@ -10,7 +10,10 @@
             <div>
                 <p class="mb-0 opacity-75">Manage system users and their roles</p>
             </div>
-            <div>
+            <div class="d-flex gap-2">
+                <a asp-action="UploadUsers" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Upload Users
+                </a>
                 <a asp-action="CreateUser" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Create New User
                 </a>
@@ -22,7 +25,7 @@
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
+        @Html.Raw(TempData["SuccessMessage"])
         @if (TempData["TempPassword"] != null)
         {
             <br><strong>Please save this password securely and share it with the user.</strong>
@@ -34,7 +37,15 @@
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
+        @Html.Raw(TempData["ErrorMessage"])
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @Html.Raw(TempData["WarningMessage"])
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
