@@ -689,6 +689,121 @@ namespace smart_feedback.Controllers
             }
         }
 
+        // GET: CourseStudents/DownloadEnrolledStudents
+        public async Task<IActionResult> DownloadEnrolledStudents(int courseId)
+        {
+            try
+            {
+                _logger.LogInformation("Downloading enrolled students Excel for courseId: {CourseId}", courseId);
+
+                // Get course information
+                var course = await _context.CourseRoles.FindAsync(courseId);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course not found with ID: {CourseId}", courseId);
+                    TempData["ErrorMessage"] = "Course not found.";
+                    return RedirectToAction("Manage", new { courseId });
+                }
+
+                // Get enrolled students
+                var enrolledStudents = await _context.CourseStudent
+                    .Where(cs => cs.CourseRolesId == courseId)
+                    .Include(cs => cs.Student)
+                    .OrderBy(cs => cs.Student.StudentId)
+                    .Select(cs => new
+                    {
+                        StudentId = cs.Student.StudentId,
+                        Name = cs.Student.Name,
+                        Email = cs.Student.Email,
+                        Programme = cs.Student.Programme,
+                        YearEnrolled = cs.Student.YearEnrolled,
+                        TrimesterEnrolled = cs.Student.TrimesterEnrolled,
+                        EnrolledDate = cs.EnrolledDate
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Retrieved {Count} enrolled students for Excel export", enrolledStudents.Count);
+
+                if (!enrolledStudents.Any())
+                {
+                    TempData["WarningMessage"] = "No students are enrolled in this course yet.";
+                    return RedirectToAction("Manage", new { courseId });
+                }
+
+                IWorkbook workbook = new XSSFWorkbook();
+                ISheet worksheet = workbook.CreateSheet("Enrolled Students");
+
+                // Create header style
+                ICellStyle headerStyle = workbook.CreateCellStyle();
+                headerStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Blue.Index;
+                headerStyle.FillPattern = FillPattern.SolidForeground;
+                IFont headerFont = workbook.CreateFont();
+                headerFont.Color = NPOI.HSSF.Util.HSSFColor.White.Index;
+                headerFont.IsBold = true;
+                headerStyle.SetFont(headerFont);
+
+                // Create date cell style
+                ICellStyle dateCellStyle = workbook.CreateCellStyle();
+                IDataFormat dataFormat = workbook.CreateDataFormat();
+                dateCellStyle.DataFormat = dataFormat.GetFormat("dd/MM/yyyy HH:mm");
+
+                // Create header row
+                IRow headerRow = worksheet.CreateRow(0);
+                var headers = new[] { "Course Code", "Course Name", "Student ID", "Name", "Email", "Programme", "Year Enrolled", "Trimester Enrolled", "Enrolled Date" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    ICell cell = headerRow.CreateCell(i);
+                    cell.SetCellValue(headers[i]);
+                    cell.CellStyle = headerStyle;
+                }
+
+                // Add data rows
+                int rowIndex = 1;
+                foreach (var student in enrolledStudents)
+                {
+                    IRow dataRow = worksheet.CreateRow(rowIndex);
+                    
+                    dataRow.CreateCell(0).SetCellValue(course.CourseCode);
+                    dataRow.CreateCell(1).SetCellValue(course.CourseName);
+                    dataRow.CreateCell(2).SetCellValue(student.StudentId);
+                    dataRow.CreateCell(3).SetCellValue(student.Name);
+                    dataRow.CreateCell(4).SetCellValue(student.Email);
+                    dataRow.CreateCell(5).SetCellValue(student.Programme ?? "");
+                    dataRow.CreateCell(6).SetCellValue(student.YearEnrolled);
+                    dataRow.CreateCell(7).SetCellValue(student.TrimesterEnrolled);
+                    
+                    ICell dateCell = dataRow.CreateCell(8);
+                    dateCell.SetCellValue(student.EnrolledDate);
+                    dateCell.CellStyle = dateCellStyle;
+
+                    rowIndex++;
+                }
+
+                // Auto-size columns
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    worksheet.AutoSizeColumn(i);
+                }
+
+                // Write to memory stream
+                using (var stream = new MemoryStream())
+                {
+                    workbook.Write(stream);
+                    var fileName = $"EnrolledStudents_{course.CourseCode}_{course.Year}_T{course.Trimester}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    
+                    _logger.LogInformation("Successfully generated Excel file: {FileName} with {Count} students", fileName, enrolledStudents.Count);
+                    
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating enrolled students Excel for course {CourseId}", courseId);
+                TempData["ErrorMessage"] = "Error generating Excel file.";
+                return RedirectToAction("Manage", new { courseId });
+            }
+        }
+
         // Helper method to get cell value as string
         private string GetCellValue(ICell cell)
         {

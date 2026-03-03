@@ -8,17 +8,8 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (@Model.Trimester @Model.Year)
+                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (Trimester @Model.Trimester @Model.Year)
                 </h3>
-                <div class="card-tools">
-                    @if (Model.Role == "Lecturer" || Model.Role == "Admin")
-                    {
-                        <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
-                           class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> Create New Assessment
-                        </a>
-                    }
-                </div>
             </div>
             <div class="card-body">
                 @if (Model.Assessments.Any())
@@ -119,16 +110,6 @@
                                                        title="View Batch Reports">
                                                         <i class="fas fa-chart-bar"></i> Batch Reports
                                                     </a>
-                                                }
-                                                @if (Model.Role == "Lecturer" || User.IsInRole("Admin"))
-                                                {
-                                                    <button type="button" 
-                                                            class="btn btn-danger btn-sm" 
-                                                            data-toggle="modal" 
-                                                            data-target="#deleteModal_@assessment.AssessmentId"
-                                                            title="Delete Assessment">
-                                                        <i class="fas fa-trash-alt"></i> Delete
-                                                    </button>
                                                 }
                                             </div>
                                         </td>

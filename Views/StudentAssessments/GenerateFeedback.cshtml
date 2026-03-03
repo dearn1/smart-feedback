@@ -733,6 +733,21 @@
             if (loadingDiv) loadingDiv.style.display = 'block';
             if (originalDiv) originalDiv.style.opacity = '0.5';
 
+            // Collect lecturer comments from all criteria
+            const lecturerComments = [];
+            document.querySelectorAll('.border-info .text-info').forEach(comment => {
+                const commentText = comment.textContent.trim();
+                if (commentText) {
+                    lecturerComments.push(commentText);
+                }
+            });
+
+            // Build the lecturer comments section for the prompt
+            let lecturerCommentsSection = '';
+            if (lecturerComments.length > 0) {
+                lecturerCommentsSection = `\n\nLecturer's Additional Comments:\n${lecturerComments.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nPlease incorporate and expand on these lecturer comments in your feedback.`;
+            }
+
             const prompt = `Generate constructive overall assessment feedback using paragraphs style.
 The feedback should be divided into two parts:
 
@@ -742,7 +757,7 @@ The feedback should be divided into two parts:
 Context:
 - Overall Score: ${percentage.toFixed(1)}%
 - Strong Areas: ${strengths || 'None identified'}
-- Areas Needing Improvement: ${improvements || 'None identified'}
+- Areas Needing Improvement: ${improvements || 'None identified'}${lecturerCommentsSection}
 
 Please provide encouraging, comprehensive feedback that summarizes the student's overall performance and provides actionable guidance for improvement. Write in a supportive, professional tone suitable for student feedback.`;
 

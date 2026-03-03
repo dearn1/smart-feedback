@@ -112,7 +112,7 @@
                     <!-- Task-Based Assessment Tables -->
                     @foreach (var task in Model.RubricTasks.OrderBy(t => t.TaskTitle))
                     {
-                        var taskCriterias = Model.RubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId).OrderBy(c => c.CriterionTitle);
+                        var taskCriterias = Model.RubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId).OrderBy(c => c.RubricCriteriaId);
                         var taskMaxScore = taskCriterias.Sum(tc => tc.Weight * tc.MaxScore / 100.0);
 
                         <div class="row mb-4">
@@ -175,9 +175,10 @@
                                                         var maxScore = Model.CriteriaScores
                                                         .Where(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId)
                                                         .Max(cs => cs.CriterionScore);
-                                                        var currentScore = Model.StudentScores.ContainsKey(currentStudent.Id) &&
-                                                        Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
-                                                        ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].Score : 0;
+                                                        var hasScore = Model.StudentScores.ContainsKey(currentStudent.Id) &&
+                                                        Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId);
+                                                        var currentScore = hasScore
+                                                        ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].Score : -1;
                                                         var customComment = Model.StudentScores.ContainsKey(currentStudent.Id) &&
                                                         Model.StudentScores[currentStudent.Id].ContainsKey(criteria.RubricCriteriaId)
                                                         ? Model.StudentScores[currentStudent.Id][criteria.RubricCriteriaId].CustomComment : "";
@@ -209,7 +210,7 @@
                                                                 var scoreTitle = Model.CriteriaScores
                                                                 .FirstOrDefault(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId && cs.CriterionScore == i)?.ScoreTitle;
 
-                                                                <td class="text-center align-top score-cell @(currentScore > 0 && currentScore == i ? "score-selected" : "") @(!canEditScores ? "score-disabled" : "")"
+                                                                <td class="text-center align-top score-cell @(currentScore >= 0 && currentScore == i ? "score-selected" : "") @(!canEditScores ? "score-disabled" : "")"
                                                                     data-score="@i"
                                                                     data-student="@currentStudent.Id"
                                                                     data-criteria="@criteria.RubricCriteriaId"
@@ -220,9 +221,9 @@
                                                                     data-score-description="@scoreDescription"
                                                                     style="cursor: @(canEditScores ? "pointer" : "not-allowed");">
                                                                     <div class="score-content">
-                                                                        <div class="score-indicator">
+@*                                                                         <div class="score-indicator">
                                                                             <i class="fas fa-check"></i>
-                                                                        </div>
+                                                                        </div> *@
                                                                         @if (!string.IsNullOrEmpty(scoreDescription))
                                                                         {
                                                                             <div class="mt-1">
@@ -493,10 +494,11 @@
                 if (canEditScores) {
                     var allMarked = validateAllCriteriaMarked();
                     if (!allMarked) {
+                        // Show simple JavaScript alert
+                        alert('Please mark all criteria before saving scores. Some criteria are still unmarked.');
+                        
                         if (typeof toastr !== 'undefined') {
                             toastr.warning('Please mark all criteria before saving scores.');
-                        } else {
-                            alert('Warning: Please mark all criteria before saving scores.');
                         }
                         return false;
                     }
@@ -594,29 +596,29 @@
                 if (e.ctrlKey || e.metaKey) {
                     switch(e.which) {
                         case 37: // Left arrow
-        @if (hasPrevious)
+@if (hasPrevious)
+{
+    @:window.location.href = '@Url.Action("Mark", new
         {
-            @:window.location.href = '@Url.Action("Mark", new
-                {
-                    id = Model.Assessment.AssessmentId,
-                    courseId = Model.CourseRolesId,
-                    role = Model.Role,
-                    studentIndex = Model.CurrentStudentIndex - 1
-                })';
-        }
+            id = Model.Assessment.AssessmentId,
+            courseId = Model.CourseRolesId,
+            role = Model.Role,
+            studentIndex = Model.CurrentStudentIndex - 1
+        })';
+}
                             e.preventDefault();
                             break;
                         case 39: // Right arrow
-        @if (hasNext)
+@if (hasNext)
+{
+    @:window.location.href = '@Url.Action("Mark", new
         {
-            @:window.location.href = '@Url.Action("Mark", new
-                {
-                    id = Model.Assessment.AssessmentId,
-                    courseId = Model.CourseRolesId,
-                    role = Model.Role,
-                    studentIndex = Model.CurrentStudentIndex + 1
-                })';
-        }
+            id = Model.Assessment.AssessmentId,
+            courseId = Model.CourseRolesId,
+            role = Model.Role,
+            studentIndex = Model.CurrentStudentIndex + 1
+        })';
+}
                             e.preventDefault();
                             break;
                         case 83: // S key
@@ -625,6 +627,9 @@
                                 if (allMarked) {
                                     saveScores();
                                 } else {
+                                    // Show simple JavaScript alert
+                                    alert('Please mark all criteria before saving scores. Some criteria are still unmarked.');
+                                    
                                     if (typeof toastr !== 'undefined') {
                                         toastr.warning('Please mark all criteria before saving scores.');
                                     }
@@ -664,12 +669,24 @@
             if (unmarkedCriteria.length > 0) {
                 console.log('Unmarked criteria:', unmarkedCriteria);
                 
+                // Highlight unmarked rows
                 allCriteriaRows.each(function() {
-                    var hasSelectedScore = $(this).find('.score-cell.score-selected').length > 0;
+                    var $row = $(this);
+                    var hasSelectedScore = $row.find('.score-cell.score-selected').length > 0;
                     if (!hasSelectedScore) {
-                        $(this).addClass('table-danger').effect('shake', { times: 2, distance: 5 }, 500);
+                        // Add animated highlight without jQuery UI
+                        $row.addClass('table-danger');
+                        // Simple CSS animation alternative
+                        $row.css('animation', 'shake 0.5s');
+                        
+                        // Use arrow function to maintain context or store reference
+                        setTimeout((function(row) {
+                            return function() {
+                                row.css('animation', '');
+                            };
+                        })($row), 500);
                     } else {
-                        $(this).removeClass('table-danger');
+                        $row.removeClass('table-danger');
                     }
                 });
 
@@ -728,7 +745,8 @@
 
                     var selectedCell = criteriaRow.find('.score-cell.score-selected');
                     if (selectedCell.length > 0) {
-                        var score = parseInt(selectedCell.data('score')) || 0;
+                        var score = parseInt(selectedCell.data('score'));
+                        if (isNaN(score)) score = 0;
                         var weightedScore = (score * weight) / 100;
                         taskWeightedTotal += weightedScore;
                         taskRawTotal += score;
@@ -792,7 +810,8 @@
 
                     var selectedCell = $(this).find('.score-cell.score-selected');
                     if (selectedCell.length > 0) {
-                        var score = parseInt(selectedCell.data('score')) || 0;
+                        var score = parseInt(selectedCell.data('score'));
+                        if (isNaN(score)) score = 0;
                         taskWeightedTotal += (score * weight) / 100;                        
                         taskRawTotal += score;
                     }
@@ -963,6 +982,13 @@
     .weighted-score {
         font-size: 1.1rem;
         font-weight: bold;
+    }
+
+    /* Shake animation */
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
     }
 
     /* Score cell styling */
