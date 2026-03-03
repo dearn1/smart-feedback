@@ -356,12 +356,48 @@ namespace smart_feedback.Controllers
             }
 
             // *** CHANGED: Fetch students from CourseStudent table for this specific course ***
-            var allStudents = await _context.CourseStudent
+            var allStudentsQuery = _context.CourseStudent
                 .Where(cs => cs.CourseRolesId == int.Parse(courseId))
                 .Include(cs => cs.Student)
-                .Select(cs => cs.Student)
-                .OrderBy(s => s.StudentId)
-                .ToListAsync();
+                .Select(cs => cs.Student);
+
+            List<Student> allStudents;
+
+            // *** NEW: Order students - unmarked first, then marked (only for Marking and ReMark statuses) ***
+            if (assessment.Status == "Marking" || assessment.Status == "ReMark")
+            {
+                // Get student IDs that have scores saved
+                var markedStudentIds = await _context.StudentAssessmentScores
+                    .Where(sas => sas.AssessmentId == id)
+                    .Select(sas => sas.StudentId)
+                    .Distinct()
+                    .ToListAsync();
+
+                // Get all students first
+                var students = await allStudentsQuery.ToListAsync();
+
+                // Partition students into unmarked and marked, maintaining alphabetical order within each group
+                var unmarkedStudents = students
+                    .Where(s => !markedStudentIds.Contains(s.Id))
+                    .OrderBy(s => s.StudentId)
+                    .ToList();
+
+                var markedStudents = students
+                    .Where(s => markedStudentIds.Contains(s.Id))
+                    .OrderBy(s => s.StudentId)
+                    .ToList();
+
+                // Combine: unmarked first, then marked
+                allStudents = unmarkedStudents.Concat(markedStudents).ToList();
+
+                _logger.LogInformation("Ordered students for assessment {AssessmentId}: {UnmarkedCount} unmarked, {MarkedCount} marked",
+                    id, unmarkedStudents.Count, markedStudents.Count);
+            }
+            else
+            {
+                // For other statuses, just use default alphabetical ordering
+                allStudents = await allStudentsQuery.OrderBy(s => s.StudentId).ToListAsync();
+            }
 
             // Handle pagination
             if (studentIndex < 0 || studentIndex >= allStudents.Count)
@@ -398,7 +434,6 @@ namespace smart_feedback.Controllers
 
             foreach (var criteria in rubricCriterias)
             {
-                // *** FIXED: Use FirstOrDefault instead of FirstOrDefaultAsync on in-memory collection ***
                 var existingScore = existingScores.FirstOrDefault(es =>
                     es.StudentId == currentStudent.Id && es.RubricCriteriaId == criteria.RubricCriteriaId);
 
