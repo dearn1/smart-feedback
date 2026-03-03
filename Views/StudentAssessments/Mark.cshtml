@@ -64,7 +64,9 @@
                                                         courseId = Model.CourseRolesId,
                                                         role = Model.Role,
                                                         studentIndex = Model.CurrentStudentIndex - 1 })"
-                                                       class="btn btn-outline-light">
+                                                       class="btn btn-outline-light student-nav-btn"
+                                                       data-student-id="@currentStudent.Id"
+                                                       data-target-index="@(Model.CurrentStudentIndex - 1)">
                                                         <i class="fas fa-chevron-left"></i> Previous
                                                     </a>
                                                 }
@@ -78,12 +80,14 @@
                                                     <div class="dropdown-menu">
                                                         @for (int i = 0; i < Model.AllStudents.Count; i++)
                                                         {
-                                                            <a class="dropdown-item @(i == Model.CurrentStudentIndex ? "active" : "")"
+                                                            <a class="dropdown-item @(i == Model.CurrentStudentIndex ? "active" : "") student-nav-btn"
                                                                href="@Url.Action("Mark", new {
                                                                    id = Model.Assessment.AssessmentId,
                                                                    courseId = Model.CourseRolesId,
                                                                    role = Model.Role,
-                                                                   studentIndex = i })">
+                                                                   studentIndex = i })"
+                                                               data-student-id="@currentStudent.Id"
+                                                               data-target-index="@i">
                                                                 @(i + 1). @Model.AllStudents[i].Name
                                                             </a>
                                                         }
@@ -97,7 +101,9 @@
                                                         courseId = Model.CourseRolesId,
                                                         role = Model.Role,
                                                         studentIndex = Model.CurrentStudentIndex + 1 })"
-                                                       class="btn btn-outline-light">
+                                                       class="btn btn-outline-light student-nav-btn"
+                                                       data-student-id="@currentStudent.Id"
+                                                       data-target-index="@(Model.CurrentStudentIndex + 1)">
                                                         Next <i class="fas fa-chevron-right"></i>
                                                     </a>
                                                 }
@@ -444,10 +450,51 @@
         $(document).ready(function() {
             var canEditScores = @Json.Serialize(canEditScores);
             var canEditModeratorComments = @Json.Serialize(canEditModeratorComments);
+            var assessmentStatus = '@Model.Assessment.Status';
+            var currentStudentId = @currentStudent.Id;
+            var assessmentId = @Model.Assessment.AssessmentId;
 
             // Add anti-forgery token for AJAX requests
             $('body').append('<input type="hidden" name="__RequestVerificationToken" value="' + $('[name="__RequestVerificationToken"]').val() + '">');
 
+            // Check if student scores exist in database before navigation
+            function checkStudentSavedBeforeNavigation(studentId, targetUrl) {
+                $.ajax({
+                    url: '@Url.Action("CheckStudentScoreExists", "StudentAssessments")',
+                    type: 'GET',
+                    data: {
+                        assessmentId: assessmentId,
+                        studentId: studentId
+                    },
+                    success: function(response) {
+                        if (response.exists) {
+                            // Student is saved, allow navigation
+                            window.location.href = targetUrl;
+                        } else {
+                            // Student is not saved, show alert
+                            alert('Unsaved: Current student marks have not been saved. Please save before navigating to another student.');
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.warning('Please save current student marks before navigating.');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error checking student score:', error);
+                        // On error, allow navigation to prevent blocking
+                        window.location.href = targetUrl;
+                    }
+                });
+            }
+
+            // Handle navigation button clicks with unsaved check
+            $('.student-nav-btn').on('click', function(e) {
+                if (assessmentStatus === 'Marking' || assessmentStatus === 'ReMark') {
+                    e.preventDefault();
+                    var targetUrl = $(this).attr('href');
+                    checkStudentSavedBeforeNavigation(currentStudentId, targetUrl);
+                }
+            });
 
             // Handle score cell clicks
             $('.score-cell').on('click', function() {
@@ -598,26 +645,48 @@
                         case 37: // Left arrow
 @if (hasPrevious)
 {
-    @:window.location.href = '@Url.Action("Mark", new
+    @:if (assessmentStatus === 'Marking' || assessmentStatus === 'ReMark') {
+        @:var targetUrl = '@Url.Action("Mark", new
         {
             id = Model.Assessment.AssessmentId,
             courseId = Model.CourseRolesId,
             role = Model.Role,
             studentIndex = Model.CurrentStudentIndex - 1
         })';
+        @:checkStudentSavedBeforeNavigation(currentStudentId, targetUrl);
+    @:} else {
+        @:window.location.href = '@Url.Action("Mark", new
+        {
+            id = Model.Assessment.AssessmentId,
+            courseId = Model.CourseRolesId,
+            role = Model.Role,
+            studentIndex = Model.CurrentStudentIndex - 1
+        })';
+    @:}
 }
                             e.preventDefault();
                             break;
                         case 39: // Right arrow
 @if (hasNext)
 {
-    @:window.location.href = '@Url.Action("Mark", new
+    @:if (assessmentStatus === 'Marking' || assessmentStatus === 'ReMark') {
+        @:var targetUrl = '@Url.Action("Mark", new
         {
             id = Model.Assessment.AssessmentId,
             courseId = Model.CourseRolesId,
             role = Model.Role,
             studentIndex = Model.CurrentStudentIndex + 1
         })';
+        @:checkStudentSavedBeforeNavigation(currentStudentId, targetUrl);
+    @:} else {
+        @:window.location.href = '@Url.Action("Mark", new
+        {
+            id = Model.Assessment.AssessmentId,
+            courseId = Model.CourseRolesId,
+            role = Model.Role,
+            studentIndex = Model.CurrentStudentIndex + 1
+        })';
+    @:}
 }
                             e.preventDefault();
                             break;
@@ -642,62 +711,195 @@
                     }
                 }
             });
-        });
 
-    function validateAllCriteriaMarked() {
-            var allCriteriaRows = $('tr[data-criteria][data-student="@currentStudent?.Id"]');
-            var totalCriteria = allCriteriaRows.length;
-            var markedCriteria = 0;
-            var unmarkedCriteria = [];
+            // Function definitions that need access to page variables
+            function validateAllCriteriaMarked() {
+                var allCriteriaRows = $('tr[data-criteria][data-student="@currentStudent?.Id"]');
+                var totalCriteria = allCriteriaRows.length;
+                var markedCriteria = 0;
+                var unmarkedCriteria = [];
 
-            allCriteriaRows.each(function() {
-                var criteriaId = $(this).data('criteria');
-                var studentId = $(this).data('student');
-                var criteriaTitle = $(this).find('strong').first().text();
-                
-                var hasSelectedScore = $(this).find('.score-cell.score-selected').length > 0;
-                
-                if (hasSelectedScore) {
-                    markedCriteria++;
-                } else {
-                    unmarkedCriteria.push(criteriaTitle);
-                }
-            });
-
-            console.log('Validation: ' + markedCriteria + ' of ' + totalCriteria + ' criteria marked');
-
-            if (unmarkedCriteria.length > 0) {
-                console.log('Unmarked criteria:', unmarkedCriteria);
-                
-                // Highlight unmarked rows
                 allCriteriaRows.each(function() {
-                    var $row = $(this);
-                    var hasSelectedScore = $row.find('.score-cell.score-selected').length > 0;
-                    if (!hasSelectedScore) {
-                        // Add animated highlight without jQuery UI
-                        $row.addClass('table-danger');
-                        // Simple CSS animation alternative
-                        $row.css('animation', 'shake 0.5s');
-                        
-                        // Use arrow function to maintain context or store reference
-                        setTimeout((function(row) {
-                            return function() {
-                                row.css('animation', '');
-                            };
-                        })($row), 500);
+                    var criteriaId = $(this).data('criteria');
+                    var studentId = $(this).data('student');
+                    var criteriaTitle = $(this).find('strong').first().text();
+                    
+                    var hasSelectedScore = $(this).find('.score-cell.score-selected').length > 0;
+                    
+                    if (hasSelectedScore) {
+                        markedCriteria++;
                     } else {
-                        $row.removeClass('table-danger');
+                        unmarkedCriteria.push(criteriaTitle);
                     }
                 });
 
-                return false;
+                console.log('Validation: ' + markedCriteria + ' of ' + totalCriteria + ' criteria marked');
+
+                if (unmarkedCriteria.length > 0) {
+                    console.log('Unmarked criteria:', unmarkedCriteria);
+                    
+                    // Highlight unmarked rows
+                    allCriteriaRows.each(function() {
+                        var $row = $(this);
+                        var hasSelectedScore = $row.find('.score-cell.score-selected').length > 0;
+                        if (!hasSelectedScore) {
+                            // Add animated highlight without jQuery UI
+                            $row.addClass('table-danger');
+                            // Simple CSS animation alternative
+                            $row.css('animation', 'shake 0.5s');
+                            
+                            // Use arrow function to maintain context or store reference
+                            setTimeout((function(row) {
+                                return function() {
+                                    row.css('animation', '');
+                                };
+                            })($row), 500);
+                        } else {
+                            $row.removeClass('table-danger');
+                        }
+                    });
+
+                    return false;
+                }
+
+                allCriteriaRows.removeClass('table-danger');
+                return true;
             }
 
-            allCriteriaRows.removeClass('table-danger');
-            return true;
-        }
+            function saveScores() {
+                $('#saveScores').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
 
-    function calculateStudentTotal(studentId) {
+                var scores = {};
+                var comments = {};
+
+                // Collect scores from selected cells
+                $('.score-cell.score-selected').each(function() {
+                    var studentId = $(this).data('student');
+                    var criteriaId = $(this).data('criteria');
+                    var score = $(this).data('score');
+                    var name = 'score_' + studentId + '_' + criteriaId;
+                    scores[name] = score;
+                });
+
+                // Collect comments
+                $('textarea[name^="comment_"]').each(function() {
+                    var name = $(this).attr('name');
+                    var value = $(this).val();
+                    comments[name] = value;
+                });
+
+                $.ajax({
+                    url: '@Url.Action("SaveScores", "StudentAssessments")',
+                    type: 'POST',
+                    data: {
+                        assessmentId: @Model.Assessment.AssessmentId,
+                        courseId: '@Model.CourseRolesId',
+                        role: '@Model.Role',
+                        scores: scores,
+                        comments: comments,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(response.message);
+                            } else {
+                                alert('Success: ' + response.message);
+                            }
+                        } else {
+                            var errorMessage = response.message || 'Failed to save scores';
+                            
+                            if (response.unmarkedCriteria && response.unmarkedCriteria.length > 0) {
+                                errorMessage += '\n\n' + response.unmarkedCriteria.join('\n');
+                            }
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessage, 'Validation Error', { timeOut: 10000 });
+                            } else {
+                                alert('Error: ' + errorMessage);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr.responseText);
+                        var errorMessage = 'An error occurred while saving scores.';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            errorMessage = 'Server error: ' + xhr.responseText;
+                        }
+
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(errorMessage);
+                        } else {
+                            alert('Error: ' + errorMessage);
+                        }
+                    },
+                    complete: function() {
+                        $('#saveScores').prop('disabled', false).html('<i class="fas fa-save"></i> Save Scores');
+                    }
+                });
+            }
+
+            function saveModeratorComments() {
+                var moderatorComments = {};
+
+                $('textarea[name^="moderator_comment_"]').each(function() {
+                    var name = $(this).attr('name');
+                    var value = $(this).val();
+                    moderatorComments[name] = value;
+                });
+
+                $.ajax({
+                    url: '@Url.Action("SaveModeratorComments", "StudentAssessments")',
+                    type: 'POST',
+                    data: {
+                        assessmentId: @Model.Assessment.AssessmentId,
+                        courseId: '@Model.CourseRolesId',
+                        role: '@Model.Role',
+                        moderatorComments: moderatorComments,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(response.message);
+                            } else {
+                                alert('Success: ' + response.message);
+                            }
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(response.message || 'Failed to save moderator comments');
+                            } else {
+                                alert('Error: ' + (response.message || 'Failed to save moderator comments'));
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr.responseText);
+                        var errorMessage = 'An error occurred while saving moderator comments.';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            errorMessage = 'Server error: ' + xhr.responseText;
+                        }
+
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error(errorMessage);
+                        } else {
+                            alert('Error: ' + errorMessage);
+                        }
+                    },
+                    complete: function() {
+                        $('#saveModeratorComments').prop('disabled', false).html('<i class="fas fa-save"></i> Save Moderator Comments');
+                    }
+                });
+            }
+        });
+
+        function calculateStudentTotal(studentId) {
             var overallWeightedTotal = 0;
             var overallRawTotal = 0;
             var totalMaxMarks = 0;
@@ -840,138 +1042,6 @@
                 progressBar.css('width', rawPercentage.toFixed(2) + '%')
                           .attr('aria-valuenow', taskRawTotal)
                           .attr('aria-valuemax', taskMaxRawTotal);
-            });
-        }
-
-        function saveScores() {
-            $('#saveScores').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-
-            var scores = {};
-            var comments = {};
-
-            // Collect scores from selected cells
-            $('.score-cell.score-selected').each(function() {
-                var studentId = $(this).data('student');
-                var criteriaId = $(this).data('criteria');
-                var score = $(this).data('score');
-                var name = 'score_' + studentId + '_' + criteriaId;
-                scores[name] = score;
-            });
-
-            // Collect comments
-            $('textarea[name^="comment_"]').each(function() {
-                var name = $(this).attr('name');
-                var value = $(this).val();
-                comments[name] = value;
-            });
-
-            $.ajax({
-                url: '@Url.Action("SaveScores", "StudentAssessments")',
-                type: 'POST',
-                data: {
-                    assessmentId: @Model.Assessment.AssessmentId,
-                    courseId: '@Model.CourseRolesId',
-                    role: '@Model.Role',
-                    scores: scores,
-                    comments: comments,
-                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                },
-                success: function(response) {
-                    if (response.success) {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.success(response.message);
-                        } else {
-                            alert('Success: ' + response.message);
-                        }
-                    } else {
-                        var errorMessage = response.message || 'Failed to save scores';
-                        
-                        if (response.unmarkedCriteria && response.unmarkedCriteria.length > 0) {
-                            errorMessage += '\n\n' + response.unmarkedCriteria.join('\n');
-                        }
-                        
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(errorMessage, 'Validation Error', { timeOut: 10000 });
-                        } else {
-                            alert('Error: ' + errorMessage);
-                        }
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', xhr.responseText);
-                    var errorMessage = 'An error occurred while saving scores.';
-
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        errorMessage = 'Server error: ' + xhr.responseText;
-                    }
-
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error(errorMessage);
-                    } else {
-                        alert('Error: ' + errorMessage);
-                    }
-                },
-                complete: function() {
-                    $('#saveScores').prop('disabled', false).html('<i class="fas fa-save"></i> Save Scores');
-                }
-            });
-        }
-
-        function saveModeratorComments() {
-            var moderatorComments = {};
-
-            $('textarea[name^="moderator_comment_"]').each(function() {
-                var name = $(this).attr('name');
-                var value = $(this).val();
-                moderatorComments[name] = value;
-            });
-
-            $.ajax({
-                url: '@Url.Action("SaveModeratorComments", "StudentAssessments")',
-                type: 'POST',
-                data: {
-                    assessmentId: @Model.Assessment.AssessmentId,
-                    courseId: '@Model.CourseRolesId',
-                    role: '@Model.Role',
-                    moderatorComments: moderatorComments,
-                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                },
-                success: function(response) {
-                    if (response.success) {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.success(response.message);
-                        } else {
-                            alert('Success: ' + response.message);
-                        }
-                    } else {
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error(response.message || 'Failed to save moderator comments');
-                        } else {
-                            alert('Error: ' + (response.message || 'Failed to save moderator comments'));
-                        }
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', xhr.responseText);
-                    var errorMessage = 'An error occurred while saving moderator comments.';
-
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        errorMessage = 'Server error: ' + xhr.responseText;
-                    }
-
-                    if (typeof toastr !== 'undefined') {
-                        toastr.error(errorMessage);
-                    } else {
-                        alert('Error: ' + errorMessage);
-                    }
-                },
-                complete: function() {
-                    $('#saveModeratorComments').prop('disabled', false).html('<i class="fas fa-save"></i> Save Moderator Comments');
-                }
             });
         }
     </script>

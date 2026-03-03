@@ -608,9 +608,7 @@ namespace smart_feedback.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = $"Scores saved successfully! {savedCount} new scores created, {updatedCount} scores updated.",
-                    savedCount = savedCount,
-                    updatedCount = updatedCount
+                    message = $"Scores saved successfully!"
                 });
             }
             catch (Exception ex)
@@ -1257,6 +1255,25 @@ public async Task<IActionResult> SaveAIGeneratedFeedback(int assessmentId, int s
             success = false, 
             message = "An error occurred while saving feedback." 
         });
+    }
+}
+
+// Add this new GET action to check if student has scores saved in database
+[HttpGet]
+public async Task<IActionResult> CheckStudentScoreExists(int assessmentId, int studentId)
+{
+    try
+    {
+        var hasScores = await _context.StudentAssessmentScores
+            .AnyAsync(sas => sas.AssessmentId == assessmentId && sas.StudentId == studentId);
+
+        return Json(new { exists = hasScores });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error checking if student {StudentId} has scores for assessment {AssessmentId}", 
+            studentId, assessmentId);
+        return Json(new { exists = false });
     }
 }
     }
