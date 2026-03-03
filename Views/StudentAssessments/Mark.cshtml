@@ -561,12 +561,39 @@
             });
 
             // Generate feedback
-            $('.generate-feedback').on('click', function() {
+            $('.generate-feedback').on('click', function(e) {
                 var studentId = $(this).data('student');
-                var url = '@Url.Action("GenerateFeedback", "StudentAssessments")' +
-                         '?id=@Model.Assessment.AssessmentId&studentId=' + studentId +
-                         '&courseId=@Model.CourseRolesId&role=@Model.Role';
-                window.open(url, '_blank');
+                
+                // Check if student scores exist in database before generating feedback
+                $.ajax({
+                    url: '@Url.Action("CheckStudentScoreExists", "StudentAssessments")',
+                    type: 'GET',
+                    data: {
+                        assessmentId: assessmentId,
+                        studentId: studentId
+                    },
+                    success: function(response) {
+                        if (response.exists) {
+                            // Student is saved, allow feedback generation
+                            var url = '@Url.Action("GenerateFeedback", "StudentAssessments")' +
+                                     '?id=@Model.Assessment.AssessmentId&studentId=' + studentId +
+                                     '&courseId=@Model.CourseRolesId&role=@Model.Role';
+                            window.open(url, '_blank');
+                        } else {
+                            // Student is not saved, show alert
+                            alert('Cannot generate feedback: Student marks have not been saved yet. Please save scores before generating feedback.');
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.warning('Please save student marks before generating feedback.');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error checking student score:', error);
+                        // On error, show warning but allow generation
+                        alert('Warning: Could not verify if scores are saved. Please ensure scores are saved before generating feedback.');
+                    }
+                });
             });
 
             // Update Status: Moderation, FinalReview, Published

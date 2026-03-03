@@ -882,7 +882,7 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                 
                 const badgeText = forceRegenerate 
                     ? '<i class="fas fa-sync-alt"></i> Feedback Regenerated' 
-                    : '<i class="fas fa-robot"></i> AI-Enhanced Feedback (Saved)';
+                    : '<i class="fas fa-robot"></i> Personalized Feedback (Saved)';
                 
                 if (aiFeedbackDiv) {
                     aiFeedbackDiv.innerHTML = `
@@ -897,10 +897,10 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                     aiFeedbackDiv.style.display = 'block';
                 }
 
-                console.log('=== AI Feedback Successfully Displayed and Saved ===');
+                console.log('=== Personalized Feedback Successfully Displayed and Saved ===');
                 
             } catch (error) {
-                console.error('=== AI Feedback Error ===');
+                console.error('=== Personalized Feedback Error ===');
                 console.error('Error:', error);
                 showFallbackFeedback(container, error.message);
                 throw error; // Re-throw for regenerateFeedback function to catch
@@ -943,12 +943,17 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
             console.log('Showing fallback feedback. Error:', errorMessage);
             
             const loadingDiv = container.querySelector('.overall-ai-loading');
+            const strengths = container.dataset.strengths;
+            const improvements = container.dataset.improvements;
 
             if (loadingDiv) {
                 loadingDiv.innerHTML = `
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle mr-2"></i>
-                        Unable to generate AI feedback. Please refresh the page to try again.
+                        <p class="mb-2">Unable to generate personalized feedback. Please refresh the page to try again.</p>
+                        <hr>
+                        <p class="mb-1"><strong>Strong Areas:</strong> ${strengths || 'None identified'}</p>
+                        <p class="mb-0"><strong>Areas Needing Improvement:</strong> ${improvements || 'None identified'}</p>
                     </div>
                 `;
             }
