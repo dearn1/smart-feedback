@@ -805,8 +805,12 @@ namespace smart_feedback.Controllers
 
             var percentage = totalMaxMarks > 0 ? (totalActualMarks / totalMaxMarks * 100) : 0;
             
-            // CHANGED: Use fallback for overall feedback (AI will be called from JavaScript)
-            var overallFeedback = await _puterAIService.GenerateOverallConstructiveFeedbackAsync(percentage, criteriaResults);
+            // CHANGED: Use new method that saves/retrieves from database
+            var overallFeedback = await _puterAIService.GetOrGenerateOverallFeedbackAsync(
+                assessment.AssessmentId, 
+                student.Id, 
+                percentage, 
+                criteriaResults);
 
             return new StudentFeedbackViewModel
             {
@@ -1193,6 +1197,65 @@ public async Task<IActionResult> TrainMLModels()
         return Json(new { 
             success = false, 
             message = $"Error: {ex.Message}" 
+        });
+    }
+}
+
+// Add this new method to save AI-generated feedback from the browser
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> SaveAIGeneratedFeedback(int assessmentId, int studentId, string feedback)
+{
+    try
+    {
+        if (string.IsNullOrWhiteSpace(feedback))
+        {
+            return Json(new { success = false, message = "Feedback cannot be empty." });
+        }
+
+        // Check if feedback already exists
+        var existingFeedback = await _context.StudentOverallFeedback
+            .FirstOrDefaultAsync(f => f.AssessmentId == assessmentId && f.StudentId == studentId);
+
+        if (existingFeedback != null)
+        {
+            // Update existing feedback
+            existingFeedback.OverallFeedback = feedback;
+            existingFeedback.LastModified = DateTime.Now;
+            _context.Update(existingFeedback);
+            
+            _logger.LogInformation("Updated AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                studentId, assessmentId);
+        }
+        else
+        {
+            // Create new feedback
+            var newFeedback = new StudentOverallFeedback
+            {
+                AssessmentId = assessmentId,
+                StudentId = studentId,
+                OverallFeedback = feedback,
+                GeneratedDate = DateTime.Now
+            };
+            
+            _context.StudentOverallFeedback.Add(newFeedback);
+            
+            _logger.LogInformation("Saved AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                studentId, assessmentId);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Feedback saved successfully." });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error saving AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
+            studentId, assessmentId);
+        
+        return Json(new { 
+            success = false, 
+            message = "An error occurred while saving feedback." 
         });
     }
 }

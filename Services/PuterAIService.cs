@@ -1,3 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using smart_feedback.Data;
+using smart_feedback.Models;
+using smart_feedback.Models.ViewModels;
 using System.Text;
 
 namespace smart_feedback.Services
@@ -5,10 +10,12 @@ namespace smart_feedback.Services
     public class PuterAIService : IPuterAIService
     {
         private readonly ILogger<PuterAIService> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public PuterAIService(ILogger<PuterAIService> logger)
+        public PuterAIService(ILogger<PuterAIService> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         // Only overall feedback - serves as fallback when JavaScript fails
@@ -17,6 +24,55 @@ namespace smart_feedback.Services
             var strengths = criteriaResults.Where(cr => cr.Score >= (cr.MaxScore * 0.75)).Select(cr => cr.CriteriaTitle).ToList();
             var improvements = criteriaResults.Where(cr => cr.Score < (cr.MaxScore * 0.5)).Select(cr => cr.CriteriaTitle).ToList();
             return await Task.FromResult(GenerateFallbackOverallFeedback(percentage, strengths, improvements));
+        }
+
+        // NEW METHOD: Get existing feedback or generate and save new one
+        public async Task<string> GetOrGenerateOverallFeedbackAsync(int assessmentId, int studentId, double percentage, List<StudentCriteriaResult> criteriaResults)
+        {
+            try
+            {
+                // Check if feedback already exists in database
+                var existingFeedback = await _context.StudentOverallFeedback
+                    .FirstOrDefaultAsync(f => f.AssessmentId == assessmentId && f.StudentId == studentId);
+
+                if (existingFeedback != null)
+                {
+                    _logger.LogInformation("Retrieved existing overall feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                        studentId, assessmentId);
+                    return existingFeedback.OverallFeedback;
+                }
+
+                // Generate new feedback
+                _logger.LogInformation("Generating new overall feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                    studentId, assessmentId);
+                
+                var feedback = await GenerateOverallConstructiveFeedbackAsync(percentage, criteriaResults);
+
+                // Save to database
+                var newFeedback = new StudentOverallFeedback
+                {
+                    AssessmentId = assessmentId,
+                    StudentId = studentId,
+                    OverallFeedback = feedback,
+                    GeneratedDate = DateTime.Now
+                };
+
+                _context.StudentOverallFeedback.Add(newFeedback);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Saved new overall feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                    studentId, assessmentId);
+
+                return feedback;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting or generating overall feedback for Student {StudentId}, Assessment {AssessmentId}", 
+                    studentId, assessmentId);
+                
+                // Fallback to generating feedback without saving
+                return await GenerateOverallConstructiveFeedbackAsync(percentage, criteriaResults);
+            }
         }
 
         private string GenerateFallbackOverallFeedback(double percentage, List<string> strengths, List<string> improvements)
