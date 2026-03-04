@@ -21,19 +21,28 @@ using System.Text.RegularExpressions;
 
 namespace smart_feedback.Controllers
 {
+    // Helper class for programme options
+    public class ProgrammeOption
+    {
+        public string Value { get; set; }
+        public string Text { get; set; }
+    }
+
     public class RubricsController : Controller
     {        
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RubricsController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<RubricsController> logger)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<RubricsController> logger, IConfiguration configuration)
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
             _userManager = userManager;
             _logger = logger;
+            _configuration = configuration;
         }
         // GET: Rubrics
         [Authorize]
@@ -259,6 +268,22 @@ namespace smart_feedback.Controllers
                     }
                 }
 
+                // Set default Institution
+                ViewBag.DefaultInstitution = "Auckland Institute of Studies";
+
+                // Load programmes from configuration
+                var programmes = _configuration.GetSection("ApplicationSettings:Programmes").Get<List<ProgrammeOption>>();
+                ViewBag.Programmes = new SelectList(programmes ?? new List<ProgrammeOption>(), "Value", "Text");
+
+                // Generate year dropdown (current year back to 10 years ago)
+                var currentYear = DateTime.Now.Year;
+                var years = Enumerable.Range(currentYear - 10, 11).OrderByDescending(y => y).ToList();
+                ViewBag.Years = new SelectList(years);
+
+                // Generate trimester dropdown (1, 2, 3)
+                var trimesters = new List<int> { 1, 2, 3 };
+                ViewBag.Trimesters = new SelectList(trimesters);
+
                 return View();
             }
             catch (Exception ex)
@@ -271,7 +296,7 @@ namespace smart_feedback.Controllers
         // POST: Rubrics/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string courseId, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName, TermName,TotalMarks,SourceFile")] Rubrics rubrics)
+        public async Task<IActionResult> Create(string courseId, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName,Year,Trimester,TotalMarks,SourceFile")] Rubrics rubrics)
         {
             _logger.LogInformation("Create POST action called for rubric: {RubricName}, courseId: {CourseId}", rubrics?.RubricName, courseId);
 
@@ -320,7 +345,7 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Successfully created rubric: {RubricName} (ID: {RubricId}) for course {CourseCode}",
                     rubrics.RubricName, rubrics.RubricsId, rubrics.CourseCode);
 
-                return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                return RedirectToAction("Management", "Rubrics");
             }
             catch (Exception ex)
             {
@@ -405,13 +430,13 @@ namespace smart_feedback.Controllers
                     _logger.LogError(ex, "Error updating rubric ID: {RubricId}", id);
                     throw;
                 }
-                return RedirectToAction("Index", "Rubrics", new { courseid, role });
+                return RedirectToAction("Management", "Rubrics");
             }
 
             _logger.LogWarning("Model validation failed for rubric edit ID: {RubricId}. Errors: {ValidationErrors}",
                 id, string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
 
-            return RedirectToAction("Index", "Rubrics", new { courseid, role });
+            return RedirectToAction("Management", "Rubrics");
         }
 
         // GET: Rubrics/EditTask/5
@@ -454,8 +479,6 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-
-
         public async Task<IActionResult> EditTask(int id, int rubricId, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
             _logger.LogInformation("EditTask POST action called for task ID: {TaskId}", id);
@@ -472,6 +495,21 @@ namespace smart_feedback.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Successfully updated task: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                // Update TotalMarks in Rubrics table
+                var rubric = await _context.Rubrics.FindAsync(rubricId);
+                if (rubric != null)
+                {
+                    var allTasks = await _context.RubricTask
+                        .Where(rt => rt.RubricsId == rubricId)
+                        .ToListAsync();
+                    
+                    rubric.TotalMarks = allTasks.Sum(t => t.MaxMarks);
+                    _context.Update(rubric);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Updated rubric {RubricId} TotalMarks to {TotalMarks}", rubricId, rubric.TotalMarks);
+                }
 
                 return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
             }
@@ -779,7 +817,7 @@ namespace smart_feedback.Controllers
                     TempData["ErrorMessage"] = "Rubric not found.";
                 }
 
-                return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                return RedirectToAction("Management", "Rubrics");
             }
             catch (Exception ex)
             {
@@ -1063,9 +1101,7 @@ namespace smart_feedback.Controllers
         }
 
         [HttpPost]
-
         [ValidateAntiForgeryToken]
-
         public async Task<IActionResult> CreateTask(int id, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
             _logger.LogInformation("CreateTask POST action called for rubric ID: {RubricId}, task: {TaskTitle}", id, rubricTask?.TaskTitle);
@@ -1078,6 +1114,21 @@ namespace smart_feedback.Controllers
 
                 _logger.LogInformation("Successfully created task: {TaskTitle} (ID: {TaskId}) for rubric {RubricId}",
                     rubricTask.TaskTitle, rubricTask.RubricTaskId, id);
+
+                // Update TotalMarks in Rubrics table
+                var rubric = await _context.Rubrics.FindAsync(id);
+                if (rubric != null)
+                {
+                    var allTasks = await _context.RubricTask
+                        .Where(rt => rt.RubricsId == id)
+                        .ToListAsync();
+                    
+                    rubric.TotalMarks = allTasks.Sum(t => t.MaxMarks);
+                    _context.Update(rubric);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Updated rubric {RubricId} TotalMarks to {TotalMarks}", id, rubric.TotalMarks);
+                }
 
                 return RedirectToAction("Details", "Rubrics", new { id, courseid, role });
             }
@@ -1663,10 +1714,10 @@ namespace smart_feedback.Controllers
 
         // GET: Rubrics/Management
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Management(string sortOrder, int? year, int? trimester, string searchTerm)
+        public async Task<IActionResult> Management(string sortOrder, string programme, string courseCode, int? year, int? trimester, string searchTerm)
         {
-            _logger.LogInformation("Management action called with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}, SortOrder: {SortOrder}",
-                year, trimester, searchTerm, sortOrder);
+            _logger.LogInformation("Management action called with filters - Programme: {Programme}, CourseCode: {CourseCode}, Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}, SortOrder: {SortOrder}",
+                programme, courseCode, year, trimester, searchTerm, sortOrder);
 
             try
             {
@@ -1681,11 +1732,25 @@ namespace smart_feedback.Controllers
                 ViewData["TotalMarksSortParm"] = sortOrder == "totalMarks" ? "totalMarks_desc" : "totalMarks";
 
                 // Set up ViewData for current filter values
+                ViewData["CurrentProgrammeFilter"] = programme;
+                ViewData["CurrentCourseCodeFilter"] = courseCode;
                 ViewData["CurrentYearFilter"] = year;
                 ViewData["CurrentTrimesterFilter"] = trimester;
                 ViewData["CurrentSearchTerm"] = searchTerm;
 
-                // Get distinct years and trimesters for dropdowns
+                // Get distinct values for dropdowns
+                ViewBag.Programmes = new SelectList(await _context.Rubrics
+                    .Select(r => r.Programme)
+                    .Distinct()
+                    .OrderBy(p => p)
+                    .ToListAsync());
+
+                ViewBag.CourseCodes = new SelectList(await _context.Rubrics
+                    .Select(r => r.CourseCode)
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToListAsync());
+
                 ViewBag.Years = new SelectList(await _context.Rubrics
                     .Select(r => r.Year)
                     .Distinct()
@@ -1699,6 +1764,8 @@ namespace smart_feedback.Controllers
                     .ToListAsync());
 
                 // Preserve current filter values for dropdowns
+                ViewBag.CurrentProgramme = programme;
+                ViewBag.CurrentCourseCode = courseCode;
                 ViewBag.CurrentYear = year;
                 ViewBag.CurrentTrimester = trimester;
 
@@ -1706,6 +1773,18 @@ namespace smart_feedback.Controllers
                 var rubricsQuery = _context.Rubrics.AsQueryable();
 
                 // Apply filters
+                if (!string.IsNullOrEmpty(programme))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.Programme == programme);
+                    _logger.LogDebug("Applied programme filter: {Programme}", programme);
+                }
+
+                if (!string.IsNullOrEmpty(courseCode))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.CourseCode == courseCode);
+                    _logger.LogDebug("Applied course code filter: {CourseCode}", courseCode);
+                }
+
                 if (year.HasValue)
                 {
                     rubricsQuery = rubricsQuery.Where(r => r.Year == year.Value);
@@ -1777,15 +1856,15 @@ namespace smart_feedback.Controllers
 
                 var rubrics = await rubricsQuery.ToListAsync();
 
-                _logger.LogInformation("Successfully retrieved {RubricCount} rubrics for management (filtered: Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Search={HasSearchFilter})",
-                    rubrics.Count, year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(searchTerm));
+                _logger.LogInformation("Successfully retrieved {RubricCount} rubrics for management (filtered: Programme={HasProgrammeFilter}, CourseCode={HasCourseCodeFilter}, Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Search={HasSearchFilter})",
+                    rubrics.Count, !string.IsNullOrEmpty(programme), !string.IsNullOrEmpty(courseCode), year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(searchTerm));
 
                 return View(rubrics);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in Management action with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}",
-                    year, trimester, searchTerm);
+                _logger.LogError(ex, "Error in Management action with filters - Programme: {Programme}, CourseCode: {CourseCode}, Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}",
+                    programme, courseCode, year, trimester, searchTerm);
                 throw;
             }
         }

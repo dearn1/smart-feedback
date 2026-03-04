@@ -20,15 +20,37 @@
     <div class="card-body bg-light">
         <form asp-action="Management" method="get" id="filterForm">
             <div class="row g-3 align-items-end">
-                <!-- Search Filter -->
+                <!-- Programme Filter -->
                 <div class="col-lg-3 col-md-6">
                     <div class="form-group mb-0">
-                        <label for="searchTerm" class="form-label fw-semibold">
-                            <i class="fas fa-search text-primary me-1"></i>
-                            Search
+                        <label for="programmeFilter" class="form-label fw-semibold">
+                            <i class="fas fa-graduation-cap text-success me-1"></i>
+                            Programme
                         </label>
-                        <input type="text" class="form-control form-control-sm" id="searchTerm" name="searchTerm" 
-                               value="@ViewData["CurrentSearchTerm"]" placeholder="Search rubrics..." />
+                        <select class="form-select form-select-sm" id="programmeFilter" name="programme">
+                            <option value="">-- All Programmes --</option>
+                            @foreach (var programme in ViewBag.Programmes as SelectList)
+                            {
+                                <option value="@programme.Text" selected="@(programme.Text == ViewBag.CurrentProgramme)">@programme.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Course Code Filter -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-group mb-0">
+                        <label for="courseCodeFilter" class="form-label fw-semibold">
+                            <i class="fas fa-book text-danger me-1"></i>
+                            Course Code
+                        </label>
+                        <select class="form-select form-select-sm" id="courseCodeFilter" name="courseCode">
+                            <option value="">-- All Course Codes --</option>
+                            @foreach (var courseCode in ViewBag.CourseCodes as SelectList)
+                            {
+                                <option value="@courseCode.Text" selected="@(courseCode.Text == ViewBag.CurrentCourseCode)">@courseCode.Text</option>
+                            }
+                        </select>
                     </div>
                 </div>
 
@@ -118,6 +140,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["RubricNameSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -129,6 +153,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["CourseCodeSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -140,6 +166,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["CourseNameSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -151,6 +179,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["YearSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -162,6 +192,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["TrimesterSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -173,6 +205,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["ProgrammeSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -184,6 +218,8 @@
                         <th>
                             <a asp-action="Management"
                                asp-route-sortOrder="@ViewData["TotalMarksSortParm"]"
+                               asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
+                               asp-route-courseCode="@ViewData["CurrentCourseCodeFilter"]"
                                asp-route-year="@ViewData["CurrentYearFilter"]"
                                asp-route-trimester="@ViewData["CurrentTrimesterFilter"]"
                                asp-route-searchTerm="@ViewData["CurrentSearchTerm"]"
@@ -232,6 +268,17 @@
                                            title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        
+                                        <a asp-action="Delete" 
+                                            class="btn btn-danger btn-sm" 
+                                            asp-route-id="@item.RubricsId" 
+                                            asp-route-courseid="" 
+                                            asp-route-role=""
+                                           title="Delete">
+                                           
+                                            <i class="fas fa-trash"></i>
+                                            
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -244,7 +291,7 @@
                                 <div class="text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-3"></i>
                                     <h5>No rubrics found</h5>
-                                    @if (ViewData["CurrentYearFilter"] != null || ViewData["CurrentTrimesterFilter"] != null || !string.IsNullOrEmpty(ViewData["CurrentSearchTerm"]?.ToString()))
+                                    @if (ViewData["CurrentProgrammeFilter"] != null || ViewData["CurrentCourseCodeFilter"] != null || ViewData["CurrentYearFilter"] != null || ViewData["CurrentTrimesterFilter"] != null || !string.IsNullOrEmpty(ViewData["CurrentSearchTerm"]?.ToString()))
                                     {
                                         <p>No rubrics match your current filters. Try adjusting your search criteria.</p>
                                     }
