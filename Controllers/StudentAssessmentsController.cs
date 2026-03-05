@@ -1347,123 +1347,72 @@ namespace smart_feedback.Controllers
             }
         }
 
-        // Add this method to your existing StudentAssessmentsController
+        // Add this to the controller class
 
 [HttpPost]
-[Authorize(Roles = "Admin")]
-public async Task<IActionResult> TrainMLModels()
+public async Task<IActionResult> GenerateBatchPdfs(int id, string courseId, string role)
 {
     try
     {
-        var trainer = new MLModelTrainer(_context, _environment);
-        
-        // Prepare training data from database
-        await trainer.PrepareTrainingDataFromDatabase();
-        
-        // Train both models
-        var feedbackResult = await trainer.TrainFeedbackModelAsync();
-        var sentimentResult = await trainer.TrainSentimentModelAsync();
-        
-        if (feedbackResult && sentimentResult)
-        {
-            return Json(new { 
-                success = true, 
-                message = "ML models trained successfully! The feedback service will reload the models automatically." 
-            });
-        }
-        else
-        {
-            return Json(new { 
-                success = false, 
-                message = "One or more models failed to train. Check server logs for details." 
-            });
-        }
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error training ML models");
-        return Json(new { 
-            success = false, 
-            message = $"Error: {ex.Message}" 
-        });
-    }
-}
+        var assessment = await _context.Assessments
+            .Include(a => a.Rubric)
+            .FirstOrDefaultAsync(a => a.AssessmentId == id);
 
-// Add this new method to save AI-generated feedback from the browser
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> SaveAIGeneratedFeedback(int assessmentId, int studentId, string feedback)
-{
-    try
-    {
-        if (string.IsNullOrWhiteSpace(feedback))
+        if (assessment == null)
         {
-            return Json(new { success = false, message = "Feedback cannot be empty." });
+            return Json(new { success = false, message = "Assessment not found." });
         }
 
-        // Check if feedback already exists
-        var existingFeedback = await _context.StudentOverallFeedback
-            .FirstOrDefaultAsync(f => f.AssessmentId == assessmentId && f.StudentId == studentId);
+        // Get all students for this course
+        var students = await _context.CourseStudent
+            .Where(cs => cs.CourseRolesId == int.Parse(courseId))
+            .Include(cs => cs.Student)
+            .Select(cs => cs.Student)
+            .OrderBy(s => s.StudentId)
+            .ToListAsync();
 
-        if (existingFeedback != null)
+        if (!students.Any())
         {
-            // Update existing feedback
-            existingFeedback.OverallFeedback = feedback;
-            existingFeedback.LastModified = DateTime.Now;
-            _context.Update(existingFeedback);
-            
-            _logger.LogInformation("Updated AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
-                studentId, assessmentId);
+            return Json(new { success = false, message = "No students found." });
         }
-        else
+
+        // Generate feedback for all students
+        var allFeedbacks = new List<StudentFeedbackViewModel>();
+        foreach (var student in students)
         {
-            // Create new feedback
-            var newFeedback = new StudentOverallFeedback
+            var feedback = await GenerateStudentFeedbackAsync(assessment, student);
+            allFeedbacks.Add(feedback);
+        }
+
+        // Inject PDF service
+        var pdfService = HttpContext.RequestServices.GetRequiredService<IPdfGenerationService>();
+        
+        // Generate PDFs
+        var pdfFiles = await pdfService.GenerateBatchPdfsAsync(allFeedbacks);
+
+        // Create ZIP file
+        using var memoryStream = new MemoryStream();
+        using (var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Create, true))
+        {
+            foreach (var (fileName, pdfData) in pdfFiles)
             {
-                AssessmentId = assessmentId,
-                StudentId = studentId,
-                OverallFeedback = feedback,
-                GeneratedDate = DateTime.Now
-            };
-            
-            _context.StudentOverallFeedback.Add(newFeedback);
-            
-            _logger.LogInformation("Saved AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
-                studentId, assessmentId);
+                var zipEntry = archive.CreateEntry(fileName, System.IO.Compression.CompressionLevel.Fastest);
+                using var zipStream = zipEntry.Open();
+                await zipStream.WriteAsync(pdfData, 0, pdfData.Length);
+            }
         }
 
-        await _context.SaveChangesAsync();
+        memoryStream.Position = 0;
+        var zipFileName = $"{assessment.AssessmentName}_AllStudents_{DateTime.Now:yyyyMMdd}.zip";
 
-        return Json(new { success = true, message = "Feedback saved successfully." });
+        _logger.LogInformation("Generated {Count} PDFs for assessment {AssessmentId}", pdfFiles.Count, id);
+
+        return File(memoryStream.ToArray(), "application/zip", zipFileName);
     }
     catch (Exception ex)
     {
-        _logger.LogError(ex, "Error saving AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}", 
-            studentId, assessmentId);
-        
-        return Json(new { 
-            success = false, 
-            message = "An error occurred while saving feedback." 
-        });
-    }
-}
-
-// Add this new GET action to check if student has scores saved in database
-[HttpGet]
-public async Task<IActionResult> CheckStudentScoreExists(int assessmentId, int studentId)
-{
-    try
-    {
-        var hasScores = await _context.StudentAssessmentScores
-            .AnyAsync(sas => sas.AssessmentId == assessmentId && sas.StudentId == studentId);
-
-        return Json(new { exists = hasScores });
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error checking if student {StudentId} has scores for assessment {AssessmentId}", 
-            studentId, assessmentId);
-        return Json(new { exists = false });
+        _logger.LogError(ex, "Error generating batch PDFs for assessment {AssessmentId}", id);
+        return Json(new { success = false, message = "Error generating PDFs: " + ex.Message });
     }
 }
     }

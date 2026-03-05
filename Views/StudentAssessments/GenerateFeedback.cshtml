@@ -814,7 +814,8 @@
 
             // Build the lecturer comments section for the prompt
             let lecturerCommentsSection = '';
-            if (lecturerComments.length > 0) {
+            if (lecturerComments.length > 0)
+            {
                 lecturerCommentsSection = `\n\nLecturer's Additional Comments:\n${lecturerComments.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nPlease incorporate and expand on these lecturer comments in your feedback.`;
             }
 
@@ -967,12 +968,46 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
         }
 
         function printAllStudents() {
-            var printContent = document.getElementById('printAllContent').innerHTML;
-            var originalContent = document.body.innerHTML;
-            document.body.innerHTML = printContent;
-            window.print();
-            document.body.innerHTML = originalContent;
-            location.reload();
+            if (!confirm('Generate PDF files for all @Model.TotalStudents students? This may take a few moments.')) {
+                return;
+            }
+
+            // Show loading indicator
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDFs...';
+
+            // Create form to POST request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("GenerateBatchPdfs", "StudentAssessments")';
+            
+            // Add parameters
+            const params = {
+                id: @Model.Assessment.AssessmentId,
+                courseId: '@Model.CourseRolesId',
+                role: '@Model.Role',
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            };
+
+            for (const [key, value] of Object.entries(params)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+
+            // Reset button after delay
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.removeChild(form);
+            }, 3000);
         }
     </script>
 }
