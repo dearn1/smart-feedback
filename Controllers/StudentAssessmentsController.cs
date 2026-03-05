@@ -16,24 +16,27 @@ namespace smart_feedback.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFeedbackGenerationService _feedbackService;
-        private readonly IPuterAIService _puterAIService; // ADD THIS
-        private readonly ILogger<StudentAssessmentsController> _logger; 
+        private readonly IPuterAIService _puterAIService;
+        private readonly ILogger<StudentAssessmentsController> _logger;
         private readonly Microsoft.AspNetCore.Hosting.IWebHostEnvironment _environment;
+        private readonly IEmailService _emailService;
 
         public StudentAssessmentsController(
             ApplicationDbContext context, 
             UserManager<ApplicationUser> userManager, 
             IFeedbackGenerationService feedbackService, 
-            IPuterAIService puterAIService, // ADD THIS
+            IPuterAIService puterAIService,
             ILogger<StudentAssessmentsController> logger, 
-            Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment)
+            Microsoft.AspNetCore.Hosting.IWebHostEnvironment environment,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _feedbackService = feedbackService;
-            _puterAIService = puterAIService; // ADD THIS
+            _puterAIService = puterAIService;
             _logger = logger;
             _environment = environment;
+            _emailService = emailService;
         }
 
         // GET: StudentAssessments
@@ -1051,6 +1054,54 @@ namespace smart_feedback.Controllers
                     return Json(new { success = false, message = "Assessment not found." });
                 }
 
+                var oldStatus = assessment.Status;
+
+                // Get course information for email
+                var course = await _context.CourseRoles
+                    .FirstOrDefaultAsync(cr => 
+                        cr.CourseCode == assessment.CourseCode && 
+                        cr.Year == assessment.Year && 
+                        cr.Trimester == assessment.Trimester);
+
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found." });
+                }
+
+                // Validate all students are marked when sending to Moderation
+                if ((oldStatus == "Marking" || oldStatus == "ReMark") && nextStatus == "Moderation")
+                {
+                    // Get all students enrolled in this course
+                    var allStudentIds = await _context.CourseStudent
+                        .Where(cs => cs.CourseRolesId == int.Parse(courseId))
+                        .Select(cs => cs.StudentId)
+                        .ToListAsync();
+
+                    // Get students who have been marked for this assessment
+                    var markedStudentIds = await _context.StudentAssessmentScores
+                        .Where(sas => sas.AssessmentId == assessmentId)
+                        .Select(sas => sas.StudentId)
+                        .Distinct()
+                        .ToListAsync();
+
+                    // Check if all students are marked
+                    if (allStudentIds.Count > markedStudentIds.Count)
+                    {
+                        var unmarkedCount = allStudentIds.Count - markedStudentIds.Count;
+                        
+                        _logger.LogWarning("Cannot send assessment {AssessmentId} to Moderation: {UnmarkedCount} of {TotalCount} students not marked", 
+                            assessmentId, unmarkedCount, allStudentIds.Count);
+
+                        return Json(new { 
+                            success = false, 
+                            message = $"Cannot send to Moderation.\n\n{unmarkedCount} out of {allStudentIds.Count} students have not been marked yet.\n\nPlease complete marking all students before sending to Moderation."
+                        });
+                    }
+
+                    _logger.LogInformation("Validation passed: All {StudentCount} students marked for assessment {AssessmentId}", 
+                        allStudentIds.Count, assessmentId);
+                }
+
                 // Update assessment status
                 var currentUser = await _userManager.GetUserAsync(User);
                 assessment.Status = nextStatus;
@@ -1063,9 +1114,88 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Assessment {AssessmentId} sent to {NextStatus} by {User}", 
                     assessmentId, nextStatus, currentUser?.UserName);
 
+                // Send email notifications based on status change
+                try
+                {
+                    if ((oldStatus == "Marking" || oldStatus == "ReMark") && nextStatus == "Moderation")
+                    {
+                        // Send email to Moderator
+                        if (!string.IsNullOrEmpty(course.RoleModerator))
+                        {
+                            var moderator = await _userManager.FindByNameAsync(course.RoleModerator);
+                            if (moderator != null && !string.IsNullOrEmpty(moderator.Email))
+                            {
+                                await _emailService.SendAssessmentStatusChangeEmailAsync(
+                                    moderator.Email,
+                                    moderator.FullName ?? moderator.UserName ?? "Moderator",
+                                    assessment.AssessmentName,
+                                    course.CourseCode,
+                                    course.CourseName,
+                                    oldStatus,
+                                    nextStatus
+                                );
+                                
+                                _logger.LogInformation("Moderation notification email sent to {ModeratorEmail} for assessment {AssessmentId}", 
+                                    moderator.Email, assessmentId);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Moderator {Username} has no email address configured", course.RoleModerator);
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No moderator assigned to course {CourseCode}", course.CourseCode);
+                        }
+                    }
+                    else if (oldStatus == "Moderation" && nextStatus == "FinalReview")
+                    {
+                        // Send email to Lecturer
+                        if (!string.IsNullOrEmpty(course.RoleLecturer))
+                        {
+                            var lecturer = await _userManager.FindByNameAsync(course.RoleLecturer);
+                            if (lecturer != null && !string.IsNullOrEmpty(lecturer.Email))
+                            {
+                                await _emailService.SendAssessmentStatusChangeEmailAsync(
+                                    lecturer.Email,
+                                    lecturer.FullName ?? lecturer.UserName ?? "Lecturer",
+                                    assessment.AssessmentName,
+                                    course.CourseCode,
+                                    course.CourseName,
+                                    oldStatus,
+                                    nextStatus
+                                );
+                                
+                                _logger.LogInformation("Final Review notification email sent to {LecturerEmail} for assessment {AssessmentId}", 
+                                    lecturer.Email, assessmentId);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Lecturer {Username} has no email address configured", course.RoleLecturer);
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No lecturer assigned to course {CourseCode}", course.CourseCode);
+                        }
+                    }
+                }
+                catch (Exception emailEx)
+                {
+                    // Log email error but don't fail the status update
+                    _logger.LogError(emailEx, "Failed to send email notification for assessment {AssessmentId} status change to {NextStatus}", 
+                        assessmentId, nextStatus);
+                    
+                    return Json(new { 
+                        success = true, 
+                        message = $"Assessment has been successfully sent to {nextStatus}, but email notification failed to send.",
+                        emailWarning = true
+                    });
+                }
+
                 return Json(new { 
                     success = true, 
-                    message = $"Assessment has been successfully sent to {nextStatus}." 
+                    message = $"Assessment has been successfully sent to {nextStatus}. Email notification has been sent." 
                 });
             }
             catch (Exception ex)

@@ -618,7 +618,19 @@
                     nextStatus = 'ReMark';
                 }
 
-                if (confirm('Are you sure you want to send this assessment to ' + nextStatus + '? This will notify the ' + nextRole + ' for review.')) {
+                var confirmMessage = 'Are you sure you want to send this assessment to ' + nextStatus + '?';
+                
+                if (nextStatus === 'Moderation') {
+                    confirmMessage += '\n\nThis will verify that all students have been marked completely and notify the ' + nextRole + ' for review.';
+                } else {
+                    confirmMessage += ' This will notify the ' + nextRole + ' for review.';
+                }
+
+                if (confirm(confirmMessage)) {
+                    // Disable button and show loading state
+                    var $btn = $('#updateStatus');
+                    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
                     $.ajax({
                         url: '@Url.Action("UpdateStatusAssessment", "StudentAssessments")',
                         type: 'POST',
@@ -640,25 +652,42 @@
                                     window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
                                 }, 1500);
                             } else {
+                                // Re-enable button on failure
+                                $btn.prop('disabled', false).html('<i class="fas fa-user-check"></i> Send to ' + 
+                                    (nextStatus === 'Moderation' ? 'Moderation' : 
+                                     nextStatus === 'FinalReview' ? 'Final Review' : 
+                                     nextStatus === 'Published' ? 'Published' : 'ReMark'));
+
+                                // Show validation error in alert with proper line breaks
+                                alert(response.message || 'Failed to send to ' + nextStatus);
+                                
                                 if (typeof toastr !== 'undefined') {
-                                    toastr.error(response.message || 'Failed to send to ' + nextStatus);
-                                } else {
-                                    alert('Error: ' + (response.message || 'Failed to send to ' + nextStatus));
+                                    toastr.error(response.message || 'Failed to send to ' + nextStatus, 'Validation Error', {
+                                        timeOut: 10000,
+                                        closeButton: true
+                                    });
                                 }
                             }
                         },
                         error: function(xhr, status, error) {
                             console.error('AJAX Error:', xhr.responseText);
+                            
+                            // Re-enable button on error
+                            $btn.prop('disabled', false).html('<i class="fas fa-user-check"></i> Send to ' + 
+                                (nextStatus === 'Moderation' ? 'Moderation' : 
+                                 nextStatus === 'FinalReview' ? 'Final Review' : 
+                                 nextStatus === 'Published' ? 'Published' : 'ReMark'));
+
                             var errorMessage = 'An error occurred while sending to ' + nextStatus + '.';
                             
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMessage = xhr.responseJSON.message;
                             }
                             
+                            alert(errorMessage);
+                            
                             if (typeof toastr !== 'undefined') {
                                 toastr.error(errorMessage);
-                            } else {
-                                alert('Error: ' + errorMessage);
                             }
                         }
                     });
@@ -952,7 +981,7 @@
                 var taskMaxScore = 0;
                 
                 var taskMaxMarks = parseInt($('.task-summary-card[data-task="' + taskId + '"]').data('max-marks')) || 0;
-        
+
                 taskMaxMarksFromHTML = 0;
                 $('.task-summary-card[data-task="' + taskId + '"] .badge-light').each(function() {
                     var badgeText = $(this).text();
@@ -962,6 +991,7 @@
                     }
                 });
 
+                // FIX: Changed ''] to '"][data-task="'
                 $('tr[data-student="' + studentId + '"][data-task="' + taskId + '"]').each(function() {
                     var criteriaRow = $(this);
                     var criteriaId = criteriaRow.data('criteria');
@@ -982,9 +1012,6 @@
 
                         $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
                             .text(weightedScore.toFixed(2));
-                            $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
-                            .text(weightedScore.toFixed(2));
-                            
                     } else {
                         $('.weighted-score[data-student="' + studentId + '"][data-criteria="' + criteriaId + '"]')
                             .text('-');

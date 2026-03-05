@@ -106,6 +106,32 @@ namespace smart_feedback.Services
             }
         }
 
+        public async Task SendAssessmentStatusChangeEmailAsync(string toEmail, string fullName, string assessmentName, string courseCode, string courseName, string oldStatus, string newStatus)
+        {
+            try
+            {
+                var subject = $"Assessment Status Update - {assessmentName}";
+                var body = GenerateAssessmentStatusChangeEmailBody(fullName, assessmentName, courseCode, courseName, oldStatus, newStatus);
+
+                // Use test email in development if configured
+                var finalToEmail = _environment.IsDevelopment() && _emailSettings.UseTestEmail && !string.IsNullOrEmpty(_emailSettings.DefaultTestEmail)
+                    ? _emailSettings.DefaultTestEmail
+                    : toEmail;
+
+                _logger.LogInformation("Sending assessment status change email to {Email} (Original: {OriginalEmail}) for {AssessmentName}: {OldStatus} -> {NewStatus}",
+                    finalToEmail, toEmail, assessmentName, oldStatus, newStatus);
+
+                await SendEmailAsync(finalToEmail, subject, body);
+
+                _logger.LogInformation("Assessment status change email sent successfully to {Email} for {AssessmentName}", finalToEmail, assessmentName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send assessment status change email to {Email} for {AssessmentName}", toEmail, assessmentName);
+                throw;
+            }
+        }
+
         // In UserEmailService.cs, add more detailed error logging in SendEmailAsync method
         private async Task SendEmailAsync(string toEmail, string subject, string body)
         {
@@ -260,6 +286,69 @@ namespace smart_feedback.Services
         </div>
         <div class='footer'>
             This is an automated message. Please do not reply to this email.
+        </div>
+    </div>
+</body>
+</html>";
+        }
+
+        private string GenerateAssessmentStatusChangeEmailBody(string fullName, string assessmentName, string courseCode, string courseName, string oldStatus, string newStatus)
+        {
+            var actionRequired = newStatus == "Moderation" ? "Please review and moderate the assessment." : "Please review the moderated assessment.";
+            var statusColor = newStatus == "Moderation" ? "#ffc107" : "#28a745";
+            
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: {statusColor}; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
+        .content {{ background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px; }}
+        .info-box {{ background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .info-box strong {{ color: #495057; }}
+        .status-change {{ background-color: #fff3cd; border-left: 4px solid {statusColor}; padding: 15px; margin: 20px 0; }}
+        .action-required {{ color: #dc3545; font-weight: bold; font-size: 16px; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>📋 Assessment Status Update</h1>
+        </div>
+        <div class='content'>
+            <h2>Hello {fullName},</h2>
+            
+            <p>An assessment has been updated and requires your attention.</p>
+            
+            <div class='info-box'>
+                <strong>Assessment:</strong> {assessmentName}<br>
+                <strong>Course:</strong> {courseCode} - {courseName}<br>
+                <strong>Previous Status:</strong> {oldStatus}<br>
+                <strong>New Status:</strong> <span style='color: {statusColor}; font-weight: bold;'>{newStatus}</span>
+            </div>
+            
+            <div class='status-change'>
+                <p class='action-required'>⚠️ Action Required</p>
+                <p>{actionRequired}</p>
+            </div>
+            
+            <p>Please log in to the Smart Feedback System to review this assessment:</p>
+            <ul>
+                <li>Navigate to your dashboard</li>
+                <li>Find the course: {courseCode}</li>
+                <li>Access the assessment: {assessmentName}</li>
+            </ul>
+            
+            <p>If you have any questions, please contact the course administrator.</p>
+            
+            <p>Best regards,<br>Smart Feedback System Team</p>
+        </div>
+        <div class='footer'>
+            This is an automated message. Please do not reply to this email.<br>
+            If you believe you received this email in error, please contact support.
         </div>
     </div>
 </body>
