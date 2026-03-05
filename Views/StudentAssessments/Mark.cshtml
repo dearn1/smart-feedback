@@ -5,7 +5,7 @@
     var currentStudent = Model.Students.FirstOrDefault();
     var hasNext = Model.CurrentStudentIndex < Model.TotalStudents - 1;
     var hasPrevious = Model.CurrentStudentIndex > 0;
-    var canEditScores = Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark" || Model.Assessment.Status == "FinalReview";
+    var canEditScores = Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark";
     var canEditModeratorComments = Model.Assessment.Status == "Moderation";
     var showModeratorComments = Model.Assessment.Status != "Marking" && Model.Assessment.Status != "ReMark";
 }
@@ -405,7 +405,13 @@
                             {
                                 <button type="button" class="btn btn-info btn-lg generate-feedback"
                                         data-student="@currentStudent.Id">
-                                    <i class="fas fa-comment-alt"></i> Generate Feedback
+                                    <i class="fas fa-comment-alt"></i> @(Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark" ? "Generate Feedback" : "View Feedback")
+                                </button>
+                            }
+                            @if (Model.Assessment.Status == "FinalReview")
+                            {
+                                <button type="button" class="btn btn-danger btn-lg" id="sendToMarking">
+                                    <i class="fas fa-undo"></i> Send Back to Marking
                                 </button>
                             }
                             @if (!(Model.Role == "Moderator" && Model.Assessment.Status == "Published"))
@@ -596,6 +602,74 @@
                 });
             });
 
+            // Send to Marking (from FinalReview)
+            $('#sendToMarking').on('click', function() {
+                var courseId = '@Model.CourseRolesId';
+                var role = '@Model.Role';
+
+                var confirmMessage = 'Are you sure you want to send this assessment back to Marking?\n\nThis will allow the lecturer to make changes to the scores and comments.';
+
+                if (confirm(confirmMessage)) {
+                    // Disable button and show loading state
+                    var $btn = $('#sendToMarking');
+                    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+                    $.ajax({
+                        url: '@Url.Action("UpdateStatusAssessment", "StudentAssessments")',
+                        type: 'POST',
+                        data: {
+                            assessmentId: @Model.Assessment.AssessmentId,
+                            courseId: courseId,
+                            role: role,
+                            nextStatus: 'Marking',
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success(response.message);
+                                } else {
+                                    alert('Success: ' + response.message);
+                                }
+                                setTimeout(function() {
+                                    window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
+                                }, 1500);
+                            } else {
+                                // Re-enable button on failure
+                                $btn.prop('disabled', false).html('<i class="fas fa-undo"></i> Send to Marking');
+
+                                alert(response.message || 'Failed to send to Marking');
+                                
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error(response.message || 'Failed to send to Marking', 'Error', {
+                                        timeOut: 10000,
+                                        closeButton: true
+                                    });
+                                }
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', xhr.responseText);
+                            
+                            // Re-enable button on error
+                            $btn.prop('disabled', false).html('<i class="fas fa-undo"></i> Send to Marking');
+
+                            var errorMessage = 'An error occurred while sending to Marking.';
+                            
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                            
+                            alert(errorMessage);
+                            
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errorMessage);
+                            }
+                        }
+                    });
+                }
+            });
+
             // Update Status: Moderation, FinalReview, Published
             $('#updateStatus').on('click', function() {
                 var status = '@Model.Assessment.Status';
@@ -622,8 +696,6 @@
                 
                 if (nextStatus === 'Moderation') {
                     confirmMessage += '\n\nThis will verify that all students have been marked completely and notify the ' + nextRole + ' for review.';
-                } else {
-                    confirmMessage += ' This will notify the ' + nextRole + ' for review.';
                 }
 
                 if (confirm(confirmMessage)) {

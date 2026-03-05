@@ -1068,7 +1068,7 @@ namespace smart_feedback.Controllers
                     return Json(new { success = false, message = "Course not found." });
                 }
 
-                // Validate all students are marked when sending to Moderation
+                // Validate all students are marked AND have feedback when sending to Moderation
                 if ((oldStatus == "Marking" || oldStatus == "ReMark") && nextStatus == "Moderation")
                 {
                     // Get all students enrolled in this course
@@ -1099,6 +1099,30 @@ namespace smart_feedback.Controllers
                     }
 
                     _logger.LogInformation("Validation passed: All {StudentCount} students marked for assessment {AssessmentId}", 
+                        allStudentIds.Count, assessmentId);
+
+                    // NEW: Check if all students have feedback generated
+                    var studentsWithFeedback = await _context.StudentOverallFeedback
+                        .Where(sof => sof.AssessmentId == assessmentId)
+                        .Select(sof => sof.StudentId)
+                        .Distinct()
+                        .ToListAsync();
+
+                    // Check if all students have feedback
+                    if (allStudentIds.Count > studentsWithFeedback.Count)
+                    {
+                        var missingFeedbackCount = allStudentIds.Count - studentsWithFeedback.Count;
+                        
+                        _logger.LogWarning("Cannot send assessment {AssessmentId} to Moderation: {MissingCount} of {TotalCount} students missing feedback", 
+                            assessmentId, missingFeedbackCount, allStudentIds.Count);
+
+                        return Json(new { 
+                            success = false, 
+                            message = $"Cannot send to Moderation.\n\n{missingFeedbackCount} out of {allStudentIds.Count} students do not have feedback generated yet.\n\nPlease generate feedback for all students before sending to Moderation."
+                        });
+                    }
+
+                    _logger.LogInformation("Validation passed: All {StudentCount} students have feedback for assessment {AssessmentId}", 
                         allStudentIds.Count, assessmentId);
                 }
 
@@ -1195,7 +1219,7 @@ namespace smart_feedback.Controllers
 
                 return Json(new { 
                     success = true, 
-                    message = $"Assessment has been successfully sent to {nextStatus}. Email notification has been sent." 
+                    message = $"Assessment has been successfully sent to {nextStatus}." 
                 });
             }
             catch (Exception ex)
