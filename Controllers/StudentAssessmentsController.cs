@@ -643,6 +643,15 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Successfully saved scores: {SavedCount} new, {UpdatedCount} updated for assessment {AssessmentId}",
                     savedCount, updatedCount, assessmentId);
 
+                // *** NEW: Calculate and save task scores and overall scores for each student ***
+                foreach (var studentId in studentIds)
+                {
+                    await CalculateAndSaveTaskScoresAsync(assessmentId, studentId);
+                    await CalculateAndSaveOverallScoreAsync(assessmentId, studentId);
+                }
+
+                _logger.LogInformation("Task and overall scores calculated and saved for {StudentCount} students", studentIds.Count);
+
                 return Json(new
                 {
                     success = true,
@@ -1414,6 +1423,139 @@ public async Task<IActionResult> GenerateBatchPdfs(int id, string courseId, stri
         _logger.LogError(ex, "Error generating batch PDFs for assessment {AssessmentId}", id);
         return Json(new { success = false, message = "Error generating PDFs: " + ex.Message });
     }
+}
+
+// Helper method to calculate and save task scores
+private async Task CalculateAndSaveTaskScoresAsync(int assessmentId, int studentId)
+{
+    var assessment = await _context.Assessments.FindAsync(assessmentId);
+    
+    var rubricTasks = await _context.RubricTask
+        .Where(rt => rt.RubricsId == assessment.RubricsId)
+        .ToListAsync();
+
+    var rubricCriterias = await _context.RubricCriteria
+        .Where(rc => rubricTasks.Select(rt => rt.RubricTaskId).Contains(rc.RubricTaskId))
+        .ToListAsync();
+
+    var studentScores = await _context.StudentAssessmentScores
+        .Where(sas => sas.AssessmentId == assessmentId && sas.StudentId == studentId)
+        .ToListAsync();
+
+    foreach (var task in rubricTasks)
+    {
+        var taskCriterias = rubricCriterias.Where(rc => rc.RubricTaskId == task.RubricTaskId).ToList();
+        double taskWeightedScore = 0;
+        double taskMaxWeightedScore = 0;
+
+        foreach (var criteria in taskCriterias)
+        {
+            var studentScore = studentScores.FirstOrDefault(ss => ss.RubricCriteriaId == criteria.RubricCriteriaId);
+            var score = studentScore?.Score ?? 0;
+            
+            var criteriaScores = await _context.RubricCriteriaScore
+                .Where(cs => cs.RubricCriteriaId == criteria.RubricCriteriaId)
+                .ToListAsync();
+            
+            var maxScore = criteriaScores.Any() ? criteriaScores.Max(cs => cs.CriterionScore) : 0;
+
+            double weightedScore = (score * criteria.Weight) / 100.0;
+            double maxWeightedScore = (maxScore * criteria.Weight) / 100.0;
+
+            taskWeightedScore += weightedScore;
+            taskMaxWeightedScore += maxWeightedScore;
+        }
+
+        double taskPercentage = taskMaxWeightedScore > 0 ? (taskWeightedScore / taskMaxWeightedScore * 100) : 0;
+        double actualScore = (taskPercentage / 100.0) * task.MaxMarks;
+
+        // Find existing task score or create new one
+        var existingTaskScore = await _context.StudentTaskScores
+            .FirstOrDefaultAsync(sts => sts.AssessmentId == assessmentId && 
+                                        sts.StudentId == studentId && 
+                                        sts.RubricTaskId == task.RubricTaskId);
+
+        if (existingTaskScore != null)
+        {
+            // Update existing task score
+            existingTaskScore.ActualScore = actualScore;
+            existingTaskScore.LastModified = DateTime.Now;
+            _context.Update(existingTaskScore);
+        }
+        else
+        {
+            // Create new task score
+            var newTaskScore = new StudentTaskScore
+            {
+                AssessmentId = assessmentId,
+                StudentId = studentId,
+                RubricTaskId = task.RubricTaskId,
+                ActualScore = actualScore,
+                LastModified = DateTime.Now
+            };
+            _context.Add(newTaskScore);
+        }
+
+        _logger.LogDebug("Task score calculated for Student {StudentId}, Task {TaskId}: {ActualScore} marks",
+            studentId, task.RubricTaskId, actualScore);
+    }
+
+    await _context.SaveChangesAsync();
+}
+
+// Helper method to calculate and save overall score
+private async Task CalculateAndSaveOverallScoreAsync(int assessmentId, int studentId)
+{
+    var taskScores = await _context.StudentTaskScores
+        .Where(sts => sts.AssessmentId == assessmentId && sts.StudentId == studentId)
+        .ToListAsync();
+
+    double totalActualScore = taskScores.Sum(ts => ts.ActualScore);
+
+    // Get assessment to retrieve ProportionalMarks
+    var assessment = await _context.Assessments.FindAsync(assessmentId);
+    if (assessment == null)
+    {
+        _logger.LogError("Assessment {AssessmentId} not found when calculating overall score", assessmentId);
+        return;
+    }
+
+    // Calculate ProportionalFinalScore
+    decimal proportionalMarks = assessment.ProportionalMarks;
+    double proportionalFinalScore = (double)(proportionalMarks / 100.0m) * totalActualScore;
+
+    // Find existing overall score or create new one
+    var existingOverallScore = await _context.StudentOverallScores
+        .FirstOrDefaultAsync(sos => sos.AssessmentId == assessmentId && sos.StudentId == studentId);
+
+    if (existingOverallScore != null)
+    {
+        // Update existing overall score
+        existingOverallScore.TotalActualScore = totalActualScore;
+        existingOverallScore.ProportionalMarks = proportionalMarks;
+        existingOverallScore.ProportionalFinalScore = proportionalFinalScore;
+        existingOverallScore.LastModified = DateTime.Now;
+        _context.Update(existingOverallScore);
+    }
+    else
+    {
+        // Create new overall score
+        var newOverallScore = new StudentOverallScore
+        {
+            AssessmentId = assessmentId,
+            StudentId = studentId,
+            TotalActualScore = totalActualScore,
+            ProportionalMarks = proportionalMarks,
+            ProportionalFinalScore = proportionalFinalScore,
+            LastModified = DateTime.Now
+        };
+        _context.Add(newOverallScore);
+    }
+
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("Overall score calculated for Student {StudentId}, Assessment {AssessmentId}: {TotalScore} marks, ProportionalMarks: {ProportionalMarks}, ProportionalFinalScore: {ProportionalFinalScore}",
+        studentId, assessmentId, totalActualScore, proportionalMarks, proportionalFinalScore);
 }
     }
 }

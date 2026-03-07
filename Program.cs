@@ -5,11 +5,11 @@ using Serilog;
 using smart_feedback.Services;
 using smart_feedback.Models;
 using smart_feedback.Models.Configuration;
-using QuestPDF.Infrastructure; // ADD THIS
+using QuestPDF.Infrastructure; 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ADD THIS: Configure QuestPDF license (must be set before any QuestPDF usage)
+// Configure QuestPDF license (must be set before any QuestPDF usage, use Community license for education purpose)
 QuestPDF.Settings.License = LicenseType.Community;
 
 // Configure Serilog

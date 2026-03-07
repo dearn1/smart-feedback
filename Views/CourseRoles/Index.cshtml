@@ -95,6 +95,12 @@
 
 <!-- Action Buttons -->
 <div class="d-flex gap-2 mb-3">
+    <a asp-action="DownloadTemplate" class="btn btn-outline-success">
+        <i class="fas fa-download"></i> Download Template
+    </a>
+    <a asp-action="Upload" class="btn btn-success">
+        <i class="fas fa-file-excel"></i> Upload Excel
+    </a>
     <a asp-action="DownloadData"
        asp-route-sortOrder="@ViewData["CurrentSort"]"
        asp-route-year="@ViewData["CurrentYearFilter"]"
@@ -102,13 +108,7 @@
        asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
        class="btn btn-info">
         <i class="fas fa-file-excel"></i> Download Data
-    </a>
-    <a asp-action="Upload" class="btn btn-success">
-        <i class="fas fa-file-excel"></i> Upload Excel
-    </a>
-    <a asp-action="DownloadTemplate" class="btn btn-outline-success">
-        <i class="fas fa-download"></i> Download Template
-    </a>
+    </a>    
     <a asp-action="Create" class="btn btn-primary">
         <i class="fas fa-plus"></i> Create New
     </a>
