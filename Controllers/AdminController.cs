@@ -879,7 +879,7 @@ namespace smart_feedback.Controllers
             {
                 _logger.LogDebug("Generating temporary password");
 
-                const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@#$%^&*()-=_+[]{}|;':,./<>?";
+                const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!#$%*()-=_+;:,./?";
                 var random = new Random();
                 var password = new StringBuilder();
 
@@ -887,7 +887,7 @@ namespace smart_feedback.Controllers
                 password.Append(chars[random.Next(0, 25)]); // Uppercase
                 password.Append(chars[random.Next(26, 50)]); // Lowercase  
                 password.Append(chars[random.Next(51, 60)]); // Digit
-                password.Append(chars[random.Next(61, 88)]); // Special character
+                password.Append(chars[random.Next(61, 77)]); // Special character
 
                 // Fill the rest randomly
                 for (int i = 4; i < 8; i++)
