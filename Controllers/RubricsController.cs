@@ -735,7 +735,7 @@ namespace smart_feedback.Controllers
                             id, assessmentsUsingRubric.Count);
 
                         TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it is being used in {assessmentsUsingRubric.Count} assessment(s). Please delete or reassign the assessments first.";
-                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                        return RedirectToAction("Management", "Rubrics");
                     }
 
                     // Get all tasks for this rubric
@@ -772,7 +772,7 @@ namespace smart_feedback.Controllers
                             id, studentScoresUsingCriteria.Count);
 
                         TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
-                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                        return RedirectToAction("Management", "Rubrics");
                     }
 
                     // Delete in the correct order to maintain referential integrity
@@ -1513,15 +1513,26 @@ namespace smart_feedback.Controllers
                                 // Extract score headers from the first row (header row)
                                 var headerRow = rows[0];
                                 var headerCells = headerRow.GetTableCells();
+                                int headerColumnCount = headerCells.Count;
 
-                                if (headerCells.Count >= 4) // Ensure we have at least 4 columns
+                                if (headerColumnCount >= 4) // Ensure we have at least 4 columns
                                 {
+                                    // Check if first column header contains "Criteria" keyword
+                                    string firstColumnHeader = GetCellText(headerCells[0]);
+                                    if (!firstColumnHeader.Contains("Criteria", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _logger.LogDebug("Skipping table {TableIndex}: first column header '{HeaderText}' does not contain 'Criteria' keyword",
+                                            tableIndex, firstColumnHeader);
+                                        tableIndex++;
+                                        continue;
+                                    }
+
                                     var checkRow = rows[1];
                                     var checkCells = checkRow.GetTableCells();
-                                    string[] scoreHeaders = new string[headerCells.Count];
+                                    string[] scoreHeaders = new string[headerColumnCount];
                                     int maxScore = -1;
 
-                                    for (int col = 2; col < headerCells.Count; col++)
+                                    for (int col = 2; col < headerColumnCount; col++)
                                     {
                                         if (GetCellText(checkCells[col]).Trim() == "")
                                         {
@@ -1542,6 +1553,15 @@ namespace smart_feedback.Controllers
                                     {
                                         var row = rows[i];
                                         var cells = row.GetTableCells();
+                                        int currentRowColumnCount = cells.Count;
+
+                                        // Ignore rows with fewer columns than the header row
+                                        if (currentRowColumnCount < headerColumnCount)
+                                        {
+                                            _logger.LogDebug("Skipping row {RowIndex} in table {TableIndex}: has {CurrentColumns} columns, expected {ExpectedColumns}",
+                                                i, tableIndex, currentRowColumnCount, headerColumnCount);
+                                            continue;
+                                        }
 
                                         var rubricCriteria = new RubricCriteria
                                         {
