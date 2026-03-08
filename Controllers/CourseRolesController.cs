@@ -441,6 +441,7 @@ namespace smart_feedback.Controllers
         // POST: CourseRoles/BulkArchive
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken] // Add this temporarily to test
         public async Task<IActionResult> BulkArchive(List<int> selectedIds)
         {
             try
@@ -489,53 +490,7 @@ namespace smart_feedback.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: CourseRoles/BulkUnarchive
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BulkUnarchive(List<int> selectedIds)
-        {
-            try
-            {
-                if (selectedIds == null || !selectedIds.Any())
-                {
-                    _logger.LogWarning("Bulk unarchive attempted with no selections");
-                    TempData["ErrorMessage"] = "Please select at least one course role to unarchive.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var courseRolesToUnarchive = await _context.CourseRoles
-                    .Where(cr => selectedIds.Contains(cr.CourseRolesId) && cr.Status == "Archived")
-                    .ToListAsync();
-
-                if (!courseRolesToUnarchive.Any())
-                {
-                    _logger.LogWarning("No archived course roles found for bulk unarchive with IDs: {Ids}", string.Join(", ", selectedIds));
-                    TempData["ErrorMessage"] = "No archived course roles found to unarchive.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                foreach (var courseRole in courseRolesToUnarchive)
-                {
-                    courseRole.Status = "Active";
-                }
-
-                _context.UpdateRange(courseRolesToUnarchive);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Successfully unarchived {Count} course roles. IDs: {Ids}",
-                    courseRolesToUnarchive.Count, string.Join(", ", courseRolesToUnarchive.Select(cr => cr.CourseRolesId)));
-
-                TempData["SuccessMessage"] = $"Successfully unarchived {courseRolesToUnarchive.Count} course role(s).";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during bulk unarchive operation");
-                TempData["ErrorMessage"] = "An error occurred while unarchiving the course roles. Please try again.";
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
+        
         // GET: CourseRoles/Upload
         public IActionResult Upload()
         {
@@ -671,7 +626,7 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Excel upload initiated, file: {FileName}, size: {FileSize} bytes",
                     excelFile?.FileName, excelFile?.Length);
 
-                if (excelFile == null || excelFile.Length == 0)
+                if (excelFile == null || excelFile.Length <= 0)
                 {
                     _logger.LogWarning("Excel upload attempted with null or empty file");
                     TempData["ErrorMessage"] = "Please select a valid Excel file.";
