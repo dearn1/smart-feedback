@@ -10,6 +10,22 @@
                 <h3 class="card-title">
                     <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (Trimester @Model.Trimester @Model.Year)
                 </h3>
+                <div class="card-tools">
+                    @* Check if all assessments are published *@
+                    @{
+                        var allPublished = Model.Assessments.Any() && Model.Assessments.All(a => a.Status == "Published");
+                    }
+                    
+                    @if (allPublished && (Model.Role == "Lecturer" || User.IsInRole("Admin")))
+                    {
+                        <a asp-action="FinalReport" 
+                           asp-route-courseId="@Model.CourseRolesId" 
+                           asp-route-role="@Model.Role" 
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-trophy"></i> Final Score
+                        </a>
+                    }
+                </div>
             </div>
             <div class="card-body">
                 @if (Model.Assessments.Any())
@@ -20,12 +36,13 @@
                                 <tr>
                                     <th>Assessment Name</th>
                                     <th>Rubric</th>
-                                    <th>Total Marks</th>
+                                    <th>Total Marks</th>                                    
                                     <th>Marking Progress</th>
                                     <th>Status</th>
                                     <th>Lecturer</th>
                                     <th>Moderator</th>
                                     <th>Actions</th>
+                                    <th>Contribution To Course Score</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -58,6 +75,7 @@
                                         </td>
                                         <td>@assessment.Rubric?.RubricName</td>
                                         <td>@assessment.Rubric?.TotalMarks</td>
+                                        
                                         <td>
                                             <div class="progress" style="height: 25px;">
                                                 <div class="progress-bar progress-bar-striped bg-@progressColor" 
@@ -113,6 +131,7 @@
                                                 }
                                             </div>
                                         </td>
+                                        <td>@assessment.ProportionalMarks %</td>
                                     </tr>
                                 }
                             </tbody>

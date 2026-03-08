@@ -1557,5 +1557,31 @@ private async Task CalculateAndSaveOverallScoreAsync(int assessmentId, int stude
     _logger.LogInformation("Overall score calculated for Student {StudentId}, Assessment {AssessmentId}: {TotalScore} marks, ProportionalMarks: {ProportionalMarks}, ProportionalFinalScore: {ProportionalFinalScore}",
         studentId, assessmentId, totalActualScore, proportionalMarks, proportionalFinalScore);
 }
+
+        // Add this action to your StudentAssessmentsController class
+
+        // GET: StudentAssessments/CheckStudentScoreExists
+        [HttpGet]
+        public async Task<IActionResult> CheckStudentScoreExists(int assessmentId, int studentId)
+        {
+            try
+            {
+                _logger.LogDebug("Checking if student {StudentId} has saved scores for assessment {AssessmentId}",
+                    studentId, assessmentId);
+
+                var hasScores = await _context.StudentAssessmentScores
+                    .AnyAsync(sas => sas.AssessmentId == assessmentId && sas.StudentId == studentId);
+
+                _logger.LogDebug("Student {StudentId} score exists check result: {Exists}", studentId, hasScores);
+
+                return Json(new { exists = hasScores });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if student score exists for assessment {AssessmentId}, student {StudentId}",
+                    assessmentId, studentId);
+                return Json(new { exists = false, error = ex.Message });
+            }
+        }
     }
 }
