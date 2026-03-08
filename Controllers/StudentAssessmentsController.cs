@@ -1558,29 +1558,363 @@ private async Task CalculateAndSaveOverallScoreAsync(int assessmentId, int stude
         studentId, assessmentId, totalActualScore, proportionalMarks, proportionalFinalScore);
 }
 
-        // Add this action to your StudentAssessmentsController class
+        // Add this new method to save AI-generated feedback from the browser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAIGeneratedFeedback(int assessmentId, int studentId, string feedback)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(feedback))
+                {
+                    return Json(new { success = false, message = "Feedback cannot be empty." });
+                }
 
-        // GET: StudentAssessments/CheckStudentScoreExists
+                // Check if feedback already exists
+                var existingFeedback = await _context.StudentOverallFeedback
+                    .FirstOrDefaultAsync(f => f.AssessmentId == assessmentId && f.StudentId == studentId);
+
+                if (existingFeedback != null)
+                {
+                    // Update existing feedback
+                    existingFeedback.OverallFeedback = feedback;
+                    existingFeedback.LastModified = DateTime.Now;
+                    _context.Update(existingFeedback);
+
+                    _logger.LogInformation("Updated AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}",
+                        studentId, assessmentId);
+                }
+                else
+                {
+                    // Create new feedback
+                    var newFeedback = new StudentOverallFeedback
+                    {
+                        AssessmentId = assessmentId,
+                        StudentId = studentId,
+                        OverallFeedback = feedback,
+                        GeneratedDate = DateTime.Now
+                    };
+
+                    _context.StudentOverallFeedback.Add(newFeedback);
+
+                    _logger.LogInformation("Saved AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}",
+                        studentId, assessmentId);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Feedback saved successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving AI-generated feedback for Student {StudentId}, Assessment {AssessmentId}",
+                    studentId, assessmentId);
+
+                return Json(new
+                {
+                    success = false,
+                    message = "An error occurred while saving feedback."
+                });
+            }
+        }
+
+        // Add this new GET action to check if student has scores saved in database
         [HttpGet]
         public async Task<IActionResult> CheckStudentScoreExists(int assessmentId, int studentId)
         {
             try
             {
-                _logger.LogDebug("Checking if student {StudentId} has saved scores for assessment {AssessmentId}",
-                    studentId, assessmentId);
-
                 var hasScores = await _context.StudentAssessmentScores
                     .AnyAsync(sas => sas.AssessmentId == assessmentId && sas.StudentId == studentId);
-
-                _logger.LogDebug("Student {StudentId} score exists check result: {Exists}", studentId, hasScores);
 
                 return Json(new { exists = hasScores });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if student score exists for assessment {AssessmentId}, student {StudentId}",
-                    assessmentId, studentId);
-                return Json(new { exists = false, error = ex.Message });
+                _logger.LogError(ex, "Error checking if student {StudentId} has scores for assessment {AssessmentId}",
+                    studentId, assessmentId);
+                return Json(new { exists = false });
+            }
+        }
+
+        // Add this method to StudentAssessmentsController class
+
+        // GET: StudentAssessments/FinalReport
+        public async Task<IActionResult> FinalReport(string courseId, string role, int? studentIndex)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(courseId) || string.IsNullOrEmpty(role))
+                {
+                    TempData["ErrorMessage"] = "Invalid course or role specified.";
+                    return RedirectToAction("Index", new { courseId, role });
+                }
+
+                var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
+                if (course == null)
+                {
+                    TempData["ErrorMessage"] = "Course not found.";
+                    return RedirectToAction("Index", new { courseId, role });
+                }
+
+                // Check if all assessments are published
+                var assessments = await _context.Assessments
+                    .Where(a => a.CourseCode == course.CourseCode &&
+                               a.Year == course.Year &&
+                               a.Trimester == course.Trimester)
+                    .ToListAsync();
+
+                if (!assessments.Any())
+                {
+                    TempData["ErrorMessage"] = "No assessments found for this course.";
+                    return RedirectToAction("Index", new { courseId, role });
+                }
+
+                if (assessments.Any(a => a.Status != "Published"))
+                {
+                    TempData["ErrorMessage"] = "All assessments must be Published before generating Final Report.";
+                    return RedirectToAction("Index", new { courseId, role });
+                }
+
+                // Get all students enrolled in this course
+                var students = await _context.CourseStudent
+                    .Where(cs => cs.CourseRolesId == int.Parse(courseId))
+                    .Include(cs => cs.Student)
+                    .Select(cs => cs.Student)
+                    .OrderBy(s => s.StudentId)
+                    .ToListAsync();
+
+                if (!students.Any())
+                {
+                    TempData["ErrorMessage"] = "No students enrolled in this course.";
+                    return RedirectToAction("Index", new { courseId, role });
+                }
+
+                ViewBag.CourseId = courseId;
+                ViewBag.Role = role;
+
+                // BATCH MODE with pagination
+                var currentIndex = studentIndex ?? 0;
+
+                // Ensure index is valid
+                if (currentIndex < 0 || currentIndex >= students.Count)
+                    currentIndex = 0;
+
+                var currentStudent = students[currentIndex];
+
+                _logger.LogInformation("Generating final report - Student {CurrentIndex} of {TotalStudents} in course {CourseCode}",
+                    currentIndex + 1, students.Count, course.CourseCode);
+
+                // Generate final report for current student
+                var currentReport = await GenerateFinalReportAsync(course, currentStudent, assessments);
+
+                // Generate all reports for print preview
+                var allReports = new List<FinalReportViewModel>();
+                foreach (var student in students)
+                {
+                    var report = await GenerateFinalReportAsync(course, student, assessments);
+                    allReports.Add(report);
+                }
+
+                // Set batch mode properties
+                currentReport.IsBatchMode = true;
+                currentReport.CurrentStudentIndex = currentIndex;
+                currentReport.TotalStudents = students.Count;
+                currentReport.AllStudents = students;
+                currentReport.AllStudentReports = allReports;
+                currentReport.CourseRolesId = int.Parse(courseId);
+                currentReport.Role = role;
+
+                return View(currentReport);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating final report for course {CourseId}", courseId);
+                TempData["ErrorMessage"] = "An error occurred while generating the final report.";
+                return RedirectToAction("Index", new { courseId, role });
+            }
+        }
+
+        // Helper method to generate final report for a student
+        private async Task<FinalReportViewModel> GenerateFinalReportAsync(
+            CourseRoles course,
+            Student student,
+            List<Assessment> assessments)
+        {
+            var assessmentBreakdown = new List<AssessmentScoreBreakdown>();
+            double totalFinalScore = 0;
+
+            foreach (var assessment in assessments)
+            {
+                // Get overall score for this assessment
+                var overallScore = await _context.StudentOverallScores
+                    .FirstOrDefaultAsync(sos => sos.AssessmentId == assessment.AssessmentId &&
+                                               sos.StudentId == student.Id);
+
+                if (overallScore != null)
+                {
+                    assessmentBreakdown.Add(new AssessmentScoreBreakdown
+                    {
+                        AssessmentName = assessment.AssessmentName,
+                        ProportionalMarks = overallScore.ProportionalMarks,
+                        TotalActualScore = overallScore.TotalActualScore,
+                        ProportionalFinalScore = overallScore.ProportionalFinalScore
+                    });
+
+                    totalFinalScore += overallScore.ProportionalFinalScore;
+                }
+            }
+
+            // Calculate final grade and description
+            var (finalGrade, finalGradeDescription) = CalculateFinalGrade(totalFinalScore);
+
+            return new FinalReportViewModel
+            {
+                Student = student,
+                CourseCode = course.CourseCode,
+                CourseName = course.CourseName,
+                Year = course.Year,
+                Trimester = course.Trimester,
+                FinalScore = totalFinalScore,
+                FinalGrade = finalGrade,
+                FinalGradeDescription = finalGradeDescription,
+                AssessmentBreakdown = assessmentBreakdown
+            };
+        }
+
+        // Helper method to calculate grade based on score
+        private (string grade, string description) CalculateFinalGrade(double score)
+        {
+            string grade;
+            string description;
+
+            // Calculate Grade
+            if (score >= 90)
+                grade = "A+";
+            else if (score >= 85)
+                grade = "A";
+            else if (score >= 80)
+                grade = "A-";
+            else if (score >= 75)
+                grade = "B+";
+            else if (score >= 70)
+                grade = "B";
+            else if (score >= 65)
+                grade = "B-";
+            else if (score >= 60)
+                grade = "C+";
+            else if (score >= 55)
+                grade = "C";
+            else if (score >= 50)
+                grade = "C-";
+            else if (score >= 45)
+                grade = "D+";
+            else if (score >= 40)
+                grade = "D";
+            else
+                grade = "D-";
+
+            // Calculate Grade Description
+            if (score >= 80)
+                description = "Excellent";
+            else if (score >= 65)
+                description = "Good";
+            else if (score >= 50)
+                description = "Pass";
+            else
+                description = "Fail";
+
+            return (grade, description);
+        }
+
+        // Add this method to StudentAssessmentsController class
+
+        // POST: StudentAssessments/GenerateFinalReportPdfs
+        [HttpPost]
+        public async Task<IActionResult> GenerateFinalReportPdfs(string courseId, string role)
+        {
+            try
+            {
+                _logger.LogInformation("Generating Final Report PDFs for course {CourseId}", courseId);
+
+                if (string.IsNullOrEmpty(courseId) || string.IsNullOrEmpty(role))
+                {
+                    return Json(new { success = false, message = "Invalid course or role specified." });
+                }
+
+                var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found." });
+                }
+
+                // Check if all assessments are published
+                var assessments = await _context.Assessments
+                    .Where(a => a.CourseCode == course.CourseCode &&
+                               a.Year == course.Year &&
+                               a.Trimester == course.Trimester)
+                    .ToListAsync();
+
+                if (!assessments.Any())
+                {
+                    return Json(new { success = false, message = "No assessments found for this course." });
+                }
+
+                if (assessments.Any(a => a.Status != "Published"))
+                {
+                    return Json(new { success = false, message = "All assessments must be Published before generating Final Reports." });
+                }
+
+                // Get all students enrolled in this course
+                var students = await _context.CourseStudent
+                    .Where(cs => cs.CourseRolesId == int.Parse(courseId))
+                    .Include(cs => cs.Student)
+                    .Select(cs => cs.Student)
+                    .OrderBy(s => s.StudentId)
+                    .ToListAsync();
+
+                if (!students.Any())
+                {
+                    return Json(new { success = false, message = "No students found." });
+                }
+
+                // Generate final reports for all students
+                var allReports = new List<FinalReportViewModel>();
+                foreach (var student in students)
+                {
+                    var report = await GenerateFinalReportAsync(course, student, assessments);
+                    allReports.Add(report);
+                }
+
+                // Inject PDF service
+                var pdfService = HttpContext.RequestServices.GetRequiredService<IPdfGenerationService>();
+                
+                // Generate PDFs for final reports
+                var pdfFiles = await pdfService.GenerateFinalReportPdfsAsync(allReports);
+
+                // Create ZIP file
+                using var memoryStream = new MemoryStream();
+                using (var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Create, true))
+                {
+                    foreach (var (fileName, pdfData) in pdfFiles)
+                    {
+                        var zipEntry = archive.CreateEntry(fileName, System.IO.Compression.CompressionLevel.Fastest);
+                        using var zipStream = zipEntry.Open();
+                        await zipStream.WriteAsync(pdfData, 0, pdfData.Length);
+                    }
+                }
+
+                memoryStream.Position = 0;
+                var zipFileName = $"FinalReports_{course.CourseCode}_T{course.Trimester}_{course.Year}_{DateTime.Now:yyyyMMdd}.zip";
+
+                _logger.LogInformation("Generated {Count} Final Report PDFs for course {CourseCode}", pdfFiles.Count, course.CourseCode);
+
+                return File(memoryStream.ToArray(), "application/zip", zipFileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating Final Report PDFs for course {CourseId}", courseId);
+                return Json(new { success = false, message = "Error generating PDFs: " + ex.Message });
             }
         }
     }
