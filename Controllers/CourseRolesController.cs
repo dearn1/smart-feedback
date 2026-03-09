@@ -188,7 +188,13 @@ namespace smart_feedback.Controllers
         // GET: CourseRoles/Create
         public IActionResult Create()
         {
-            return View();
+            var model = new CourseRoles
+            {
+                Institution = "Auckland Institute of Studies",
+                Year = DateTime.Now.Year,
+                Status = "Active"
+            };
+            return View(model);
         }
 
         // POST: CourseRoles/Create

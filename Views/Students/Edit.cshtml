@@ -4,9 +4,7 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
-
-<h4>Student</h4>
+<h4>Student Data</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -14,7 +12,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
-                <label asp-for="StudentId" class="control-label"></label>
+                <label asp-for="StudentId" class="control-label">Student Id</label>
                 <input asp-for="StudentId" class="form-control" />
                 <span asp-validation-for="StudentId" class="text-danger"></span>
             </div>
@@ -34,12 +32,12 @@
                 <span asp-validation-for="Programme" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="YearEnrolled" class="control-label"></label>
+                <label asp-for="YearEnrolled" class="control-label">Year Enrolled</label>
                 <input asp-for="YearEnrolled" class="form-control" />
                 <span asp-validation-for="YearEnrolled" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TrimesterEnrolled" class="control-label"></label>
+                <label asp-for="TrimesterEnrolled" class="control-label">Trimester Enrolled</label>
                 <input asp-for="TrimesterEnrolled" class="form-control" />
                 <span asp-validation-for="TrimesterEnrolled" class="text-danger"></span>
             </div>
