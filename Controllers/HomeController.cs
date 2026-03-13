@@ -110,6 +110,21 @@ public class HomeController : Controller
                     viewModel.ModeratorFullName = moderator?.FullName ?? course.RoleModerator;
                 }
 
+                // NEW: Get assessment status counts for this course
+                var assessmentStatusCounts = await _context.Assessments
+                    .Where(a => a.CourseCode == course.CourseCode && 
+                               a.Year == course.Year && 
+                               a.Trimester == course.Trimester)
+                    .GroupBy(a => a.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                viewModel.FinalReviewCount = assessmentStatusCounts
+                    .FirstOrDefault(s => s.Status == "FinalReview")?.Count ?? 0;
+                
+                viewModel.ModerationCount = assessmentStatusCounts
+                    .FirstOrDefault(s => s.Status == "Moderation")?.Count ?? 0;
+
                 viewModels.Add(viewModel);
             }
 

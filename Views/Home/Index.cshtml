@@ -137,9 +137,17 @@
                                 <tbody>
                                     @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses)
                                     {
-                                        <tr>
+                                        <tr class="@(course.HasFinalReview ? "table-warning" : "")">
                                             <td>@course.CourseCode</td>
-                                            <td>@course.CourseName</td>
+                                            <td>
+                                                @course.CourseName
+                                                @if (course.HasFinalReview)
+                                                {
+                                                    <span class="badge bg-warning text-dark ms-2">
+                                                        <i class="fas fa-exclamation-circle"></i> @course.FinalReviewCount Final Review
+                                                    </span>
+                                                }
+                                            </td>
                                             <td>@course.Year</td>
                                             <td>@course.Trimester</td>
                                             <td>@course.Programme</td>
@@ -163,9 +171,17 @@
                                                     <a asp-controller="StudentAssessments" asp-action="Index"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Lecturer"
-                                                       class="btn btn-outline-success btn-sm"
+                                                       class="@(course.HasFinalReview ? "btn btn-warning btn-sm" : "btn btn-outline-success btn-sm")"
                                                        title="Manage Marking">
-                                                        <i class="fas fa-clipboard-check me-1"></i> Marking
+                                                        <i class="fas fa-clipboard-check me-1"></i> 
+                                                        @if (course.HasFinalReview)
+                                                        {
+                                                            <span class="fw-bold">Marking <span class="badge bg-dark">@course.FinalReviewCount</span></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Marking</span>
+                                                        }
                                                     </a>
                                                 </div>
                                             </td>
@@ -208,9 +224,17 @@
                                 <tbody>
                                     @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.ModeratorCourses)
                                     {
-                                        <tr>
+                                        <tr class="@(course.HasModeration ? "table-info" : "")">
                                             <td>@course.CourseCode</td>
-                                            <td>@course.CourseName</td>
+                                            <td>
+                                                @course.CourseName
+                                                @if (course.HasModeration)
+                                                {
+                                                    <span class="badge bg-info text-dark ms-2">
+                                                        <i class="fas fa-exclamation-circle"></i> @course.ModerationCount Moderation
+                                                    </span>
+                                                }
+                                            </td>
                                             <td>@course.Year</td>
                                             <td>@course.Trimester</td>
                                             <td>@course.Programme</td>
@@ -227,9 +251,17 @@
                                                     <a asp-controller="StudentAssessments" asp-action="Index"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Moderator"
-                                                       class="btn btn-outline-warning btn-sm"
+                                                       class="@(course.HasModeration ? "btn btn-info btn-sm" : "btn btn-outline-warning btn-sm")"
                                                        title="View Marking">
-                                                        <i class="fas fa-clipboard-check me-1"></i> Review Marking
+                                                        <i class="fas fa-clipboard-check me-1"></i> 
+                                                        @if (course.HasModeration)
+                                                        {
+                                                            <span class="fw-bold">Review Marking <span class="badge bg-dark">@course.ModerationCount</span></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Review Marking</span>
+                                                        }
                                                     </a>
                                                 </div>
                                             </td>
@@ -244,3 +276,58 @@
         </div>
     }
 }
+
+<style>
+    /* Highlight effect for rows with pending actions */
+    .table-warning {
+        background-color: #fff3cd !important;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .table-info {
+        background-color: #d1ecf1 !important;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    /* Pulse animation for action buttons */
+    .btn-warning.btn-sm,
+    .btn-info.btn-sm {
+        animation: pulse-shadow 2s infinite;
+    }
+    
+    @@keyframes pulse-shadow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+    }
+    
+    .table-info .btn-info.btn-sm {
+        animation: pulse-shadow-info 2s infinite;
+    }
+    
+    @@keyframes pulse-shadow-info {
+        0% {
+            box-shadow: 0 0 0 0 rgba(23, 162, 184, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(23, 162, 184, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(23, 162, 184, 0);
+        }
+    }
+    
+    .badge.bg-warning {
+        color: #000 !important;
+    }
+    
+    .badge.bg-info {
+        color: #000 !important;
+    }
+</style>
