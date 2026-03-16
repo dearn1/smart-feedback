@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using smart_feedback.Data;
 
@@ -11,9 +12,11 @@ using smart_feedback.Data;
 namespace smart_feedback.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260303082346_AddStudentOverallFeedback")]
+    partial class AddStudentOverallFeedback
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -601,75 +604,6 @@ namespace smart_feedback.Data.Migrations
                     b.ToTable("StudentOverallFeedback");
                 });
 
-            modelBuilder.Entity("smart_feedback.Models.StudentOverallScore", b =>
-                {
-                    b.Property<int>("StudentOverallScoreId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StudentOverallScoreId"));
-
-                    b.Property<int>("AssessmentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastModified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("ProportionalFinalScore")
-                        .HasColumnType("float");
-
-                    b.Property<decimal>("ProportionalMarks")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.Property<double>("TotalActualScore")
-                        .HasColumnType("float");
-
-                    b.HasKey("StudentOverallScoreId");
-
-                    b.HasIndex("AssessmentId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("StudentOverallScores");
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.StudentTaskScore", b =>
-                {
-                    b.Property<int>("StudentTaskScoreId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StudentTaskScoreId"));
-
-                    b.Property<double>("ActualScore")
-                        .HasColumnType("float");
-
-                    b.Property<int>("AssessmentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastModified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("RubricTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("StudentTaskScoreId");
-
-                    b.HasIndex("AssessmentId");
-
-                    b.HasIndex("RubricTaskId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("StudentTaskScores");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -793,52 +727,6 @@ namespace smart_feedback.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Assessment");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.StudentOverallScore", b =>
-                {
-                    b.HasOne("smart_feedback.Models.Assessment", "Assessment")
-                        .WithMany()
-                        .HasForeignKey("AssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("smart_feedback.Models.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Assessment");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("smart_feedback.Models.StudentTaskScore", b =>
-                {
-                    b.HasOne("smart_feedback.Models.Assessment", "Assessment")
-                        .WithMany()
-                        .HasForeignKey("AssessmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("smart_feedback.Models.RubricTask", "RubricTask")
-                        .WithMany()
-                        .HasForeignKey("RubricTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("smart_feedback.Models.Student", "Student")
-                        .WithMany()
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Assessment");
-
-                    b.Navigation("RubricTask");
 
                     b.Navigation("Student");
                 });

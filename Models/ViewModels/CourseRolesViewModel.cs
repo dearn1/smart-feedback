@@ -13,5 +13,11 @@ namespace smart_feedback.Models.ViewModels
         public string RoleModerator { get; set; }
         public string LecturerFullName { get; set; }
         public string ModeratorFullName { get; set; }
+        
+        // NEW: Assessment status counts
+        public int FinalReviewCount { get; set; }
+        public int ModerationCount { get; set; }
+        public bool HasFinalReview => FinalReviewCount > 0;
+        public bool HasModeration => ModerationCount > 0;
     }
 }

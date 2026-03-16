@@ -188,7 +188,13 @@ namespace smart_feedback.Controllers
         // GET: CourseRoles/Create
         public IActionResult Create()
         {
-            return View();
+            var model = new CourseRoles
+            {
+                Institution = "Auckland Institute of Studies",
+                Year = DateTime.Now.Year,
+                Status = "Active"
+            };
+            return View(model);
         }
 
         // POST: CourseRoles/Create
@@ -441,6 +447,7 @@ namespace smart_feedback.Controllers
         // POST: CourseRoles/BulkArchive
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken] // Add this temporarily to test
         public async Task<IActionResult> BulkArchive(List<int> selectedIds)
         {
             try
@@ -489,53 +496,7 @@ namespace smart_feedback.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: CourseRoles/BulkUnarchive
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BulkUnarchive(List<int> selectedIds)
-        {
-            try
-            {
-                if (selectedIds == null || !selectedIds.Any())
-                {
-                    _logger.LogWarning("Bulk unarchive attempted with no selections");
-                    TempData["ErrorMessage"] = "Please select at least one course role to unarchive.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var courseRolesToUnarchive = await _context.CourseRoles
-                    .Where(cr => selectedIds.Contains(cr.CourseRolesId) && cr.Status == "Archived")
-                    .ToListAsync();
-
-                if (!courseRolesToUnarchive.Any())
-                {
-                    _logger.LogWarning("No archived course roles found for bulk unarchive with IDs: {Ids}", string.Join(", ", selectedIds));
-                    TempData["ErrorMessage"] = "No archived course roles found to unarchive.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                foreach (var courseRole in courseRolesToUnarchive)
-                {
-                    courseRole.Status = "Active";
-                }
-
-                _context.UpdateRange(courseRolesToUnarchive);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Successfully unarchived {Count} course roles. IDs: {Ids}",
-                    courseRolesToUnarchive.Count, string.Join(", ", courseRolesToUnarchive.Select(cr => cr.CourseRolesId)));
-
-                TempData["SuccessMessage"] = $"Successfully unarchived {courseRolesToUnarchive.Count} course role(s).";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred during bulk unarchive operation");
-                TempData["ErrorMessage"] = "An error occurred while unarchiving the course roles. Please try again.";
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
-
+        
         // GET: CourseRoles/Upload
         public IActionResult Upload()
         {
@@ -566,9 +527,9 @@ namespace smart_feedback.Controllers
                 yellowStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.Yellow.Index;
                 yellowStyle.FillPattern = FillPattern.SolidForeground;
 
-                // Create header row
+                // Create header row (removed "Status" column)
                 IRow headerRow = worksheet.CreateRow(0);
-                var headers = new[] { "Course Code", "Course Name", "Year", "Trimester", "Programme", "Institution", "Role Lecturer", "Role Moderator", "Total Assessment", "Status" };
+                var headers = new[] { "Course Code", "Course Name", "Year", "Trimester", "Programme", "Institution", "Role Lecturer", "Role Moderator", "Total Assessment" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     ICell cell = headerRow.CreateCell(i);
@@ -576,9 +537,9 @@ namespace smart_feedback.Controllers
                     cell.CellStyle = headerStyle;
                 }
 
-                // Add sample data row 1
+                // Add sample data row 1 (removed Status value)
                 IRow row1 = worksheet.CreateRow(1);
-                var sampleData1 = new object[] { "CS101", "Introduction to Programming", 2025, 1, "Bachelor of Computer Science", "XYZ University", "lecturer1@university.edu", "moderator1@university.edu", 5, "Active" };
+                var sampleData1 = new object[] { "CS101", "Introduction to Programming", 2025, 1, "Bachelor of Computer Science", "XYZ University", "lecturer1@university.edu", "moderator1@university.edu", 5 };
                 for (int i = 0; i < sampleData1.Length; i++)
                 {
                     ICell cell = row1.CreateCell(i);
@@ -589,9 +550,9 @@ namespace smart_feedback.Controllers
                     cell.CellStyle = yellowStyle;
                 }
 
-                // Add sample data row 2
+                // Add sample data row 2 (removed Status value)
                 IRow row2 = worksheet.CreateRow(2);
-                var sampleData2 = new object[] { "CS102", "Data Structures", 2025, 2, "Bachelor of Computer Science", "XYZ University", "lecturer2@university.edu", "moderator2@university.edu", 3, "Active" };
+                var sampleData2 = new object[] { "CS102", "Data Structures", 2025, 2, "Bachelor of Computer Science", "XYZ University", "lecturer2@university.edu", "moderator2@university.edu", 3 };
                 for (int i = 0; i < sampleData2.Length; i++)
                 {
                     ICell cell = row2.CreateCell(i);
@@ -632,7 +593,7 @@ namespace smart_feedback.Controllers
                     "7. Column G (Role Lecturer) is REQUIRED (email format recommended)",
                     "8. Column H (Role Moderator) is REQUIRED (email format recommended)",
                     "9. Column I (Total Assessment) is OPTIONAL (default: 0, must be a number)",
-                    "10. Column J (Status) is OPTIONAL (default: Active, allowed values: Active or Archived)",
+                    "10. All uploaded course roles will be set to 'Active' status by default",
                     "11. Delete the sample rows (2 and 3) and add your actual course role data",
                     "12. Rows with missing required fields will be rejected"
                 };
@@ -671,7 +632,7 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Excel upload initiated, file: {FileName}, size: {FileSize} bytes",
                     excelFile?.FileName, excelFile?.Length);
 
-                if (excelFile == null || excelFile.Length == 0)
+                if (excelFile == null || excelFile.Length <= 0)
                 {
                     _logger.LogWarning("Excel upload attempted with null or empty file");
                     TempData["ErrorMessage"] = "Please select a valid Excel file.";
@@ -747,7 +708,6 @@ namespace smart_feedback.Controllers
                         var roleLecturerCell = GetCellValue(currentRow.GetCell(6))?.Trim();
                         var roleModeratorCell = GetCellValue(currentRow.GetCell(7))?.Trim();
                         var totalAssessmentCell = GetCellValue(currentRow.GetCell(8))?.Trim();
-                        var statusCell = GetCellValue(currentRow.GetCell(9))?.Trim();
 
                         // Skip empty rows
                         if (string.IsNullOrWhiteSpace(courseCodeCell) &&
@@ -838,26 +798,7 @@ namespace smart_feedback.Controllers
                             }
                         }
 
-                        // Validate Status (optional, default to "Active")
-                        string status = "Active";
-                        if (!string.IsNullOrWhiteSpace(statusCell))
-                        {
-                            if (statusCell.Equals("Active", StringComparison.OrdinalIgnoreCase))
-                            {
-                                status = "Active";
-                            }
-                            else if (statusCell.Equals("Archived", StringComparison.OrdinalIgnoreCase))
-                            {
-                                status = "Archived";
-                            }
-                            else
-                            {
-                                rowErrors.Add($"Row {rowNumber}: Invalid Status '{statusCell}' (must be 'Active' or 'Archived')");
-                                continue;
-                            }
-                        }
-
-                        // Create course role object
+                        // Create course role object with default 'Active' status
                         var courseRole = new CourseRoles
                         {
                             CourseCode = courseCodeCell,
@@ -869,7 +810,7 @@ namespace smart_feedback.Controllers
                             RoleLecturer = roleLecturerCell,
                             RoleModerator = roleModeratorCell,
                             TotalAssessment = totalAssessment,
-                            Status = status
+                            Status = "Active" // Set default status to 'Active'
                         };
 
                         courseRolesToAdd.Add(courseRole);
@@ -887,8 +828,8 @@ namespace smart_feedback.Controllers
                     _context.CourseRoles.AddRange(courseRolesToAdd);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Successfully added {Count} course roles from Excel file", courseRolesToAdd.Count);
-                    messages.Add($"✅ Successfully added {courseRolesToAdd.Count} course role(s) from Excel file.");
+                    _logger.LogInformation("Successfully added {Count} course roles from Excel file with 'Active' status", courseRolesToAdd.Count);
+                    messages.Add($"✅ Successfully added {courseRolesToAdd.Count} course role(s) from Excel file with 'Active' status.");
                 }
 
                 if (rowErrors.Any())
@@ -1019,9 +960,9 @@ namespace smart_feedback.Controllers
                 // Create data cell style
                 ICellStyle dataCellStyle = workbook.CreateCellStyle();
 
-                // Create header row
+                // Create header row (removed "Status" column)
                 IRow headerRow = worksheet.CreateRow(0);
-                var headers = new[] { "Course Code", "Course Name", "Year", "Trimester", "Programme", "Institution", "Role Lecturer", "Role Moderator", "Total Assessment", "Status" };
+                var headers = new[] { "Course Code", "Course Name", "Year", "Trimester", "Programme", "Institution", "Role Lecturer", "Role Moderator", "Total Assessment" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     ICell cell = headerRow.CreateCell(i);
@@ -1029,7 +970,7 @@ namespace smart_feedback.Controllers
                     cell.CellStyle = headerStyle;
                 }
 
-                // Add data rows
+                // Add data rows (removed Status column)
                 int rowIndex = 1;
                 foreach (var courseRole in courseRoles)
                 {
@@ -1044,7 +985,6 @@ namespace smart_feedback.Controllers
                     dataRow.CreateCell(6).SetCellValue(courseRole.RoleLecturer ?? "");
                     dataRow.CreateCell(7).SetCellValue(courseRole.RoleModerator ?? "");
                     dataRow.CreateCell(8).SetCellValue(courseRole.TotalAssessment);
-                    dataRow.CreateCell(9).SetCellValue(courseRole.Status ?? "Active");
 
                     rowIndex++;
                 }

@@ -1,13 +1,13 @@
 ﻿@model IEnumerable<smart_feedback.Models.Student>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Student Data";
 }
 
-<h1>Index</h1>
-
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Create New
+    </a>
     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#uploadExcelModal">
         <i class="fas fa-file-excel"></i> Upload Excel File
     </button>

@@ -95,6 +95,12 @@
 
 <!-- Action Buttons -->
 <div class="d-flex gap-2 mb-3">
+    <a asp-action="DownloadTemplate" class="btn btn-outline-success">
+        <i class="fas fa-download"></i> Download Template
+    </a>
+    <a asp-action="Upload" class="btn btn-success">
+        <i class="fas fa-file-excel"></i> Upload Excel
+    </a>
     <a asp-action="DownloadData"
        asp-route-sortOrder="@ViewData["CurrentSort"]"
        asp-route-year="@ViewData["CurrentYearFilter"]"
@@ -102,13 +108,7 @@
        asp-route-programme="@ViewData["CurrentProgrammeFilter"]"
        class="btn btn-info">
         <i class="fas fa-file-excel"></i> Download Data
-    </a>
-    <a asp-action="Upload" class="btn btn-success">
-        <i class="fas fa-file-excel"></i> Upload Excel
-    </a>
-    <a asp-action="DownloadTemplate" class="btn btn-outline-success">
-        <i class="fas fa-download"></i> Download Template
-    </a>
+    </a>    
     <a asp-action="Create" class="btn btn-primary">
         <i class="fas fa-plus"></i> Create New
     </a>
@@ -319,7 +319,7 @@
 
 <!-- Archived Course Roles Table -->
 <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center" style="cursor: pointer;" id="archivedTableHeader">
         <div>
             <h5 class="mb-0">
                 <i class="fas fa-archive me-2"></i>
@@ -327,27 +327,16 @@
                 <span class="badge bg-white text-secondary ms-2">@archivedCourseRoles.Count()</span>
             </h5>
         </div>
-        <div id="bulkActionsArchived" style="display: none;">
-            <button type="button" class="btn btn-success btn-sm" id="unarchiveSelectedBtn">
-                <i class="fas fa-undo me-1"></i>
-                Unarchive Selected (<span id="selectedCountArchived">0</span>)
-            </button>
-            <button type="button" class="btn btn-outline-light btn-sm" id="clearSelectionArchivedBtn">
-                <i class="fas fa-times me-1"></i>
-                Clear
-            </button>
+        <div>
+            <i class="fas fa-chevron-down" id="archivedChevron"></i>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <form id="bulkUnarchiveForm" asp-action="BulkUnarchive" method="post">
-                @Html.AntiForgeryToken()
+    <div style="display: none;" id="archivedTableCollapse">
+        <div class="card-body p-0">
+            <div class="table-responsive">
                 <table class="table table-striped table-hover mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="selectAllArchived" class="form-check-input" title="Select All">
-                            </th>
                             <th>
                                 <a asp-action="Index"
                                    asp-route-sortOrder="@ViewData["CourseCodeSortParm"]"
@@ -417,7 +406,7 @@
                                     <i class="fas fa-sort"></i>
                                 </a>
                             </th>
-                            <th width="200px">Actions</th>
+                            @* <th width="200px">Actions</th> *@
                         </tr>
                     </thead>
                     <tbody>
@@ -426,9 +415,6 @@
                             @foreach (var item in archivedCourseRoles)
                             {
                                 <tr class="table-secondary">
-                                    <td>
-                                        <input type="checkbox" name="selectedIds" value="@item.CourseRolesId" class="form-check-input row-checkbox-archived">
-                                    </td>
                                     <td>
                                         @Html.DisplayFor(modelItem => item.CourseCode)
                                     </td>
@@ -458,7 +444,7 @@
                                             @Html.DisplayFor(modelItem => item.TotalAssessment)
                                         </span>
                                     </td>
-                                    <td>
+                                    @* <td>
                                         <div class="btn-group" role="group" aria-label="Actions">
                                             <a asp-action="Edit" class="btn btn-warning btn-sm" asp-route-id="@item.CourseRolesId" title="Edit">
                                                 <i class="fas fa-edit"></i>
@@ -471,19 +457,19 @@
                                             </a>
                                             <form asp-action="Unarchive" asp-route-id="@item.CourseRolesId" method="post" style="display:inline;">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-success btn-sm" title="Unarchive" onclick="return confirm('Are you sure you want to activate this course role?');">
+                                                <button type="submit" class="btn btn-success btn-sm" title="Unarchive" onclick="return confirm('Are you sure you want to unarchive this course role?');">
                                                     <i class="fas fa-undo"></i>
                                                 </button>
                                             </form>
                                         </div>
-                                    </td>
+                                    </td> *@
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="11" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-box-open fa-2x mb-3"></i>
                                         <h5>No archived course roles</h5>
@@ -501,7 +487,7 @@
                         }
                     </tbody>
                 </table>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -568,6 +554,22 @@
     tr.selected-row {
         background-color: rgba(13, 110, 253, 0.1) !important;
     }
+
+    .card-header[data-bs-toggle="collapse"] {
+        transition: all 0.3s ease;
+    }
+
+    .card-header[data-bs-toggle="collapse"]:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    #archivedChevron {
+        transition: transform 0.3s ease;
+    }
+
+    .collapse {
+        transition: height 0.35s ease;
+    }
 </style>
 
 <script>
@@ -631,93 +633,67 @@
             });
         }
 
-        // Archive selected rows
+        // Archive selected rows - USING AJAX
         if (archiveSelectedBtn) {
-            archiveSelectedBtn.addEventListener('click', function() {
-                const selectedCount = Array.from(rowCheckboxesActive).filter(cb => cb.checked).length;
+            archiveSelectedBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                const checkedBoxes = Array.from(rowCheckboxesActive).filter(cb => cb.checked);
+                const selectedIds = checkedBoxes.map(cb => parseInt(cb.value));
+                const selectedCount = selectedIds.length;
+                
+                console.log('Archive button clicked');
+                console.log('Selected IDs:', selectedIds);
                 
                 if (selectedCount === 0) {
                     alert('Please select at least one course role to archive.');
                     return;
                 }
                 
-                if (confirm(`Are you sure you want to archive ${selectedCount} course role(s)?`)) {
-                    bulkArchiveForm.submit();
-                }
-            });
-        }
-
-        // ==================== ARCHIVED TABLE ====================
-        const selectAllArchived = document.getElementById('selectAllArchived');
-        const rowCheckboxesArchived = document.querySelectorAll('.row-checkbox-archived');
-        const bulkActionsArchived = document.getElementById('bulkActionsArchived');
-        const selectedCountArchivedSpan = document.getElementById('selectedCountArchived');
-        const unarchiveSelectedBtn = document.getElementById('unarchiveSelectedBtn');
-        const clearSelectionArchivedBtn = document.getElementById('clearSelectionArchivedBtn');
-        const bulkUnarchiveForm = document.getElementById('bulkUnarchiveForm');
-
-        // Select/Deselect all archived rows
-        if (selectAllArchived) {
-            selectAllArchived.addEventListener('change', function() {
-                rowCheckboxesArchived.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                    updateRowHighlight(checkbox);
-                });
-                updateBulkActionsArchived();
-            });
-        }
-
-        // Handle individual checkbox changes for archived rows
-        rowCheckboxesArchived.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateRowHighlight(this);
-                updateBulkActionsArchived();
-                
-                // Update select all checkbox
-                if (selectAllArchived) {
-                    selectAllArchived.checked = Array.from(rowCheckboxesArchived).every(cb => cb.checked);
-                }
-            });
-        });
-
-        // Update bulk actions visibility for archived table
-        function updateBulkActionsArchived() {
-            const selectedCount = Array.from(rowCheckboxesArchived).filter(cb => cb.checked).length;
-            selectedCountArchivedSpan.textContent = selectedCount;
-            
-            if (selectedCount > 0) {
-                bulkActionsArchived.style.display = 'block';
-            } else {
-                bulkActionsArchived.style.display = 'none';
-            }
-        }
-
-        // Clear selection for archived rows
-        if (clearSelectionArchivedBtn) {
-            clearSelectionArchivedBtn.addEventListener('click', function() {
-                rowCheckboxesArchived.forEach(checkbox => {
-                    checkbox.checked = false;
-                    updateRowHighlight(checkbox);
-                });
-                if (selectAllArchived) {
-                    selectAllArchived.checked = false;
-                }
-                updateBulkActionsArchived();
-            });
-        }
-
-        // Unarchive selected rows
-        if (unarchiveSelectedBtn) {
-            unarchiveSelectedBtn.addEventListener('click', function() {
-                const selectedCount = Array.from(rowCheckboxesArchived).filter(cb => cb.checked).length;
-                
-                if (selectedCount === 0) {
-                    alert('Please select at least one course role to unarchive.');
+                if (!confirm(`Are you sure you want to archive ${selectedCount} course role(s)?`)) {
                     return;
                 }
                 
-                if (confirm(`Are you sure you want to unarchive ${selectedCount} course role(s)?`)) {
-                    bulkUnarchiveForm.submit();
+                try {
+                    // Get the anti-forgery token
+                    const token = bulkArchiveForm.querySelector('input[name="__RequestVerificationToken"]').value;
+                    console.log('Anti-forgery token:', token);
+                    
+                    // Create form data
+                    const formData = new FormData();
+                    selectedIds.forEach(id => {
+                        formData.append('selectedIds', id);
+                    });
+                    
+                    // Log what we're sending
+                    console.log('Sending FormData:');
+                    for (let pair of formData.entries()) {
+                        console.log(pair[0] + ': ' + pair[1]);
+                    }
+                    
+                    // Send AJAX request
+                    const response = await fetch('@Url.Action("BulkArchive", "CourseRoles")', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token
+                        },
+                        body: formData
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response OK:', response.ok);
+                    
+                    if (response.ok) {
+                        // Reload the page to show updated data
+                        window.location.reload();
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        alert('Error archiving course roles. Check console for details.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred: ' + error.message);
                 }
             });
         }
@@ -746,6 +722,27 @@
                 window.location.href = '@Url.Action("Index", "CourseRoles")';
             }
         });
+
+        // ==================== ARCHIVED TABLE COLLAPSE ====================
+        const archivedTableHeader = document.getElementById('archivedTableHeader');
+        const archivedTableCollapse = document.getElementById('archivedTableCollapse');
+        const archivedChevron = document.getElementById('archivedChevron');
+
+        if (archivedTableHeader) {
+            archivedTableHeader.addEventListener('click', function() {
+                const isCollapsed = archivedTableCollapse.style.display === 'none' || archivedTableCollapse.style.display === '';
+
+                if (isCollapsed) {
+                    archivedTableCollapse.style.display = 'block';
+                    archivedChevron.classList.remove('fa-chevron-down');
+                    archivedChevron.classList.add('fa-chevron-up');
+                } else {
+                    archivedTableCollapse.style.display = 'none';
+                    archivedChevron.classList.remove('fa-chevron-up');
+                    archivedChevron.classList.add('fa-chevron-down');
+                }
+            });
+        }
     });
 </script>
 

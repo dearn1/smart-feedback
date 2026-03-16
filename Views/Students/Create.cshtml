@@ -4,16 +4,14 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Student</h4>
+<h4>Student Data</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="StudentId" class="control-label"></label>
+                <label asp-for="StudentId" class="control-label">Student Id</label>
                 <input asp-for="StudentId" class="form-control" />
                 <span asp-validation-for="StudentId" class="text-danger"></span>
             </div>
@@ -33,13 +31,18 @@
                 <span asp-validation-for="Programme" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="YearEnrolled" class="control-label"></label>
+                <label asp-for="YearEnrolled" class="control-label">Year Enrolled</label>
                 <input asp-for="YearEnrolled" class="form-control" />
                 <span asp-validation-for="YearEnrolled" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TrimesterEnrolled" class="control-label"></label>
-                <input asp-for="TrimesterEnrolled" class="form-control" />
+                <label asp-for="TrimesterEnrolled" class="control-label">Trimester Enrolled</label>
+                <select asp-for="TrimesterEnrolled" class="form-control">
+                    <option value="">-- Select Trimester --</option>
+                    <option value="1">Trimester 1</option>
+                    <option value="2">Trimester 2</option>
+                    <option value="3">Trimester 3</option>
+                </select>
                 <span asp-validation-for="TrimesterEnrolled" class="text-danger"></span>
             </div>
             <div class="form-group">

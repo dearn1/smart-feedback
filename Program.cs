@@ -5,8 +5,12 @@ using Serilog;
 using smart_feedback.Services;
 using smart_feedback.Models;
 using smart_feedback.Models.Configuration;
+using QuestPDF.Infrastructure; 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure QuestPDF license (must be set before any QuestPDF usage, use Community license for education purpose)
+QuestPDF.Settings.License = LicenseType.Community;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -35,6 +39,8 @@ builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection
 // Register email service
 builder.Services.AddScoped<IEmailService, UserEmailService>();
 
+// Register PDF Generation Service
+builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 builder.Services.AddScoped<IFeedbackGenerationService, MLFeedbackGenerationService>();

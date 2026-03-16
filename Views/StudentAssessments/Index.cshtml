@@ -8,14 +8,21 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (@Model.Trimester @Model.Year)
+                    <i class="fas fa-clipboard-check"></i> Student Assessments - @Model.CourseCode @Model.CourseName (Trimester @Model.Trimester @Model.Year)
                 </h3>
                 <div class="card-tools">
-                    @if (Model.Role == "Lecturer" || Model.Role == "Admin")
+                    @* Check if all assessments are published *@
+                    @{
+                        var allPublished = Model.Assessments.Any() && Model.Assessments.All(a => a.Status == "Published");
+                    }
+                    
+                    @if (allPublished && (Model.Role == "Lecturer" || User.IsInRole("Admin")))
                     {
-                        <a asp-action="Create" asp-route-courseId="@Model.CourseRolesId" asp-route-role="@Model.Role" 
-                           class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> Create New Assessment
+                        <a asp-action="FinalReport" 
+                           asp-route-courseId="@Model.CourseRolesId" 
+                           asp-route-role="@Model.Role" 
+                           class="btn btn-warning btn-lg">
+                            <i class="fas fa-trophy"></i> Final Score
                         </a>
                     }
                 </div>
@@ -29,12 +36,13 @@
                                 <tr>
                                     <th>Assessment Name</th>
                                     <th>Rubric</th>
-                                    <th>Total Marks</th>
+                                    <th>Total Marks</th>                                    
                                     <th>Marking Progress</th>
                                     <th>Status</th>
                                     <th>Lecturer</th>
                                     <th>Moderator</th>
                                     <th>Actions</th>
+                                    <th>Contribution To Course Score</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -67,6 +75,7 @@
                                         </td>
                                         <td>@assessment.Rubric?.RubricName</td>
                                         <td>@assessment.Rubric?.TotalMarks</td>
+                                        
                                         <td>
                                             <div class="progress" style="height: 25px;">
                                                 <div class="progress-bar progress-bar-striped bg-@progressColor" 
@@ -120,18 +129,9 @@
                                                         <i class="fas fa-chart-bar"></i> Batch Reports
                                                     </a>
                                                 }
-                                                @if (Model.Role == "Lecturer" || User.IsInRole("Admin"))
-                                                {
-                                                    <button type="button" 
-                                                            class="btn btn-danger btn-sm" 
-                                                            data-toggle="modal" 
-                                                            data-target="#deleteModal_@assessment.AssessmentId"
-                                                            title="Delete Assessment">
-                                                        <i class="fas fa-trash-alt"></i> Delete
-                                                    </button>
-                                                }
                                             </div>
                                         </td>
+                                        <td>@assessment.ProportionalMarks %</td>
                                     </tr>
                                 }
                             </tbody>

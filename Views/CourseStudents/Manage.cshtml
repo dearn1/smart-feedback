@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-users"></i> Manage Students - @Model.CourseCode @Model.CourseName (@Model.Trimester @Model.Year)
+                    <i class="fas fa-users"></i> Manage Students - @Model.CourseCode @Model.CourseName (Trimester @Model.Trimester @Model.Year)
                 </h3>
                 <div class="card-tools">
                     <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-sm">
@@ -39,6 +39,12 @@
                             <a asp-action="DownloadTemplate" asp-route-courseId="@Model.CourseRolesId" class="btn btn-outline-success">
                                 <i class="fas fa-download"></i> Download Template
                             </a>
+                            @if (Model.EnrolledStudents.Any())
+                            {
+                                <a asp-action="DownloadEnrolledStudents" asp-route-courseId="@Model.CourseRolesId" class="btn btn-primary">
+                                    <i class="fas fa-file-download"></i> Download Enrolled Students
+                                </a>
+                            }
                         </div>
                     </div>
 

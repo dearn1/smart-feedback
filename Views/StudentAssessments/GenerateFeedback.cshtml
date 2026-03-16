@@ -337,39 +337,57 @@
                     <div class="col-md-12">
                         <div class="card overall-feedback-card shadow-sm">
                             <div class="card-header bg-gradient-primary text-white">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-comments fa-2x mr-3"></i>
-                                    <div>
-                                        <h4 class="mb-0">Overall Assessment Feedback</h4>
-                                        <small class="opacity-75">Comprehensive evaluation and recommendations</small>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-comments fa-2x mr-3"></i>
+                                        <div>
+                                            <h4 class="mb-0">Overall Assessment Feedback</h4>
+                                            <small class="opacity-75">Comprehensive evaluation and recommendations</small>
+                                        </div>
                                     </div>
+                                    @* Only show regenerate button for Lecturers and Admins, not in print mode *@
+                                    @if ((User.IsInRole("Lecturer") || User.IsInRole("Admin")) && (Model.Assessment.Status == "Marking" || Model.Assessment.Status == "ReMark"))
+                                    {
+                                        <div class="no-print">
+                                            <button type="button" 
+                                                    class="btn btn-light btn-sm" 
+                                                    id="regenerateFeedbackBtn"
+                                                    onclick="regenerateFeedback()"
+                                                    title="Regenerate AI feedback">
+                                                <i class="fas fa-sync-alt"></i> Regenerate
+                                            </button>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                             <div class="card-body feedback-content">
-                                <div class="overall-feedback-container"
-                                     data-percentage="@Model.Percentage"
-                                     data-strengths="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score >= (cr.MaxScore * 0.75)).Select(cr => cr.CriteriaTitle))"
-                                     data-improvements="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score < (cr.MaxScore * 0.5)).Select(cr => cr.CriteriaTitle))">
-                                    
+                                @* Display feedback from database if it exists, otherwise show generation UI *@
+                                <div id="feedbackDisplayContainer">
                                     @if (!string.IsNullOrEmpty(Model.OverallFeedback))
                                     {
-                                        <div class="original-overall-feedback feedback-text">
+                                        <div class="feedback-text" id="existingFeedback">
+                                            <div class="mb-3">
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check-circle"></i> Feedback Available
+                                                </span>
+                                            </div>
                                             @Html.Raw(Model.OverallFeedback.Replace("\n", "<br />"))
                                         </div>
                                     }
                                     else
                                     {
-                                        <div class="alert alert-info mb-0">
-                                            <i class="fas fa-info-circle mr-2"></i>
-                                            No overall feedback has been generated yet.
+                                        <div class="overall-feedback-container"
+                                             data-percentage="@Model.Percentage"
+                                             data-strengths="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score >= (cr.MaxScore * 0.75)).Select(cr => cr.CriteriaTitle))"
+                                             data-improvements="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score < (cr.MaxScore * 0.5)).Select(cr => cr.CriteriaTitle))">
+                                            
+                                            <div class="ai-overall-feedback" style="display: none;"></div>
+                                            <div class="overall-ai-loading" style="display: block; text-align: center; padding: 20px;">
+                                                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                                                <p class="mt-2 text-muted">Generating personalized feedback...</p>
+                                            </div>
                                         </div>
                                     }
-                                    
-                                    <div class="ai-overall-feedback" style="display: none;"></div>
-                                    <div class="overall-ai-loading" style="display: block; text-align: center; padding: 20px;">
-                                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                                        <p class="mt-2 text-muted">Generating personalized feedback...</p>
-                                    </div>
                                 </div>
                             </div>
                             <div class="card-footer bg-light">
@@ -691,7 +709,7 @@
 @section Scripts {
     <script src="https://js.puter.com/v2/"></script>
     <script>
-        // Enhanced AI feedback with proper response extraction
+        // Enhanced AI feedback with automatic database storage
         $(document).ready(function() {
             @if (!Model.IsBatchMode)
             {
@@ -703,11 +721,65 @@
             console.log('Puter SDK loaded:', typeof puter !== 'undefined');
             console.log('Puter AI available:', typeof puter?.ai !== 'undefined');
 
-            // Automatically enhance overall feedback when page loads
-            enhanceOverallFeedbackWithAI();
+            // Only generate feedback if it doesn't already exist
+            const feedbackExists = @Html.Raw(string.IsNullOrEmpty(Model.OverallFeedback) ? "false" : "true");
+            
+            if (!feedbackExists) {
+                console.log('No existing feedback found - generating new AI feedback');
+                enhanceOverallFeedbackWithAI();
+            } else {
+                console.log('Existing feedback found - skipping AI generation');
+            }
         });
 
-        async function enhanceOverallFeedbackWithAI() {
+        // NEW: Function to regenerate feedback (force regeneration)
+        async function regenerateFeedback() {
+            const btn = document.getElementById('regenerateFeedbackBtn');
+            const originalBtnContent = btn.innerHTML;
+            
+            // Confirm regeneration
+            if (!confirm('Are you sure you want to regenerate the feedback? This will replace the existing feedback.')) {
+                return;
+            }
+
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Regenerating...' ;
+
+            try {
+                // Clear the existing feedback display
+                const feedbackContainer = document.getElementById('feedbackDisplayContainer');
+                feedbackContainer.innerHTML = `
+                    <div class="overall-feedback-container"
+                         data-percentage="@Model.Percentage"
+                         data-strengths="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score >= (cr.MaxScore * 0.75)).Select(cr => cr.CriteriaTitle))"
+                         data-improvements="@string.Join(", ", Model.CriteriaResults.Where(cr => cr.Score < (cr.MaxScore * 0.5)).Select(cr => cr.CriteriaTitle))">
+                        
+                        <div class="ai-overall-feedback" style="display: none;"></div>
+                        <div class="overall-ai-loading" style="display: block; text-align: center; padding: 20px;">
+                            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                            <p class="mt-2 text-muted">Regenerating personalized feedback...</p>
+                        </div>
+                    </div>
+                `;
+
+                // Call the AI feedback generation function
+                await enhanceOverallFeedbackWithAI(true);
+
+                // Show success message
+                toastr.success('Feedback regenerated successfully!');
+                
+            } catch (error) {
+                console.error('Error regenerating feedback:', error);
+                toastr.error('Failed to regenerate feedback. Please try again.');
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = originalBtnContent;
+            }
+        }
+
+        async function enhanceOverallFeedbackWithAI(forceRegenerate = false) {
             console.log('=== Starting AI Feedback Enhancement ===');
             
             const container = document.querySelector('.overall-feedback-container');
@@ -728,10 +800,24 @@
 
             const loadingDiv = container.querySelector('.overall-ai-loading');
             const aiFeedbackDiv = container.querySelector('.ai-overall-feedback');
-            const originalDiv = container.querySelector('.original-overall-feedback');
 
             if (loadingDiv) loadingDiv.style.display = 'block';
-            if (originalDiv) originalDiv.style.opacity = '0.5';
+
+            // Collect lecturer comments from all criteria
+            const lecturerComments = [];
+            document.querySelectorAll('.border-info .text-info').forEach(comment => {
+                const commentText = comment.textContent.trim();
+                if (commentText) {
+                    lecturerComments.push(commentText);
+                }
+            });
+
+            // Build the lecturer comments section for the prompt
+            let lecturerCommentsSection = '';
+            if (lecturerComments.length > 0)
+            {
+                lecturerCommentsSection = `\n\nLecturer's Additional Comments:\n${lecturerComments.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nPlease incorporate and expand on these lecturer comments in your feedback.`;
+            }
 
             const prompt = `Generate constructive overall assessment feedback using paragraphs style.
 The feedback should be divided into two parts:
@@ -742,7 +828,7 @@ The feedback should be divided into two parts:
 Context:
 - Overall Score: ${percentage.toFixed(1)}%
 - Strong Areas: ${strengths || 'None identified'}
-- Areas Needing Improvement: ${improvements || 'None identified'}
+- Areas Needing Improvement: ${improvements || 'None identified'}${lecturerCommentsSection}
 
 Please provide encouraging, comprehensive feedback that summarizes the student's overall performance and provides actionable guidance for improvement. Write in a supportive, professional tone suitable for student feedback.`;
 
@@ -755,18 +841,13 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                 console.log('Response received');
                 
                 // Extract the text from the response object
-                // Puter AI can return different formats:
-                // Format 1: { role: "assistant", content: "...", ... }
-                // Format 2: { message: { role: "assistant", content: "..." }, ... }
                 let feedbackText = '';
                 
                 if (typeof response === 'string') {
-                    // Direct string response
                     feedbackText = response;
                 } else if (response && typeof response === 'object') {
-                    // Try to extract from various possible locations
-                    feedbackText = response.message?.content ||  // Format 2: nested in message
-                                   response.content ||           // Format 1: direct content
+                    feedbackText = response.message?.content ||
+                                   response.content ||
                                    response.text || 
                                    response.message?.text ||
                                    response.data ||
@@ -785,11 +866,13 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                 
                 console.log('Feedback length:', feedbackText.length);
                 
+                // Save AI-generated feedback to database
+                await saveAIFeedbackToDatabase(feedbackText, forceRegenerate);
+                
                 // Hide loading, show AI feedback
                 if (loadingDiv) loadingDiv.style.display = 'none';
-                if (originalDiv) originalDiv.style.display = 'none';
                 
-                // Format with HTML - split by \n for better readability
+                // Format with HTML
                 const formattedResponse = feedbackText
                     .split('\n')
                     .map(line => line.trim())
@@ -798,12 +881,16 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>');
                 
+                const badgeText = forceRegenerate 
+                    ? '<i class="fas fa-sync-alt"></i> Feedback Regenerated' 
+                    : '<i class="fas fa-robot"></i> Personalized Feedback (Saved)';
+                
                 if (aiFeedbackDiv) {
                     aiFeedbackDiv.innerHTML = `
                         <div class="feedback-text">
                             <div class="mb-3">
                                 <span class="badge badge-success">
-                                    <i class="fas fa-robot"></i> Personalized Feedback
+                                    ${badgeText}
                                 </span>
                             </div>
                             ${formattedResponse}
@@ -811,12 +898,45 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
                     aiFeedbackDiv.style.display = 'block';
                 }
 
-                console.log('=== AI Feedback Successfully Displayed ===');
+                console.log('=== Personalized Feedback Successfully Displayed and Saved ===');
                 
             } catch (error) {
-                console.error('=== AI Feedback Error ===');
+                console.error('=== Personalized Feedback Error ===');
                 console.error('Error:', error);
                 showFallbackFeedback(container, error.message);
+                throw error; // Re-throw for regenerateFeedback function to catch
+            }
+        }
+
+        // Save AI-generated feedback to database
+        async function saveAIFeedbackToDatabase(feedback, isUpdate = false) {
+            try {
+                const response = await fetch('@Url.Action("SaveAIGeneratedFeedback", "StudentAssessments")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: new URLSearchParams({
+                        assessmentId: @Model.Assessment.AssessmentId,
+                        studentId: @Model.Student.Id,
+                        feedback: feedback,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('AI feedback to database successfully');
+                    if (isUpdate) {
+                        console.log('Existing feedback was updated');
+                    }
+                } else {
+                    console.warn('Failed to save AI feedback:', result.message);
+                }
+            } catch (error) {
+                console.error('Error saving AI feedback to database:', error);
             }
         }
 
@@ -824,15 +944,22 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
             console.log('Showing fallback feedback. Error:', errorMessage);
             
             const loadingDiv = container.querySelector('.overall-ai-loading');
-            const originalDiv = container.querySelector('.original-overall-feedback');
+            const strengths = container.dataset.strengths;
+            const improvements = container.dataset.improvements;
 
-            if (loadingDiv) loadingDiv.style.display = 'none';
-            if (originalDiv) {
-                originalDiv.style.opacity = '1';
-                originalDiv.style.display = 'block';
+            if (loadingDiv) {
+                loadingDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <p class="mb-2">Unable to generate personalized feedback. Please refresh the page to try again.</p>
+                        <hr>
+                        <p class="mb-1"><strong>Strong Areas:</strong> ${strengths || 'None identified'}</p>
+                        <p class="mb-0"><strong>Areas Needing Improvement:</strong> ${improvements || 'None identified'}</p>
+                    </div>
+                `;
             }
 
-            console.info('Using rule-based feedback as fallback');
+            console.info('Displayed error message to user');
         }
 
         function navigateToStudent(index) {
@@ -841,12 +968,46 @@ Please provide encouraging, comprehensive feedback that summarizes the student's
         }
 
         function printAllStudents() {
-            var printContent = document.getElementById('printAllContent').innerHTML;
-            var originalContent = document.body.innerHTML;
-            document.body.innerHTML = printContent;
-            window.print();
-            document.body.innerHTML = originalContent;
-            location.reload();
+            if (!confirm('Generate PDF files for all @Model.TotalStudents students? This may take a few moments.')) {
+                return;
+            }
+
+            // Show loading indicator
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDFs...';
+
+            // Create form to POST request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("GenerateBatchPdfs", "StudentAssessments")';
+            
+            // Add parameters
+            const params = {
+                id: @Model.Assessment.AssessmentId,
+                courseId: '@Model.CourseRolesId',
+                role: '@Model.Role',
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            };
+
+            for (const [key, value] of Object.entries(params)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+
+            // Reset button after delay
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.body.removeChild(form);
+            }, 3000);
         }
     </script>
 }

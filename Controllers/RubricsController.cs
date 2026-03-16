@@ -21,19 +21,28 @@ using System.Text.RegularExpressions;
 
 namespace smart_feedback.Controllers
 {
+    // Helper class for programme options
+    public class ProgrammeOption
+    {
+        public string Value { get; set; }
+        public string Text { get; set; }
+    }
+
     public class RubricsController : Controller
     {        
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RubricsController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<RubricsController> logger)
+        public RubricsController(ApplicationDbContext context, IWebHostEnvironment hostingEnvironment, UserManager<ApplicationUser> userManager, ILogger<RubricsController> logger, IConfiguration configuration)
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
             _userManager = userManager;
             _logger = logger;
+            _configuration = configuration;
         }
         // GET: Rubrics
         [Authorize]
@@ -259,6 +268,22 @@ namespace smart_feedback.Controllers
                     }
                 }
 
+                // Set default Institution
+                ViewBag.DefaultInstitution = "Auckland Institute of Studies";
+
+                // Load programmes from configuration
+                var programmes = _configuration.GetSection("ApplicationSettings:Programmes").Get<List<ProgrammeOption>>();
+                ViewBag.Programmes = new SelectList(programmes ?? new List<ProgrammeOption>(), "Value", "Text");
+
+                // Generate year dropdown (current year back to 10 years ago)
+                var currentYear = DateTime.Now.Year;
+                var years = Enumerable.Range(currentYear - 10, 11).OrderByDescending(y => y).ToList();
+                ViewBag.Years = new SelectList(years);
+
+                // Generate trimester dropdown (1, 2, 3)
+                var trimesters = new List<int> { 1, 2, 3 };
+                ViewBag.Trimesters = new SelectList(trimesters);
+
                 return View();
             }
             catch (Exception ex)
@@ -271,7 +296,7 @@ namespace smart_feedback.Controllers
         // POST: Rubrics/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string courseId, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName, TermName,TotalMarks,SourceFile")] Rubrics rubrics)
+        public async Task<IActionResult> Create(string courseId, string role, [Bind("RubricsId,RubricName,Institution,Programme,CourseCode,CourseName,Year,Trimester,TotalMarks,SourceFile")] Rubrics rubrics)
         {
             _logger.LogInformation("Create POST action called for rubric: {RubricName}, courseId: {CourseId}", rubrics?.RubricName, courseId);
 
@@ -320,7 +345,7 @@ namespace smart_feedback.Controllers
                 _logger.LogInformation("Successfully created rubric: {RubricName} (ID: {RubricId}) for course {CourseCode}",
                     rubrics.RubricName, rubrics.RubricsId, rubrics.CourseCode);
 
-                return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                return RedirectToAction("Management", "Rubrics");
             }
             catch (Exception ex)
             {
@@ -405,13 +430,13 @@ namespace smart_feedback.Controllers
                     _logger.LogError(ex, "Error updating rubric ID: {RubricId}", id);
                     throw;
                 }
-                return RedirectToAction("Index", "Rubrics", new { courseid, role });
+                return RedirectToAction("Management", "Rubrics");
             }
 
             _logger.LogWarning("Model validation failed for rubric edit ID: {RubricId}. Errors: {ValidationErrors}",
                 id, string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
 
-            return RedirectToAction("Index", "Rubrics", new { courseid, role });
+            return RedirectToAction("Management", "Rubrics");
         }
 
         // GET: Rubrics/EditTask/5
@@ -454,8 +479,6 @@ namespace smart_feedback.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-
-
         public async Task<IActionResult> EditTask(int id, int rubricId, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
             _logger.LogInformation("EditTask POST action called for task ID: {TaskId}", id);
@@ -472,6 +495,21 @@ namespace smart_feedback.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Successfully updated task: {TaskTitle} (ID: {TaskId})", rubricTask.TaskTitle, id);
+
+                // Update TotalMarks in Rubrics table
+                var rubric = await _context.Rubrics.FindAsync(rubricId);
+                if (rubric != null)
+                {
+                    var allTasks = await _context.RubricTask
+                        .Where(rt => rt.RubricsId == rubricId)
+                        .ToListAsync();
+                    
+                    rubric.TotalMarks = allTasks.Sum(t => t.MaxMarks);
+                    _context.Update(rubric);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Updated rubric {RubricId} TotalMarks to {TotalMarks}", rubricId, rubric.TotalMarks);
+                }
 
                 return RedirectToAction("Details", "Rubrics", new { id = rubricId, courseid, role });
             }
@@ -697,7 +735,7 @@ namespace smart_feedback.Controllers
                             id, assessmentsUsingRubric.Count);
 
                         TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it is being used in {assessmentsUsingRubric.Count} assessment(s). Please delete or reassign the assessments first.";
-                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                        return RedirectToAction("Management", "Rubrics");
                     }
 
                     // Get all tasks for this rubric
@@ -734,7 +772,7 @@ namespace smart_feedback.Controllers
                             id, studentScoresUsingCriteria.Count);
 
                         TempData["ErrorMessage"] = $"Cannot delete rubric '{rubrics.RubricName}' because it contains criteria that are being used in student assessments. Please delete the related assessments first.";
-                        return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                        return RedirectToAction("Management", "Rubrics");
                     }
 
                     // Delete in the correct order to maintain referential integrity
@@ -779,7 +817,7 @@ namespace smart_feedback.Controllers
                     TempData["ErrorMessage"] = "Rubric not found.";
                 }
 
-                return RedirectToAction("Index", "Rubrics", new { courseId, role });
+                return RedirectToAction("Management", "Rubrics");
             }
             catch (Exception ex)
             {
@@ -1063,9 +1101,7 @@ namespace smart_feedback.Controllers
         }
 
         [HttpPost]
-
         [ValidateAntiForgeryToken]
-
         public async Task<IActionResult> CreateTask(int id, string courseid, string role, [Bind("RubricTaskId,RubricsId,TaskTitle,TaskDescription,MaxMarks")] RubricTask rubricTask)
         {
             _logger.LogInformation("CreateTask POST action called for rubric ID: {RubricId}, task: {TaskTitle}", id, rubricTask?.TaskTitle);
@@ -1078,6 +1114,21 @@ namespace smart_feedback.Controllers
 
                 _logger.LogInformation("Successfully created task: {TaskTitle} (ID: {TaskId}) for rubric {RubricId}",
                     rubricTask.TaskTitle, rubricTask.RubricTaskId, id);
+
+                // Update TotalMarks in Rubrics table
+                var rubric = await _context.Rubrics.FindAsync(id);
+                if (rubric != null)
+                {
+                    var allTasks = await _context.RubricTask
+                        .Where(rt => rt.RubricsId == id)
+                        .ToListAsync();
+                    
+                    rubric.TotalMarks = allTasks.Sum(t => t.MaxMarks);
+                    _context.Update(rubric);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Updated rubric {RubricId} TotalMarks to {TotalMarks}", id, rubric.TotalMarks);
+                }
 
                 return RedirectToAction("Details", "Rubrics", new { id, courseid, role });
             }
@@ -1198,26 +1249,6 @@ namespace smart_feedback.Controllers
                     ViewBag.CourseId = courseid;
                     ViewBag.CurrentUserRole = role;
 
-                    // Get existing criteria data again for display
-                    var firstExistingCriteria = existingCriterias.OrderBy(rc => rc.RubricCriteriaId).FirstOrDefault();
-                    if (firstExistingCriteria != null)
-                    {
-                        var existingScores = await _context.RubricCriteriaScore
-                            .Where(rcs => rcs.RubricCriteriaId == firstExistingCriteria.RubricCriteriaId)
-                            .OrderByDescending(rcs => rcs.CriterionScore)
-                            .ToListAsync();
-
-                        ViewBag.FirstExistingCriteria = firstExistingCriteria;
-                        ViewBag.ExistingScores = existingScores;
-                        ViewBag.HasExistingCriteria = true;
-                    }
-                    else
-                    {
-                        ViewBag.FirstExistingCriteria = null;
-                        ViewBag.ExistingScores = null;
-                        ViewBag.HasExistingCriteria = false;
-                    }
-
                     return View(rubricCriteria);
                 }
 
@@ -1304,8 +1335,8 @@ namespace smart_feedback.Controllers
                             ScoreDescription = scoreDescription
                         };
                         _context.RubricCriteriaScore.Add(rubricCriteriaScore);
-                        await _context.SaveChangesAsync();
                     }
+                    await _context.SaveChangesAsync();
                     _logger.LogDebug("Successfully created {ScoreCount} new scores for criteria {CriteriaId}",
                         rubricCriteria.MaxScore + 1, rubricCriteria.RubricCriteriaId);
                 }
@@ -1369,7 +1400,9 @@ namespace smart_feedback.Controllers
                 {
                     _logger.LogWarning("Upload attempted with null or empty file");
                     ModelState.AddModelError("rubricsFile", "Please upload your Rubrics File.");
-                    return RedirectToAction("Upload", "Rubrics");
+                    ViewBag.CourseId = courseId;
+                    ViewBag.CurrentUserRole = role;
+                    return View();
                 }
 
                 // Check file extension
@@ -1378,7 +1411,9 @@ namespace smart_feedback.Controllers
                 {
                     _logger.LogWarning("Upload attempted with invalid file extension: {Extension}", extension);
                     ModelState.AddModelError("rubricsFile", "Only Word documents are allowed.");
-                    return RedirectToAction("Upload", "Rubrics");
+                    ViewBag.CourseId = courseId;
+                    ViewBag.CurrentUserRole = role;
+                    return View();
                 }
 
                 // Check file size (limit to 10MB)
@@ -1386,7 +1421,9 @@ namespace smart_feedback.Controllers
                 {
                     _logger.LogWarning("Upload attempted with oversized file: {FileSize} bytes", rubricsFile.Length);
                     ModelState.AddModelError("rubricsFile", "File size must be less than 10MB.");
-                    return RedirectToAction("Upload", "Rubrics");
+                    ViewBag.CourseId = courseId;
+                    ViewBag.CurrentUserRole = role;
+                    return View();
                 }
 
                 _logger.LogDebug("File validation passed, processing document: {FileName}", rubricsFile.FileName);
@@ -1418,228 +1455,198 @@ namespace smart_feedback.Controllers
 
                         _logger.LogDebug("Extracted {ParagraphCount} paragraphs from document", rubricsParagraphs.Count);
 
+                        // Validate we have minimum required paragraphs
+                        if (rubricsParagraphs.Count < 2)
+                        {
+                            _logger.LogWarning("Document does not contain sufficient header information");
+                            ModelState.AddModelError("", "Document format is invalid. Expected at least Programme and Course information in the first paragraphs.");
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                            return View();
+                        }
+
                         // Extract rubric criteria from tables
                         int tableIndex = 0;
                         int taskIndex = 0;
-                        bool isTableRead = false;
 
-                        foreach (var table in docx.Tables)
+                        //remove docx.Tables that has columns count less than 3, as they are not valid tables for rubric tasks or criteria
+                        var filteredTables = docx.Tables.Where(t => t.Rows.Count > 0 && t.Rows[0].GetTableCells().Count >= 3).ToList();
+
+                        foreach (var table in filteredTables)
                         {
-                            isTableRead = false;
                             _logger.LogDebug("Processing table {TableIndex} with {RowCount} rows", tableIndex, table.Rows.Count);
 
-                            // Extract rubric criteria from ONLY the first table
-                            if (docx.Tables.Count > 0)
+                            if (tableIndex == 0)
                             {
-                                if (tableIndex == 0)
+                                //Fetch rubrics tasks from the first table
+                                var rows = table.Rows;
+
+                                // Skip header row (index 0) and process data rows
+                                for (int i = 1; i < rows.Count; i++)
                                 {
-                                    //Fetch rubrics tasks from the first table
-                                    var rows = table.Rows;
+                                    var row = rows[i];
+                                    var cells = row.GetTableCells();
+
+                                    if (cells.Count >= 3) // Ensure we have at least 3 columns
+                                    {
+                                        var task = new RubricTask
+                                        {
+                                            TaskTitle = GetCellText(cells[0]),
+                                            TaskDescription = GetCellText(cells[1]),
+                                            MaxMarks = ParseMaxMarks(GetCellText(cells[2]))
+                                        };
+
+                                        // Only add if we have meaningful data
+                                        if (!string.IsNullOrWhiteSpace(task.TaskTitle))
+                                        {
+                                            rubricTasks.Add(task);
+                                            _logger.LogDebug("Added task: {TaskTitle} with {MaxMarks} marks", task.TaskTitle, task.MaxMarks);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                //Fetch rubrics tasks criterias from the remaining tables
+                                var rows = table.Rows;
+
+                                // Extract score headers from the first row (header row)
+                                var headerRow = rows[0];
+                                var headerCells = headerRow.GetTableCells();
+                                int headerColumnCount = headerCells.Count;
+
+                                if (headerColumnCount >= 4) // Ensure we have at least 4 columns
+                                {
+                                    // Check if first column header contains "Criteria" keyword
+                                    string firstColumnHeader = GetCellText(headerCells[0]);
+                                    if (!firstColumnHeader.Contains("Criteria", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        _logger.LogDebug("Skipping table {TableIndex}: first column header '{HeaderText}' does not contain 'Criteria' keyword",
+                                            tableIndex, firstColumnHeader);
+                                        tableIndex++;
+                                        continue;
+                                    }
+
+                                    var checkRow = rows[1];
+                                    var checkCells = checkRow.GetTableCells();
+                                    string[] scoreHeaders = new string[headerColumnCount];
+                                    int maxScore = -1;
+
+                                    for (int col = 2; col < headerColumnCount; col++)
+                                    {
+                                        if (GetCellText(checkCells[col]).Trim() == "")
+                                        {
+                                            break; // Stop if we encounter an empty cell
+                                        }
+
+                                        string scoreHeader = GetCellText(headerCells[col]);
+                                        // Clean up the score header by removing numbering or dashes if present
+                                        scoreHeader = System.Text.RegularExpressions.Regex.Replace(scoreHeader, @"^[\d\-\–\.\s]+", "").Trim();
+                                        scoreHeaders[col - 2] = scoreHeader;
+                                        maxScore++;
+                                    }
+
+                                    _logger.LogDebug("Extracted {ScoreHeaderCount} score headers for table {TableIndex}", maxScore + 1, tableIndex);
 
                                     // Skip header row (index 0) and process data rows
                                     for (int i = 1; i < rows.Count; i++)
                                     {
                                         var row = rows[i];
                                         var cells = row.GetTableCells();
+                                        int currentRowColumnCount = cells.Count;
 
-                                        if (cells.Count >= 3) // Ensure we have at least 3 columns
+                                        // Ignore rows with fewer columns than the header row
+                                        if (currentRowColumnCount < headerColumnCount)
                                         {
-                                            var task = new RubricTask
+                                            _logger.LogDebug("Skipping row {RowIndex} in table {TableIndex}: has {CurrentColumns} columns, expected {ExpectedColumns}",
+                                                i, tableIndex, currentRowColumnCount, headerColumnCount);
+                                            continue;
+                                        }
+
+                                        var rubricCriteria = new RubricCriteria
+                                        {
+                                            RubricTaskId = tableIndex - 1,      // Link to the correct RubricTask (temp value=0,1,2,3,...)
+                                            CriterionTitle = GetCellText(cells[0]),
+                                            Weight = double.TryParse(GetCellText(cells[1]).TrimEnd('%'), out double weight) ? weight : 0,
+                                            MaxScore = maxScore
+                                        };
+                                        rubricCriterias.Add(rubricCriteria);
+
+                                        _logger.LogDebug("Added criteria: {CriterionTitle} with weight {Weight}% and max score {MaxScore}",
+                                            rubricCriteria.CriterionTitle, rubricCriteria.Weight, rubricCriteria.MaxScore);
+
+                                        // Extract scores for this criterion
+                                        for (int j = 0; j <= maxScore; j++)
+                                        {
+                                            var rubricCriteriaScore = new RubricCriteriaScore
                                             {
-                                                TaskTitle = GetCellText(cells[0]),
-                                                TaskDescription = GetCellText(cells[1]),
-                                                MaxMarks = ParseMaxMarks(GetCellText(cells[2]))
+                                                RubricCriteriaId = taskIndex,       // Link to the correct RubricCriteria (temp value=0,1,2,3,...)
+                                                CriterionScore = maxScore - j,
+                                                ScoreTitle = j < scoreHeaders.Length ? scoreHeaders[j] : "", // Use header from first row
+                                                ScoreDescription = GetCellText(cells[j + 2])
                                             };
-
-                                            // Only add if we have meaningful data
-                                            if (!string.IsNullOrWhiteSpace(task.TaskTitle))
-                                            {
-                                                rubricTasks.Add(task);
-                                                _logger.LogDebug("Added task: {TaskTitle} with {MaxMarks} marks", task.TaskTitle, task.MaxMarks);
-                                            }
-
-                                            isTableRead = true;
+                                            rubricCriteriaScores.Add(rubricCriteriaScore);
                                         }
+                                        taskIndex++;
                                     }
-                                }
-                                else
-                                {
-                                    //Fetch rubrics tasks criterias from the remaining table
-                                    var rows = table.Rows;
-
-                                    // Extract score headers from the first row (header row)
-                                    var headerRow = rows[0];
-                                    var headerCells = headerRow.GetTableCells();
-
-                                    if (headerCells.Count >= 4) // Ensure we have at least 4 columns
-                                    {
-                                        var checkRow = rows[1];
-                                        var checkCells = checkRow.GetTableCells();
-                                        string[] scoreHeaders = new string[headerCells.Count];
-                                        int maxScore = -1;
-
-                                        for (int col = 2; col < headerCells.Count; col++)
-                                        {
-                                            if (GetCellText(checkCells[col]).Trim() == "")
-                                            {
-                                                break; // Stop if we encounter an empty cell
-                                            }
-
-                                            string scoreHeader = GetCellText(headerCells[col]);
-                                            // Clean up the score header by removing numbering or dashes if present
-                                            scoreHeader = System.Text.RegularExpressions.Regex.Replace(scoreHeader, @"^[\d\-\–\.\s]+", "").Trim();
-                                            scoreHeaders[col - 2] = scoreHeader;
-                                            maxScore++;
-                                        }
-
-                                        _logger.LogDebug("Extracted {ScoreHeaderCount} score headers for table {TableIndex}", maxScore + 1, tableIndex);
-
-                                        // Skip header row (index 0) and process data rows
-                                        for (int i = 1; i < rows.Count; i++)
-                                        {
-                                            var row = rows[i];
-                                            var cells = row.GetTableCells();
-
-                                            var rubricCriteria = new RubricCriteria
-                                            {
-                                                RubricTaskId = tableIndex - 1,      // Link to the correct RubricTask (temp value=0,1,2,3,...)
-                                                CriterionTitle = GetCellText(cells[0]),
-                                                Weight = double.TryParse(GetCellText(cells[1]).TrimEnd('%'), out double weight) ? weight : 0,
-                                                MaxScore = maxScore
-                                            };
-                                            rubricCriterias.Add(rubricCriteria);
-
-                                            _logger.LogDebug("Added criteria: {CriterionTitle} with weight {Weight}% and max score {MaxScore}",
-                                                rubricCriteria.CriterionTitle, rubricCriteria.Weight, rubricCriteria.MaxScore);
-
-                                            // Extract scores for this criterion
-                                            for (int j = 0; j <= maxScore; j++)
-                                            {
-                                                var rubricCriteriaScore = new RubricCriteriaScore
-                                                {
-                                                    RubricCriteriaId = taskIndex,       // Link to the correct RubricCriteria (temp value=0,1,2,3,...)
-                                                    CriterionScore = maxScore - j,
-                                                    ScoreTitle = j < scoreHeaders.Length ? scoreHeaders[j] : "", // Use header from first row
-                                                    ScoreDescription = GetCellText(cells[j + 2])
-                                                };
-                                                rubricCriteriaScores.Add(rubricCriteriaScore);
-                                            }
-                                            taskIndex++;
-                                            isTableRead = true;
-                                        }
-                                    }
-                                }
-
-                                string fullText = rubricsParagraphs.Count > 1 ? rubricsParagraphs[1] : "";
-                                int firstSpaceIndex = fullText.IndexOf(' ');
-
-                                var course = await _context.CourseRoles.FindAsync(int.Parse(courseId));
-                                if (course == null)
-                                {
-                                    _logger.LogWarning("Course not found for ID: {CourseId} during upload", courseId);
-                                    ModelState.AddModelError("", "Course not found");
-                                    ViewBag.CourseId = courseId;
-                                    ViewBag.CurrentUserRole = role;
-                                    return View();
-                                }
-
-                                rubric.Institution = course.Institution;
-                                rubric.Programme = rubricsParagraphs[0];
-                                rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
-                                rubric.CourseName = firstSpaceIndex > 0 ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
-                                rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
-                                rubric.Year = course.Year;
-                                rubric.Trimester = course.Trimester;
-                                rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
-                                rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
-
-                                _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Year: {Year}, Trimester: {Trimester}, Total Marks: {TotalMarks}",
-                                    rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester, rubric.TotalMarks);
-
-                                // VALIDATION 1: Check if course information matches current course context
-                                if (!string.IsNullOrEmpty(courseId))
-                                {
-                                    if (course != null)
-                                    {
-                                        bool hasValidationError = false;
-
-                                        if (!string.Equals(rubric.Programme, course.Programme, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            _logger.LogWarning("Programme mismatch: Document has '{DocumentProgramme}' but expected '{CourseProgramme}'",
-                                                rubric.Programme, course.Programme);
-                                            ModelState.AddModelError("", $"Programme mismatch: Document has '{rubric.Programme}' but expected '{course.Programme}'");
-                                            hasValidationError = true;
-                                        }
-
-                                        if (!string.Equals(rubric.CourseCode, course.CourseCode, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            _logger.LogWarning("Course Code mismatch: Document has '{DocumentCourseCode}' but expected '{CourseCourseCode}'",
-                                                rubric.CourseCode, course.CourseCode);
-                                            ModelState.AddModelError("", $"Course Code mismatch: Document has '{rubric.CourseCode}' but expected '{course.CourseCode}'");
-                                            hasValidationError = true;
-                                        }
-
-                                        if (!string.Equals(rubric.CourseName, course.CourseName, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            _logger.LogWarning("Course Name mismatch: Document has '{DocumentCourseName}' but expected '{CourseCourseName}'",
-                                                rubric.CourseName, course.CourseName);
-                                            ModelState.AddModelError("", $"Course Name mismatch: Document has '{rubric.CourseName}' but expected '{course.CourseName}'");
-                                            hasValidationError = true;
-                                        }
-
-                                        if (rubric.Year != course.Year)
-                                        {
-                                            _logger.LogWarning("Year mismatch: Document has '{DocumentYear}' but expected '{CourseYear}'",
-                                                rubric.Year, course.Year);
-                                            ModelState.AddModelError("", $"Year mismatch: Document has '{rubric.Year}' but expected '{course.Year}'");
-                                            hasValidationError = true;
-                                        }
-
-                                        if (rubric.Trimester != course.Trimester)
-                                        {
-                                            _logger.LogWarning("Trimester mismatch: Document has '{DocumentTrimester}' but expected '{CourseTrimester}'",
-                                                rubric.Trimester, course.Trimester);
-                                            ModelState.AddModelError("", $"Trimester mismatch: Document has '{rubric.Trimester}' but expected '{course.Trimester}'");
-                                            hasValidationError = true;
-                                        }
-
-                                        if (hasValidationError)
-                                        {
-                                            ViewBag.CourseId = courseId;
-                                            ViewBag.CurrentUserRole = role;
-                                            return View();
-                                        }
-                                    }
-                                }
-
-                                // VALIDATION 2: Check if rubric with same course code, term name, and rubric name already exists
-                                var existingRubric = await _context.Rubrics
-                                    .FirstOrDefaultAsync(r => r.CourseCode == rubric.CourseCode &&
-                                                             r.Year == rubric.Year &&
-                                                             r.Trimester == rubric.Trimester &&
-                                                             r.RubricName == rubric.RubricName);
-
-                                if (existingRubric != null)
-                                {
-                                    _logger.LogWarning("Duplicate rubric upload attempted: {RubricName} for course {CourseCode} in year {Year}, trimester {Trimester}",
-                                        rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester);
-
-                                    ModelState.AddModelError("", $"A rubric with the name '{rubric.RubricName}' already exists for course '{rubric.CourseCode}' in year '{rubric.Year}', trimester '{rubric.Trimester}'");
-
-                                    ViewBag.CourseId = courseId;
-                                    ViewBag.CurrentUserRole = role;
-                                    return View();
-                                }
-
-                                if (isTableRead)
-                                {
-                                    tableIndex++;
                                 }
                             }
+
+                            tableIndex++;
                         }
 
                         _logger.LogInformation("Document processing completed. Extracted: {TaskCount} tasks, {CriteriaCount} criteria, {ScoreCount} scores",
                             rubricTasks.Count, rubricCriterias.Count, rubricCriteriaScores.Count);
+
+                        // Parse document header information AFTER table processing
+                        string fullText = rubricsParagraphs.Count > 1 ? rubricsParagraphs[1] : "";
+                        int firstSpaceIndex = fullText.IndexOf(' ');
+
+                        String term = rubricsParagraphs.Count > 3 ? rubricsParagraphs[3] : "";
+                        Match match = Regex.Match(term, @"\d+");
+                        int trimester = 0;
+                        int year = 0;
+                        if (match.Success)
+                        {
+                            trimester = int.Parse(match.Value);
+                        }
+                        MatchCollection matches = Regex.Matches(term, @"\d+");
+                        if (matches.Count > 0)
+                        {
+                            year = int.Parse(matches[matches.Count - 1].Value);
+                        }
+
+                        rubric.Institution = "Auckland Institute of Studies";
+                        rubric.Programme = rubricsParagraphs.Count > 0 ? rubricsParagraphs[0] : "";
+                        rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
+                        rubric.CourseName = firstSpaceIndex > 0 && firstSpaceIndex + 1 < fullText.Length ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
+                        rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
+                        rubric.Year = year;
+                        rubric.Trimester = trimester;
+                        rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
+                        rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
+
+                        _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Year: {Year}, Trimester: {Trimester}, Total Marks: {TotalMarks}",
+                            rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester, rubric.TotalMarks);
+
+                        // VALIDATION: Check if rubric with same course code, term name, and rubric name already exists
+                        var existingRubric = await _context.Rubrics
+                            .FirstOrDefaultAsync(r => r.CourseCode == rubric.CourseCode &&
+                                                     r.Year == rubric.Year &&
+                                                     r.Trimester == rubric.Trimester &&
+                                                     r.RubricName == rubric.RubricName);
+
+                        if (existingRubric != null)
+                        {
+                            _logger.LogWarning("Duplicate rubric upload attempted: {RubricName} for course {CourseCode} in year {Year}, trimester {Trimester}",
+                                rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester);
+
+                            ModelState.AddModelError("", $"A rubric with the name '{rubric.RubricName}' already exists for course '{rubric.CourseCode}' in year '{rubric.Year}', trimester '{rubric.Trimester}'");
+
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                            return View();
+                        }
 
                         // Save rubric first to get the RubricsId
                         _context.Add(rubric);
@@ -1662,6 +1669,8 @@ namespace smart_feedback.Controllers
                             criteria.RubricTaskId = correspondingTask.RubricTaskId;
                             _context.RubricCriteria.Add(criteria);
                         }
+                        
+
                         await _context.SaveChangesAsync();
                         _logger.LogDebug("Saved {CriteriaCount} criteria", rubricCriterias.Count);
 
@@ -1725,10 +1734,10 @@ namespace smart_feedback.Controllers
 
         // GET: Rubrics/Management
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Management(string sortOrder, int? year, int? trimester, string searchTerm)
+        public async Task<IActionResult> Management(string sortOrder, string programme, string courseCode, int? year, int? trimester, string searchTerm)
         {
-            _logger.LogInformation("Management action called with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}, SortOrder: {SortOrder}",
-                year, trimester, searchTerm, sortOrder);
+            _logger.LogInformation("Management action called with filters - Programme: {Programme}, CourseCode: {CourseCode}, Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}, SortOrder: {SortOrder}",
+                programme, courseCode, year, trimester, searchTerm, sortOrder);
 
             try
             {
@@ -1743,11 +1752,25 @@ namespace smart_feedback.Controllers
                 ViewData["TotalMarksSortParm"] = sortOrder == "totalMarks" ? "totalMarks_desc" : "totalMarks";
 
                 // Set up ViewData for current filter values
+                ViewData["CurrentProgrammeFilter"] = programme;
+                ViewData["CurrentCourseCodeFilter"] = courseCode;
                 ViewData["CurrentYearFilter"] = year;
                 ViewData["CurrentTrimesterFilter"] = trimester;
                 ViewData["CurrentSearchTerm"] = searchTerm;
 
-                // Get distinct years and trimesters for dropdowns
+                // Get distinct values for dropdowns
+                ViewBag.Programmes = new SelectList(await _context.Rubrics
+                    .Select(r => r.Programme)
+                    .Distinct()
+                    .OrderBy(p => p)
+                    .ToListAsync());
+
+                ViewBag.CourseCodes = new SelectList(await _context.Rubrics
+                    .Select(r => r.CourseCode)
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToListAsync());
+
                 ViewBag.Years = new SelectList(await _context.Rubrics
                     .Select(r => r.Year)
                     .Distinct()
@@ -1761,6 +1784,8 @@ namespace smart_feedback.Controllers
                     .ToListAsync());
 
                 // Preserve current filter values for dropdowns
+                ViewBag.CurrentProgramme = programme;
+                ViewBag.CurrentCourseCode = courseCode;
                 ViewBag.CurrentYear = year;
                 ViewBag.CurrentTrimester = trimester;
 
@@ -1768,6 +1793,18 @@ namespace smart_feedback.Controllers
                 var rubricsQuery = _context.Rubrics.AsQueryable();
 
                 // Apply filters
+                if (!string.IsNullOrEmpty(programme))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.Programme == programme);
+                    _logger.LogDebug("Applied programme filter: {Programme}", programme);
+                }
+
+                if (!string.IsNullOrEmpty(courseCode))
+                {
+                    rubricsQuery = rubricsQuery.Where(r => r.CourseCode == courseCode);
+                    _logger.LogDebug("Applied course code filter: {CourseCode}", courseCode);
+                }
+
                 if (year.HasValue)
                 {
                     rubricsQuery = rubricsQuery.Where(r => r.Year == year.Value);
@@ -1839,15 +1876,15 @@ namespace smart_feedback.Controllers
 
                 var rubrics = await rubricsQuery.ToListAsync();
 
-                _logger.LogInformation("Successfully retrieved {RubricCount} rubrics for management (filtered: Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Search={HasSearchFilter})",
-                    rubrics.Count, year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(searchTerm));
+                _logger.LogInformation("Successfully retrieved {RubricCount} rubrics for management (filtered: Programme={HasProgrammeFilter}, CourseCode={HasCourseCodeFilter}, Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Search={HasSearchFilter})",
+                    rubrics.Count, !string.IsNullOrEmpty(programme), !string.IsNullOrEmpty(courseCode), year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(searchTerm));
 
                 return View(rubrics);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in Management action with filters - Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}",
-                    year, trimester, searchTerm);
+                _logger.LogError(ex, "Error in Management action with filters - Programme: {Programme}, CourseCode: {CourseCode}, Year: {Year}, Trimester: {Trimester}, SearchTerm: {SearchTerm}",
+                    programme, courseCode, year, trimester, searchTerm);
                 throw;
             }
         }
@@ -1924,7 +1961,7 @@ namespace smart_feedback.Controllers
                         Index = i + 1,
                         AssessmentName = existingAssessment?.AssessmentName ?? $"Assessment {i + 1}",
                         RubricId = existingAssessment?.RubricsId,
-                        ProportionalMarks = 0 // Will need to add this field to Assessment model
+                        ProportionalMarks = existingAssessment?.ProportionalMarks ?? 0
                     });
                 }
 
@@ -2034,9 +2071,12 @@ namespace smart_feedback.Controllers
                             Year = course.Year,
                             Trimester = course.Trimester,
                             RubricsId = row.RubricId.Value,
+                            ProportionalMarks = row.ProportionalMarks,
                             CreatedDate = DateTime.Now,
                             CreatedBy = currentUser?.UserName ?? "System",
-                            Status = "Marking"
+                            Status = "Marking",
+                            StatusChangedDate = DateTime.Now,
+                            StatusChangedBy = currentUser?.UserName ?? "System",
                             // TODO: Add ProportionalMarks when field is added to Assessment model
                         };
                         _context.Add(newAssessment);
