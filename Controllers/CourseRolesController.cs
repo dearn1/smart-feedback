@@ -1022,6 +1022,232 @@ namespace smart_feedback.Controllers
             }
         }
 
+        // GET: CourseRoles/CopyToTrimester
+        public async Task<IActionResult> CopyToTrimester()
+        {
+            try
+            {
+                _logger.LogInformation("CopyToTrimester page accessed");
+
+                // Get distinct years and trimesters for dropdowns
+                var years = await _context.CourseRoles
+                    .Where(cr => cr.Status == "Active")
+                    .Select(cr => cr.Year)
+                    .Distinct()
+                    .OrderByDescending(y => y)
+                    .ToListAsync();
+
+                var trimesters = await _context.CourseRoles
+                    .Where(cr => cr.Status == "Active")
+                    .Select(cr => cr.Trimester)
+                    .Distinct()
+                    .OrderBy(t => t)
+                    .ToListAsync();
+
+                ViewBag.Years = new SelectList(years);
+                ViewBag.Trimesters = new SelectList(trimesters);
+                ViewBag.ProgrammeOptions = _appSettings.GetProgrammeSelectList(null);
+
+                // Set default destination year and trimester
+                ViewBag.DefaultDestYear = DateTime.Now.Year;
+                ViewBag.DefaultDestTrimester = DateTime.Now.Month <= 4 ? 1 : (DateTime.Now.Month <= 8 ? 2 : 3);
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading CopyToTrimester page");
+                TempData["ErrorMessage"] = "An error occurred while loading the copy page.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: CourseRoles/GetCopyPreview
+        [HttpPost]
+        public async Task<IActionResult> GetCopyPreview(int? sourceYear, int? sourceTrimester, string sourceProgramme)
+        {
+            try
+            {
+                _logger.LogInformation("GetCopyPreview called with Year: {Year}, Trimester: {Trimester}, Programme: {Programme}",
+                    sourceYear, sourceTrimester, sourceProgramme);
+
+                if (!sourceYear.HasValue || !sourceTrimester.HasValue || string.IsNullOrEmpty(sourceProgramme))
+                {
+                    return Json(new { success = false, message = "Please select source Year, Trimester, and Programme." });
+                }
+
+                var courseRolesQuery = _context.CourseRoles
+                    .Where(cr => cr.Status == "Active" &&
+                                 cr.Year == sourceYear.Value &&
+                                 cr.Trimester == sourceTrimester.Value);
+
+                // Apply programme filter only if not "ALL"
+                if (sourceProgramme != "ALL")
+                {
+                    courseRolesQuery = courseRolesQuery.Where(cr => cr.Programme == sourceProgramme);
+                }
+
+                var courseRoles = await courseRolesQuery
+                    .OrderBy(cr => cr.Programme)
+                    .ThenBy(cr => cr.CourseCode)
+                    .Select(cr => new
+                    {
+                        cr.CourseRolesId,
+                        cr.CourseCode,
+                        cr.CourseName,
+                        cr.Year,
+                        cr.Trimester,
+                        cr.Programme,
+                        cr.Institution,
+                        cr.RoleLecturer,
+                        cr.RoleModerator,
+                        cr.TotalAssessment
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Found {Count} course roles matching criteria", courseRoles.Count);
+
+                return Json(new { success = true, data = courseRoles });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetCopyPreview");
+                return Json(new { success = false, message = "An error occurred while loading course roles." });
+            }
+        }
+
+        // POST: CourseRoles/CopyToTrimester
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CopyToTrimester(
+            List<int> selectedIds,
+            int destinationYear,
+            int destinationTrimester,
+            bool blankLecturer = false,
+            bool blankModerator = false)
+        {
+            try
+            {
+                _logger.LogInformation("CopyToTrimester action called with {Count} IDs, Destination: {Year}-T{Trimester}, BlankLecturer: {BlankLecturer}, BlankModerator: {BlankModerator}",
+                    selectedIds?.Count ?? 0, destinationYear, destinationTrimester, blankLecturer, blankModerator);
+
+                if (selectedIds == null || !selectedIds.Any())
+                {
+                    TempData["ErrorMessage"] = "Please select at least one course role to copy.";
+                    return RedirectToAction(nameof(CopyToTrimester));
+                }
+
+                // Validate destination year and trimester
+                if (destinationYear < 1900 || destinationYear > 2100)
+                {
+                    TempData["ErrorMessage"] = "Invalid destination year.";
+                    return RedirectToAction(nameof(CopyToTrimester));
+                }
+
+                if (destinationTrimester < 1 || destinationTrimester > 3)
+                {
+                    TempData["ErrorMessage"] = "Destination trimester must be 1, 2, or 3.";
+                    return RedirectToAction(nameof(CopyToTrimester));
+                }
+
+                // Get source course roles
+                var sourceCourseRoles = await _context.CourseRoles
+                    .Where(cr => selectedIds.Contains(cr.CourseRolesId))
+                    .ToListAsync();
+
+                if (!sourceCourseRoles.Any())
+                {
+                    TempData["ErrorMessage"] = "No course roles found with the selected IDs.";
+                    return RedirectToAction(nameof(CopyToTrimester));
+                }
+
+                var copiedCount = 0;
+                var skippedCount = 0;
+                var skippedCourses = new List<string>();
+
+                foreach (var source in sourceCourseRoles)
+                {
+                    // Check if this combination already exists
+                    var exists = await _context.CourseRoles
+                        .AnyAsync(cr => cr.CourseCode == source.CourseCode &&
+                                       cr.Year == destinationYear &&
+                                       cr.Trimester == destinationTrimester &&
+                                       cr.Programme == source.Programme);
+
+                    if (exists)
+                    {
+                        skippedCount++;
+                        skippedCourses.Add($"{source.CourseCode} ({source.CourseName})");
+                        _logger.LogWarning("Skipping duplicate: {CourseCode} for {Year}-T{Trimester}",
+                            source.CourseCode, destinationYear, destinationTrimester);
+                        continue;
+                    }
+
+                    // Create new course role
+                    var newCourseRole = new CourseRoles
+                    {
+                        CourseCode = source.CourseCode,
+                        CourseName = source.CourseName,
+                        Year = destinationYear,
+                        Trimester = destinationTrimester,
+                        Programme = source.Programme,
+                        Institution = source.Institution,
+                        RoleLecturer = blankLecturer ? string.Empty : source.RoleLecturer,
+                        RoleModerator = blankModerator ? string.Empty : source.RoleModerator,
+                        TotalAssessment = source.TotalAssessment,
+                        Status = "Active"
+                    };
+
+                    _context.CourseRoles.Add(newCourseRole);
+                    copiedCount++;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully copied {Copied} course roles to {Year}-T{Trimester}. Skipped {Skipped} duplicates.",
+                    copiedCount, destinationYear, destinationTrimester, skippedCount);
+
+                // Build success message
+                var message = $"✅ Successfully copied {copiedCount} course role(s) to {destinationYear} - Trimester {destinationTrimester}.";
+
+                if (blankLecturer)
+                {
+                    message += "<br/>📝 Lecturer field was blanked out.";
+                }
+
+                if (blankModerator)
+                {
+                    message += "<br/>📝 Moderator field was blanked out.";
+                }
+
+                if (skippedCount > 0)
+                {
+                    message += $"<br/>⚠️ Skipped {skippedCount} duplicate(s):";
+                    message += "<br/>" + string.Join("<br/>", skippedCourses.Take(5));
+                    if (skippedCourses.Count > 5)
+                    {
+                        message += $"<br/>...and {skippedCourses.Count - 5} more";
+                    }
+                }
+
+                TempData["SuccessMessage"] = message;
+
+                // Redirect to Index with destination filters
+                return RedirectToAction(nameof(Index), new
+                {
+                    year = destinationYear,
+                    trimester = destinationTrimester,
+                    programme = sourceCourseRoles.First().Programme
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error copying course roles to new trimester");
+                TempData["ErrorMessage"] = "An error occurred while copying course roles. Please try again.";
+                return RedirectToAction(nameof(CopyToTrimester));
+            }
+        }
+
         // Helper method to check if course role exists
         private bool CourseRolesExists(int id)
         {
