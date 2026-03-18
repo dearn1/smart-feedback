@@ -1442,7 +1442,7 @@ namespace smart_feedback.Controllers
                         _logger.LogDebug("Successfully opened DOCX document with {ParagraphCount} paragraphs and {TableCount} tables",
                             docx.Paragraphs.Count, docx.Tables.Count);
 
-                        // Extract rubrics paragraphs
+                        // STEP 1: Extract rubrics header information
                         foreach (var para in docx.Paragraphs)
                         {
                             if (!string.IsNullOrWhiteSpace(para.ParagraphText))
@@ -1455,160 +1455,33 @@ namespace smart_feedback.Controllers
 
                         _logger.LogDebug("Extracted {ParagraphCount} paragraphs from document", rubricsParagraphs.Count);
 
-                        // Validate we have minimum required paragraphs
-                        if (rubricsParagraphs.Count < 2)
+                        // VALIDATION: Check if we have minimum required header information
+                        if (rubricsParagraphs.Count < 4)
                         {
-                            _logger.LogWarning("Document does not contain sufficient header information");
-                            ModelState.AddModelError("", "Document format is invalid. Expected at least Programme and Course information in the first paragraphs.");
+                            _logger.LogWarning("Document does not contain sufficient header information. Found {Count} paragraphs, expected 4", rubricsParagraphs.Count);
+                            ModelState.AddModelError("", $"Document format is invalid. Expected 4 header paragraphs (Programme, Course, Rubric Name, Term), but found only {rubricsParagraphs.Count}. Please ensure your document follows the correct format.");
                             ViewBag.CourseId = courseId;
                             ViewBag.CurrentUserRole = role;
                             return View();
                         }
 
-                        // Extract rubric criteria from tables
-                        int tableIndex = 0;
-                        int taskIndex = 0;
-
-                        //remove docx.Tables that has columns count less than 3, as they are not valid tables for rubric tasks or criteria
-                        var filteredTables = docx.Tables.Where(t => t.Rows.Count > 0 && t.Rows[0].GetTableCells().Count >= 3).ToList();
-
-                        foreach (var table in filteredTables)
-                        {
-                            _logger.LogDebug("Processing table {TableIndex} with {RowCount} rows", tableIndex, table.Rows.Count);
-
-                            if (tableIndex == 0)
-                            {
-                                //Fetch rubrics tasks from the first table
-                                var rows = table.Rows;
-
-                                // Skip header row (index 0) and process data rows
-                                for (int i = 1; i < rows.Count; i++)
-                                {
-                                    var row = rows[i];
-                                    var cells = row.GetTableCells();
-
-                                    if (cells.Count >= 3) // Ensure we have at least 3 columns
-                                    {
-                                        var task = new RubricTask
-                                        {
-                                            TaskTitle = GetCellText(cells[0]),
-                                            TaskDescription = GetCellText(cells[1]),
-                                            MaxMarks = ParseMaxMarks(GetCellText(cells[2]))
-                                        };
-
-                                        // Only add if we have meaningful data
-                                        if (!string.IsNullOrWhiteSpace(task.TaskTitle))
-                                        {
-                                            rubricTasks.Add(task);
-                                            _logger.LogDebug("Added task: {TaskTitle} with {MaxMarks} marks", task.TaskTitle, task.MaxMarks);
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                //Fetch rubrics tasks criterias from the remaining tables
-                                var rows = table.Rows;
-
-                                // Extract score headers from the first row (header row)
-                                var headerRow = rows[0];
-                                var headerCells = headerRow.GetTableCells();
-                                int headerColumnCount = headerCells.Count;
-
-                                if (headerColumnCount >= 4) // Ensure we have at least 4 columns
-                                {
-                                    // Check if first column header contains "Criteria" keyword
-                                    string firstColumnHeader = GetCellText(headerCells[0]);
-                                    if (!firstColumnHeader.Contains("Criteria", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        _logger.LogDebug("Skipping table {TableIndex}: first column header '{HeaderText}' does not contain 'Criteria' keyword",
-                                            tableIndex, firstColumnHeader);
-                                        tableIndex++;
-                                        continue;
-                                    }
-
-                                    var checkRow = rows[1];
-                                    var checkCells = checkRow.GetTableCells();
-                                    string[] scoreHeaders = new string[headerColumnCount];
-                                    int maxScore = -1;
-
-                                    for (int col = 2; col < headerColumnCount; col++)
-                                    {
-                                        if (GetCellText(checkCells[col]).Trim() == "")
-                                        {
-                                            break; // Stop if we encounter an empty cell
-                                        }
-
-                                        string scoreHeader = GetCellText(headerCells[col]);
-                                        // Clean up the score header by removing numbering or dashes if present
-                                        scoreHeader = System.Text.RegularExpressions.Regex.Replace(scoreHeader, @"^[\d\-\–\.\s]+", "").Trim();
-                                        scoreHeaders[col - 2] = scoreHeader;
-                                        maxScore++;
-                                    }
-
-                                    _logger.LogDebug("Extracted {ScoreHeaderCount} score headers for table {TableIndex}", maxScore + 1, tableIndex);
-
-                                    // Skip header row (index 0) and process data rows
-                                    for (int i = 1; i < rows.Count; i++)
-                                    {
-                                        var row = rows[i];
-                                        var cells = row.GetTableCells();
-                                        int currentRowColumnCount = cells.Count;
-
-                                        // Ignore rows with fewer columns than the header row
-                                        if (currentRowColumnCount < headerColumnCount)
-                                        {
-                                            _logger.LogDebug("Skipping row {RowIndex} in table {TableIndex}: has {CurrentColumns} columns, expected {ExpectedColumns}",
-                                                i, tableIndex, currentRowColumnCount, headerColumnCount);
-                                            continue;
-                                        }
-
-                                        var rubricCriteria = new RubricCriteria
-                                        {
-                                            RubricTaskId = tableIndex - 1,      // Link to the correct RubricTask (temp value=0,1,2,3,...)
-                                            CriterionTitle = GetCellText(cells[0]),
-                                            Weight = double.TryParse(GetCellText(cells[1]).TrimEnd('%'), out double weight) ? weight : 0,
-                                            MaxScore = maxScore
-                                        };
-                                        rubricCriterias.Add(rubricCriteria);
-
-                                        _logger.LogDebug("Added criteria: {CriterionTitle} with weight {Weight}% and max score {MaxScore}",
-                                            rubricCriteria.CriterionTitle, rubricCriteria.Weight, rubricCriteria.MaxScore);
-
-                                        // Extract scores for this criterion
-                                        for (int j = 0; j <= maxScore; j++)
-                                        {
-                                            var rubricCriteriaScore = new RubricCriteriaScore
-                                            {
-                                                RubricCriteriaId = taskIndex,       // Link to the correct RubricCriteria (temp value=0,1,2,3,...)
-                                                CriterionScore = maxScore - j,
-                                                ScoreTitle = j < scoreHeaders.Length ? scoreHeaders[j] : "", // Use header from first row
-                                                ScoreDescription = GetCellText(cells[j + 2])
-                                            };
-                                            rubricCriteriaScores.Add(rubricCriteriaScore);
-                                        }
-                                        taskIndex++;
-                                    }
-                                }
-                            }
-
-                            tableIndex++;
-                        }
-
-                        _logger.LogInformation("Document processing completed. Extracted: {TaskCount} tasks, {CriteriaCount} criteria, {ScoreCount} scores",
-                            rubricTasks.Count, rubricCriterias.Count, rubricCriteriaScores.Count);
-
-                        // Parse document header information AFTER table processing
+                        // Parse header information with validation
+                        string programme = rubricsParagraphs.Count > 0 ? rubricsParagraphs[0] : "";
                         string fullText = rubricsParagraphs.Count > 1 ? rubricsParagraphs[1] : "";
-                        int firstSpaceIndex = fullText.IndexOf(' ');
+                        string rubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
+                        string term = rubricsParagraphs.Count > 3 ? rubricsParagraphs[3] : "";
 
-                        String term = rubricsParagraphs.Count > 3 ? rubricsParagraphs[3] : "";
-                        Match match = Regex.Match(term, @"\d+");
+                        int firstSpaceIndex = fullText.IndexOf(' ');
+                        string courseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
+                        string courseName = firstSpaceIndex > 0 && firstSpaceIndex + 1 < fullText.Length ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
+
+                        // Extract year and trimester from term
+                        Match trimesterMatch = Regex.Match(term, @"\d+");
                         int trimester = 0;
                         int year = 0;
-                        if (match.Success)
+                        if (trimesterMatch.Success)
                         {
-                            trimester = int.Parse(match.Value);
+                            trimester = int.Parse(trimesterMatch.Value);
                         }
                         MatchCollection matches = Regex.Matches(term, @"\d+");
                         if (matches.Count > 0)
@@ -1616,20 +1489,254 @@ namespace smart_feedback.Controllers
                             year = int.Parse(matches[matches.Count - 1].Value);
                         }
 
+                        // VALIDATION: Check for missing required header values
+                        List<string> missingFields = new List<string>();
+                        if (string.IsNullOrWhiteSpace(programme)) missingFields.Add("Programme");
+                        if (string.IsNullOrWhiteSpace(courseCode)) missingFields.Add("Course Code");
+                        if (string.IsNullOrWhiteSpace(courseName)) missingFields.Add("Course Name");
+                        if (string.IsNullOrWhiteSpace(rubricName)) missingFields.Add("Rubric Name");
+                        if (year == 0) missingFields.Add("Year");
+                        if (trimester == 0) missingFields.Add("Trimester");
+
+                        if (missingFields.Any())
+                        {
+                            _logger.LogWarning("Document is missing required header fields: {MissingFields}", string.Join(", ", missingFields));
+                            ModelState.AddModelError("", $"Document is missing required information: {string.Join(", ", missingFields)}. Please ensure your document header is complete.");
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                            return View();
+                        }
+
+                        _logger.LogDebug("Parsed rubric header - Programme: {Programme}, Course: {CourseCode}, Name: {RubricName}, Year: {Year}, Trimester: {Trimester}",
+                            programme, courseCode, rubricName, year, trimester);
+
+                        // STEP 2: Find and extract rubrics tasks table
+                        XWPFTable rubricTasksTable = null;
+                        int taskTableIndex = -1;
+
+                        for (int i = 0; i < docx.Tables.Count; i++)
+                        {
+                            var table = docx.Tables[i];
+
+                            // Check if table has at least 3 columns
+                            if (table.Rows.Count == 0 || table.Rows[0].GetTableCells().Count < 3)
+                            {
+                                continue;
+                            }
+
+                            // Check condition 1: first column header contains "Task"
+                            var firstCellText = GetCellText(table.Rows[0].GetTableCells()[0]);
+                            bool hasTaskHeader = firstCellText.Contains("Task", StringComparison.OrdinalIgnoreCase);
+
+                            // Check condition 2: there's a paragraph before this table containing "Summary of Mark"
+                            bool foundSummaryHeading = false;
+                            int tablePosition = docx.Tables.IndexOf(table);
+
+                            // Search paragraphs before this table
+                            for (int p = docx.Paragraphs.Count - 1; p >= 0; p--)
+                            {
+                                var paraText = docx.Paragraphs[p].ParagraphText.Trim();
+                                if (paraText.Contains("Summary of Mark", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    foundSummaryHeading = true;
+                                    break;
+                                }
+                                // Stop searching if we've gone too far back
+                                if (p < tablePosition && !string.IsNullOrWhiteSpace(paraText))
+                                {
+                                    break;
+                                }
+                            }
+
+                            // Accept table if EITHER condition is met
+                            if (hasTaskHeader || foundSummaryHeading)
+                            {
+                                rubricTasksTable = table;
+                                taskTableIndex = i;
+                                _logger.LogDebug("Found rubric tasks table at index {TableIndex} (hasTaskHeader: {HasTaskHeader}, foundSummaryHeading: {FoundSummaryHeading})", 
+                                    i, hasTaskHeader, foundSummaryHeading);
+                                break;
+                            }
+                        }
+
+                        // VALIDATION: Check if tasks table was found
+                        if (rubricTasksTable == null)
+                        {
+                            _logger.LogWarning("Rubric tasks table not found in document");
+                            ModelState.AddModelError("", "Document format is invalid. Could not find the rubric tasks table. Please ensure your document contains a table with either a 'Task' column header or preceded by 'Summary of Mark' heading with at least 3 columns.");
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                            return View();
+                        }
+
+                        // Extract tasks from the tasks table
+                        var taskRows = rubricTasksTable.Rows;
+                        for (int i = 1; i < taskRows.Count; i++)
+                        {
+                            var row = taskRows[i];
+                            var cells = row.GetTableCells();
+
+                            if (cells.Count >= 3)
+                            {
+                                var task = new RubricTask
+                                {
+                                    TaskTitle = GetCellText(cells[0]),
+                                    TaskDescription = GetCellText(cells[1]),
+                                    MaxMarks = ParseMaxMarks(GetCellText(cells[2]))
+                                };
+
+                                if (!string.IsNullOrWhiteSpace(task.TaskTitle))
+                                {
+                                    rubricTasks.Add(task);
+                                    _logger.LogDebug("Added task: {TaskTitle} with {MaxMarks} marks", task.TaskTitle, task.MaxMarks);
+                                }
+                            }
+                        }
+
+                        _logger.LogInformation("Extracted {TaskCount} tasks from rubric tasks table", rubricTasks.Count);
+
+                        // STEP 3: Extract rubrics criteria from tables after the tasks table
+                        bool foundCriteriaTable = false;
+                        int taskIndex = 0;
+                        double currentTaskWeightTotal = 0.0;
+                        int currentCriteriaId = 0; // To keep track of criteria IDs for score association
+
+                        for (int i = taskTableIndex + 1; i < docx.Tables.Count; i++)
+                        {
+                            var table = docx.Tables[i];
+
+                            // Check if table has at least 4 columns
+                            if (table.Rows.Count == 0 || table.Rows[0].GetTableCells().Count < 4)
+                            {
+                                _logger.LogDebug("Skipping table {TableIndex}: insufficient columns", i);
+                                continue;
+                            }
+
+                            // Check if first column header contains "Criteria" or "Criterion" or "Area" keyword
+                            string firstColumnHeader = GetCellText(table.Rows[0].GetTableCells()[0]);
+                            if (!firstColumnHeader.Contains("Criteria", StringComparison.OrdinalIgnoreCase) && 
+                                !firstColumnHeader.Contains("Criterion", StringComparison.OrdinalIgnoreCase) &&
+                                !firstColumnHeader.Contains("Area", StringComparison.OrdinalIgnoreCase))
+                            {
+                                _logger.LogDebug("Skipping table {TableIndex}: first column header '{HeaderText}' does not contain 'Criteria', 'Criterion', or 'Area' keyword",
+                                    i, firstColumnHeader);
+                                continue;
+                            }
+
+                            foundCriteriaTable = true;
+
+                            var rows = table.Rows;
+                            var headerRow = rows[0];
+                            var headerCells = headerRow.GetTableCells();
+                            int headerColumnCount = headerCells.Count;
+
+                            var checkRow = rows[1];
+                            var checkCells = checkRow.GetTableCells();
+                            string[] scoreHeaders = new string[headerColumnCount];
+                            int maxScore = -1;
+
+                            for (int col = 2; col < headerColumnCount; col++)
+                            {
+                                if (GetCellText(checkCells[col]).Trim() == "")
+                                {
+                                    break;
+                                }
+
+                                string scoreHeader = GetCellText(headerCells[col]);
+                                scoreHeader = System.Text.RegularExpressions.Regex.Replace(scoreHeader, @"^[\d\-\–\.\s]+", "").Trim();
+                                scoreHeaders[col - 2] = scoreHeader;
+                                maxScore++;
+                            }
+
+                            _logger.LogDebug("Processing criteria table {TableIndex} with {ScoreHeaderCount} score headers", i, maxScore + 1);
+
+                            // Skip header row (index 0) and process data rows
+                            for (int r = 1; r < rows.Count; r++)
+                            {
+                                var row = rows[r];
+                                var cells = row.GetTableCells();
+                                int currentRowColumnCount = cells.Count;
+
+                                if (currentRowColumnCount < headerColumnCount)
+                                {
+                                    _logger.LogDebug("Skipping row {RowIndex} in table {TableIndex}: has {CurrentColumns} columns, expected {ExpectedColumns}",
+                                        r, i, currentRowColumnCount, headerColumnCount);
+                                    continue;
+                                }
+
+                                // Get criterion title and check if it's blank
+                                var criterionTitle = GetCellText(cells[0]);
+                                
+                                // Skip this row if the criterion title is blank or empty
+                                if (string.IsNullOrWhiteSpace(criterionTitle))
+                                {
+                                    _logger.LogDebug("Skipping row {RowIndex} in table {TableIndex}: criterion title is blank", r, i);
+                                    continue;
+                                }
+
+                                var rubricCriteria = new RubricCriteria
+                                {
+                                    RubricTaskId = taskIndex,
+                                    CriterionTitle = criterionTitle,
+                                    Weight = double.TryParse(GetCellText(cells[1]).TrimEnd('%'), out double weight) ? weight : 0,
+                                    MaxScore = maxScore
+                                };
+                                rubricCriterias.Add(rubricCriteria);
+                                currentTaskWeightTotal += rubricCriteria.Weight;
+
+                                _logger.LogDebug("Added criteria: {CriterionTitle} with weight {Weight}% and max score {MaxScore}",
+                                    rubricCriteria.CriterionTitle, rubricCriteria.Weight, rubricCriteria.MaxScore);
+
+                                // Extract scores for this criterion
+                                for (int j = 0; j <= maxScore; j++)
+                                {
+                                    var rubricCriteriaScore = new RubricCriteriaScore
+                                    {
+                                        RubricCriteriaId = currentCriteriaId,
+                                        CriterionScore = maxScore - j,
+                                        ScoreTitle = j < scoreHeaders.Length ? scoreHeaders[j] : "",
+                                        ScoreDescription = GetCellText(cells[j + 2])
+                                    };
+                                    rubricCriteriaScores.Add(rubricCriteriaScore);
+                                }
+                                currentCriteriaId++;    
+                                if (currentTaskWeightTotal >= 100.0)
+                                {
+                                    _logger.LogDebug("Total weight for task {TaskIndex} has reached {TotalWeight}%, moving to next task", taskIndex, currentTaskWeightTotal);
+                                    currentTaskWeightTotal = 0.0;
+                                    taskIndex++;
+                                }                                
+                            }
+                        }
+
+                        // VALIDATION: Check if criteria tables were found
+                        if (!foundCriteriaTable)
+                        {
+                            _logger.LogWarning("No rubric criteria tables found in document after tasks table");
+                            ModelState.AddModelError("", "Document format is invalid. Could not find any rubric criteria tables after the tasks table. Please ensure your document contains criteria tables with a 'Criteria' column header and at least 4 columns.");
+                            ViewBag.CourseId = courseId;
+                            ViewBag.CurrentUserRole = role;
+                            return View();
+                        }
+
+                        _logger.LogInformation("Document processing completed. Extracted: {TaskCount} tasks, {CriteriaCount} criteria, {ScoreCount} scores",
+                            rubricTasks.Count, rubricCriterias.Count, rubricCriteriaScores.Count);
+
+                        // Populate rubric object
                         rubric.Institution = "Auckland Institute of Studies";
-                        rubric.Programme = rubricsParagraphs.Count > 0 ? rubricsParagraphs[0] : "";
-                        rubric.CourseCode = firstSpaceIndex > 0 ? fullText.Substring(0, firstSpaceIndex) : fullText;
-                        rubric.CourseName = firstSpaceIndex > 0 && firstSpaceIndex + 1 < fullText.Length ? fullText.Substring(firstSpaceIndex + 1).Trim() : "";
-                        rubric.RubricName = rubricsParagraphs.Count > 2 ? rubricsParagraphs[2] : "";
+                        rubric.Programme = programme;
+                        rubric.CourseCode = courseCode;
+                        rubric.CourseName = courseName;
+                        rubric.RubricName = rubricName;
                         rubric.Year = year;
                         rubric.Trimester = trimester;
                         rubric.TotalMarks = rubricTasks.Sum(t => t.MaxMarks);
                         rubric.SourceFile = $"{rubricsFile.FileName} (Size: {rubricsFile.Length} bytes, Uploaded: {DateTime.Now:yyyy-MM-dd HH:mm:ss})";
 
-                        _logger.LogDebug("Parsed rubric data - Name: {RubricName}, Course: {CourseCode}, Year: {Year}, Trimester: {Trimester}, Total Marks: {TotalMarks}",
+                        _logger.LogDebug("Rubric data prepared - Name: {RubricName}, Course: {CourseCode}, Year: {Year}, Trimester: {Trimester}, Total Marks: {TotalMarks}",
                             rubric.RubricName, rubric.CourseCode, rubric.Year, rubric.Trimester, rubric.TotalMarks);
 
-                        // VALIDATION: Check if rubric with same course code, term name, and rubric name already exists
+                        // VALIDATION: Check if rubric with same course code, year, trimester, and rubric name already exists
                         var existingRubric = await _context.Rubrics
                             .FirstOrDefaultAsync(r => r.CourseCode == rubric.CourseCode &&
                                                      r.Year == rubric.Year &&
@@ -1669,7 +1776,7 @@ namespace smart_feedback.Controllers
                             criteria.RubricTaskId = correspondingTask.RubricTaskId;
                             _context.RubricCriteria.Add(criteria);
                         }
-                        
+
 
                         await _context.SaveChangesAsync();
                         _logger.LogDebug("Saved {CriteriaCount} criteria", rubricCriterias.Count);
@@ -1688,9 +1795,11 @@ namespace smart_feedback.Controllers
                             rubric.RubricName, rubric.RubricsId, rubricTasks.Count);
 
                         TempData["SuccessMessage"] = $"Your rubrics has been submitted successfully! {rubricTasks.Count} tasks extracted.";
+                        
+                        // Redirect to Details page instead of Management
+                        return RedirectToAction("Details", "Rubrics", new { id = rubric.RubricsId, courseid = courseId, role });
                     }
                 }
-                return RedirectToAction("Details", "Rubrics", new { id = rubric.RubricsId, courseId, role });
             }
             catch (Exception ex)
             {
@@ -1702,6 +1811,9 @@ namespace smart_feedback.Controllers
                 ViewBag.CurrentUserRole = role;
                 return View();
             }
+
+            // This line should never be reached due to the return inside the if block, but kept for safety
+            return RedirectToAction("Management", "Rubrics");
         }
 
         // Helper method to extract text from table cell
@@ -1729,7 +1841,7 @@ namespace smart_feedback.Controllers
                 }
             }
 
-            return 0;
+ return 0;
         }
 
         // GET: Rubrics/Management
