@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,117 +7,97 @@ using smart_feedback.Models;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using NPOI.HSSF.UserModel;
+using System.IO;
 
 namespace smart_feedback.Controllers
 {
-    public class StudentsController : Controller
+    [Authorize(Roles = "Admin")]
+    public class CoursesController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<StudentsController> _logger;
+        private readonly ILogger<CoursesController> _logger;
 
-        public StudentsController(ApplicationDbContext context, ILogger<StudentsController> logger)
+        public CoursesController(ApplicationDbContext context, ILogger<CoursesController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        // GET: Students
-        public async Task<IActionResult> Index(string programme, int? yearEnrolled, int? trimesterEnrolled)
+        // GET: Courses
+        public async Task<IActionResult> Index(string searchString, string programme)
         {
-            var students = from s in _context.Student
-                           select s;
+            ViewData["Title"] = "Course List Management";
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentProgramme"] = programme;
 
-            // Apply filters
+            var courses = from c in _context.Courses
+                         select c;
+
+            // Apply search filter
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                courses = courses.Where(c => c.CourseCode.Contains(searchString) 
+                                          || c.CourseName.Contains(searchString) 
+                                          || c.Programme.Contains(searchString));
+            }
+
+            // Apply programme filter
             if (!string.IsNullOrEmpty(programme))
             {
-                students = students.Where(s => s.Programme == programme);
+                courses = courses.Where(c => c.Programme == programme);
             }
 
-            if (yearEnrolled.HasValue)
-            {
-                students = students.Where(s => s.YearEnrolled == yearEnrolled.Value);
-            }
-
-            if (trimesterEnrolled.HasValue)
-            {
-                students = students.Where(s => s.TrimesterEnrolled == trimesterEnrolled.Value);
-            }
-
-            // Get distinct values for dropdowns
-            ViewBag.Programmes = new SelectList(await _context.Student
-                .Select(s => s.Programme)
+            // Get distinct programmes for dropdown
+            ViewBag.Programmes = new SelectList(await _context.Courses
+                .Select(c => c.Programme)
                 .Distinct()
                 .OrderBy(p => p)
                 .ToListAsync());
 
-            ViewBag.Years = new SelectList(await _context.Student
-                .Select(s => s.YearEnrolled)
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToListAsync());
-
-            ViewBag.Trimesters = new SelectList(await _context.Student
-                .Select(s => s.TrimesterEnrolled)
-                .Distinct()
-                .OrderBy(t => t)
-                .ToListAsync());
-
-            // Preserve current filter values
-            ViewBag.CurrentProgramme = programme;
-            ViewBag.CurrentYear = yearEnrolled;
-            ViewBag.CurrentTrimester = trimesterEnrolled;
-
-            return View(await students.ToListAsync());
+            return View(await courses.OrderBy(c => c.CourseCode).ToListAsync());
         }
 
-        // GET: Students/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var student = await _context.Student
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-
-            return View(student);
-        }
-
-        // GET: Students/Create
+        // GET: Courses/Create
         public async Task<IActionResult> Create()
         {
-            // Load programmes from database
+            ViewData["Title"] = "Create Course";
+            
+            // Get programmes from database table
             var programmes = await _context.Programmes
                 .OrderBy(p => p.ProgrammeName)
                 .ToListAsync();
-
+            
             ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName");
-
+            
             return View();
         }
 
-        // POST: Students/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Courses/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,StudentId,Name,Email,Programme,YearEnrolled,TrimesterEnrolled")] Student student)
+        public async Task<IActionResult> Create([Bind("CourseCode,CourseName,Programme")] Course course)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(student);
+                _context.Add(course);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Course created successfully.";
                 return RedirectToAction(nameof(Index));
             }
-            return View(student);
+            
+            ViewData["Title"] = "Create Course";
+            
+            // Reload programmes dropdown on validation error
+            var programmes = await _context.Programmes
+                .OrderBy(p => p.ProgrammeName)
+                .ToListAsync();
+            
+            ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName", course.Programme);
+            
+            return View(course);
         }
 
-        // GET: Students/Edit/5
+        // GET: Courses/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -128,30 +105,30 @@ namespace smart_feedback.Controllers
                 return NotFound();
             }
 
-            var student = await _context.Student.FindAsync(id);
-            if (student == null)
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null)
             {
                 return NotFound();
             }
-
-            // Load programmes from database
+            
+            ViewData["Title"] = "Edit Course";
+            
+            // Get programmes from database table
             var programmes = await _context.Programmes
                 .OrderBy(p => p.ProgrammeName)
                 .ToListAsync();
-
-            ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName", student.Programme);
-
-            return View(student);
+            
+            ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName", course.Programme);
+            
+            return View(course);
         }
 
-        // POST: Students/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Courses/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,StudentId,Name,Email,Programme,YearEnrolled,TrimesterEnrolled")] Student student)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CourseCode,CourseName,Programme")] Course course)
         {
-            if (id != student.Id)
+            if (id != course.Id)
             {
                 return NotFound();
             }
@@ -160,12 +137,13 @@ namespace smart_feedback.Controllers
             {
                 try
                 {
-                    _context.Update(student);
+                    _context.Update(course);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Course updated successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!StudentExists(student.Id))
+                    if (!CourseExists(course.Id))
                     {
                         return NotFound();
                     }
@@ -176,10 +154,20 @@ namespace smart_feedback.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(student);
+            
+            ViewData["Title"] = "Edit Course";
+            
+            // Reload programmes dropdown on validation error
+            var programmes = await _context.Programmes
+                .OrderBy(p => p.ProgrammeName)
+                .ToListAsync();
+            
+            ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName", course.Programme);
+            
+            return View(course);
         }
 
-        // GET: Students/Delete/5
+        // GET: Courses/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -187,40 +175,42 @@ namespace smart_feedback.Controllers
                 return NotFound();
             }
 
-            var student = await _context.Student
+            var course = await _context.Courses
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (student == null)
+            if (course == null)
             {
                 return NotFound();
             }
 
-            return View(student);
+            ViewData["Title"] = "Delete Course";
+            return View(course);
         }
 
-        // POST: Students/Delete/5
+        // POST: Courses/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var student = await _context.Student.FindAsync(id);
-            if (student != null)
+            var course = await _context.Courses.FindAsync(id);
+            if (course != null)
             {
-                _context.Student.Remove(student);
+                _context.Courses.Remove(course);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Course deleted successfully.";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Students/DownloadTemplate
+        // GET: Courses/DownloadTemplate
         public IActionResult DownloadTemplate()
         {
             try
             {
-                _logger.LogInformation("Downloading Excel template for student upload");
+                _logger.LogInformation("Downloading Excel template for courses upload");
 
                 IWorkbook workbook = new XSSFWorkbook();
-                ISheet worksheet = workbook.CreateSheet("Students");
+                ISheet worksheet = workbook.CreateSheet("Courses");
 
                 // Create header style
                 ICellStyle headerStyle = workbook.CreateCellStyle();
@@ -238,7 +228,7 @@ namespace smart_feedback.Controllers
 
                 // Create header row
                 IRow headerRow = worksheet.CreateRow(0);
-                var headers = new[] { "Student ID", "Name", "Email", "Programme", "Year Enrolled", "Trimester Enrolled" };
+                var headers = new[] { "Course Code", "Course Name", "Programme" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     ICell cell = headerRow.CreateCell(i);
@@ -249,53 +239,29 @@ namespace smart_feedback.Controllers
                 // Add sample data rows
                 IRow row1 = worksheet.CreateRow(1);
                 ICell cell1_0 = row1.CreateCell(0);
-                cell1_0.SetCellValue("20250001");
+                cell1_0.SetCellValue("CS101");
                 cell1_0.CellStyle = yellowStyle;
 
                 ICell cell1_1 = row1.CreateCell(1);
-                cell1_1.SetCellValue("John Doe");
+                cell1_1.SetCellValue("Introduction to Programming");
                 cell1_1.CellStyle = yellowStyle;
 
                 ICell cell1_2 = row1.CreateCell(2);
-                cell1_2.SetCellValue("john.doe@example.com");
+                cell1_2.SetCellValue("Bachelor of Computer Science");
                 cell1_2.CellStyle = yellowStyle;
-
-                ICell cell1_3 = row1.CreateCell(3);
-                cell1_3.SetCellValue("Bachelor of Computer Science");
-                cell1_3.CellStyle = yellowStyle;
-
-                ICell cell1_4 = row1.CreateCell(4);
-                cell1_4.SetCellValue(2025);
-                cell1_4.CellStyle = yellowStyle;
-
-                ICell cell1_5 = row1.CreateCell(5);
-                cell1_5.SetCellValue(1);
-                cell1_5.CellStyle = yellowStyle;
 
                 IRow row2 = worksheet.CreateRow(2);
                 ICell cell2_0 = row2.CreateCell(0);
-                cell2_0.SetCellValue("20250002");
+                cell2_0.SetCellValue("CS102");
                 cell2_0.CellStyle = yellowStyle;
 
                 ICell cell2_1 = row2.CreateCell(1);
-                cell2_1.SetCellValue("Jane Smith");
+                cell2_1.SetCellValue("Data Structures and Algorithms");
                 cell2_1.CellStyle = yellowStyle;
 
                 ICell cell2_2 = row2.CreateCell(2);
-                cell2_2.SetCellValue("jane.smith@example.com");
+                cell2_2.SetCellValue("Bachelor of Computer Science");
                 cell2_2.CellStyle = yellowStyle;
-
-                ICell cell2_3 = row2.CreateCell(3);
-                cell2_3.SetCellValue("Bachelor of Information Technology");
-                cell2_3.CellStyle = yellowStyle;
-
-                ICell cell2_4 = row2.CreateCell(4);
-                cell2_4.SetCellValue(2025);
-                cell2_4.CellStyle = yellowStyle;
-
-                ICell cell2_5 = row2.CreateCell(5);
-                cell2_5.SetCellValue(2);
-                cell2_5.CellStyle = yellowStyle;
 
                 // Auto-size columns
                 for (int i = 0; i < headers.Length; i++)
@@ -318,15 +284,12 @@ namespace smart_feedback.Controllers
 
                 var instructions = new[]
                 {
-                    "1. Column A (Student ID) is REQUIRED and must be unique",
-                    "2. Column B (Name) is REQUIRED",
-                    "3. Column C (Email) is REQUIRED and must be a valid email format",
-                    "4. Column D (Programme) is REQUIRED",
-                    "5. Column E (Year Enrolled) is REQUIRED and must be a 4-digit year (e.g., 2025)",
-                    "6. Column F (Trimester Enrolled) is REQUIRED and must be 1, 2, or 3",
-                    "7. Delete the sample rows (2 and 3) and add your actual student data",
-                    "8. Students with duplicate Student IDs will be skipped",
-                    "9. Rows with missing required fields will be rejected"
+                    "1. Column A (Course Code) is REQUIRED and must be unique (max 20 characters)",
+                    "2. Column B (Course Name) is REQUIRED",
+                    "3. Column C (Programme) is REQUIRED (max 100 characters)",
+                    "4. Delete the sample rows (2 and 3) and add your actual course data",
+                    "5. Courses with duplicate Course Codes will be skipped",
+                    "6. Rows with missing required fields will be rejected"
                 };
 
                 for (int i = 0; i < instructions.Length; i++)
@@ -341,19 +304,22 @@ namespace smart_feedback.Controllers
                 using (var stream = new MemoryStream())
                 {
                     workbook.Write(stream);
-                    var fileName = $"StudentUploadTemplate_{DateTime.Now:yyyyMMdd}.xlsx";
+                    var fileName = $"CourseUploadTemplate_{DateTime.Now:yyyyMMdd}.xlsx";
+                    
+                    _logger.LogInformation("Course upload template generated successfully: {FileName}", fileName);
+                    
                     return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating Excel template");
+                _logger.LogError(ex, "Error generating course upload template");
                 TempData["ErrorMessage"] = "Error generating template file.";
                 return RedirectToAction(nameof(Index));
             }
         }
 
-        // POST: Students/UploadExcel
+        // POST: Courses/UploadExcel
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadExcel(IFormFile excelFile)
@@ -387,9 +353,9 @@ namespace smart_feedback.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                var studentsToAdd = new List<Student>();
+                var coursesToAdd = new List<Course>();
                 var rowErrors = new List<string>();
-                var duplicateStudentIds = new List<string>();
+                var duplicateCourses = new List<string>();
                 int rowNumber = 1;
 
                 using (var stream = excelFile.OpenReadStream())
@@ -417,16 +383,16 @@ namespace smart_feedback.Controllers
                     if (firstRow != null)
                     {
                         var firstCell = GetCellValue(firstRow.GetCell(0))?.ToLower();
-                        if (firstCell != null && (firstCell.Contains("student") || firstCell.Contains("id")))
+                        if (firstCell != null && (firstCell.Contains("course") || firstCell.Contains("code")))
                         {
                             startRow = 1;
                             _logger.LogDebug("Header row detected, starting from row 1");
                         }
                     }
 
-                    // Get existing student IDs for duplicate check
-                    var existingStudentIds = await _context.Student
-                        .Select(s => s.StudentId.ToLower())
+                    // Get existing course codes for duplicate check
+                    var existingCourseCodes = await _context.Courses
+                        .Select(c => c.CourseCode.ToLower())
                         .ToListAsync();
 
                     for (int row = startRow; row <= rowCount; row++)
@@ -436,45 +402,35 @@ namespace smart_feedback.Controllers
                         IRow currentRow = worksheet.GetRow(row);
                         if (currentRow == null) continue;
 
-                        var studentIdCell = GetCellValue(currentRow.GetCell(0))?.Trim();
-                        var nameCell = GetCellValue(currentRow.GetCell(1))?.Trim();
-                        var emailCell = GetCellValue(currentRow.GetCell(2))?.Trim();
-                        var programmeCell = GetCellValue(currentRow.GetCell(3))?.Trim();
-                        var yearEnrolledCell = GetCellValue(currentRow.GetCell(4))?.Trim();
-                        var trimesterEnrolledCell = GetCellValue(currentRow.GetCell(5))?.Trim();
+                        var courseCodeCell = GetCellValue(currentRow.GetCell(0))?.Trim();
+                        var courseNameCell = GetCellValue(currentRow.GetCell(1))?.Trim();
+                        var programmeCell = GetCellValue(currentRow.GetCell(2))?.Trim();
 
                         // Skip empty rows
-                        if (string.IsNullOrWhiteSpace(studentIdCell) &&
-                            string.IsNullOrWhiteSpace(nameCell) &&
-                            string.IsNullOrWhiteSpace(emailCell))
+                        if (string.IsNullOrWhiteSpace(courseCodeCell) &&
+                            string.IsNullOrWhiteSpace(courseNameCell) &&
+                            string.IsNullOrWhiteSpace(programmeCell))
                         {
                             _logger.LogDebug("Skipping empty row {Row}", rowNumber);
                             continue;
                         }
 
                         // Validate required fields
-                        if (string.IsNullOrWhiteSpace(studentIdCell))
+                        if (string.IsNullOrWhiteSpace(courseCodeCell))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Missing Student ID");
+                            rowErrors.Add($"Row {rowNumber}: Missing Course Code");
                             continue;
                         }
 
-                        if (string.IsNullOrWhiteSpace(nameCell))
+                        if (courseCodeCell.Length > 20)
                         {
-                            rowErrors.Add($"Row {rowNumber}: Missing Name");
+                            rowErrors.Add($"Row {rowNumber}: Course Code '{courseCodeCell}' exceeds 20 characters");
                             continue;
                         }
 
-                        if (string.IsNullOrWhiteSpace(emailCell))
+                        if (string.IsNullOrWhiteSpace(courseNameCell))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Missing Email");
-                            continue;
-                        }
-
-                        // Validate email format
-                        if (!IsValidEmail(emailCell))
-                        {
-                            rowErrors.Add($"Row {rowNumber}: Invalid Email format '{emailCell}'");
+                            rowErrors.Add($"Row {rowNumber}: Missing Course Name");
                             continue;
                         }
 
@@ -484,85 +440,62 @@ namespace smart_feedback.Controllers
                             continue;
                         }
 
-                        // Validate Year Enrolled
-                        if (string.IsNullOrWhiteSpace(yearEnrolledCell) || !int.TryParse(yearEnrolledCell, out int yearEnrolled))
+                        if (programmeCell.Length > 100)
                         {
-                            rowErrors.Add($"Row {rowNumber}: Invalid Year Enrolled '{yearEnrolledCell}' (must be a number)");
+                            rowErrors.Add($"Row {rowNumber}: Programme '{programmeCell}' exceeds 100 characters");
                             continue;
                         }
 
-                        if (yearEnrolled < 1900 || yearEnrolled > 2100)
+                        // Check for duplicate course code in database
+                        if (existingCourseCodes.Contains(courseCodeCell.ToLower()))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Year Enrolled '{yearEnrolled}' is out of valid range (1900-2100)");
-                            continue;
-                        }
-
-                        // Validate Trimester Enrolled
-                        if (string.IsNullOrWhiteSpace(trimesterEnrolledCell) || !int.TryParse(trimesterEnrolledCell, out int trimesterEnrolled))
-                        {
-                            rowErrors.Add($"Row {rowNumber}: Invalid Trimester Enrolled '{trimesterEnrolledCell}' (must be a number)");
-                            continue;
-                        }
-
-                        if (trimesterEnrolled < 1 || trimesterEnrolled > 3)
-                        {
-                            rowErrors.Add($"Row {rowNumber}: Trimester Enrolled must be 1, 2, or 3 (got '{trimesterEnrolled}')");
-                            continue;
-                        }
-
-                        // Check for duplicate Student ID
-                        if (existingStudentIds.Contains(studentIdCell.ToLower()))
-                        {
-                            duplicateStudentIds.Add(studentIdCell);
-                            _logger.LogDebug("Row {Row}: Duplicate Student ID '{StudentId}'", rowNumber, studentIdCell);
+                            duplicateCourses.Add(courseCodeCell);
+                            _logger.LogDebug("Row {Row}: Duplicate Course Code '{CourseCode}'", rowNumber, courseCodeCell);
                             continue;
                         }
 
                         // Check for duplicates within the uploaded file
-                        if (studentsToAdd.Any(s => s.StudentId.Equals(studentIdCell, StringComparison.OrdinalIgnoreCase)))
+                        if (coursesToAdd.Any(c => c.CourseCode.Equals(courseCodeCell, StringComparison.OrdinalIgnoreCase)))
                         {
-                            rowErrors.Add($"Row {rowNumber}: Duplicate Student ID '{studentIdCell}' within the file");
+                            rowErrors.Add($"Row {rowNumber}: Duplicate Course Code '{courseCodeCell}' within the file");
                             continue;
                         }
 
-                        // Create student object
-                        var student = new Student
+                        // Create course object
+                        var course = new Course
                         {
-                            StudentId = studentIdCell,
-                            Name = nameCell,
-                            Email = emailCell,
-                            Programme = programmeCell,
-                            YearEnrolled = yearEnrolled,
-                            TrimesterEnrolled = trimesterEnrolled
+                            CourseCode = courseCodeCell,
+                            CourseName = courseNameCell,
+                            Programme = programmeCell
                         };
 
-                        studentsToAdd.Add(student);
+                        coursesToAdd.Add(course);
                     }
                 }
 
-                _logger.LogInformation("Extracted {Count} valid students from Excel file, {ErrorCount} rows with errors, {DuplicateCount} duplicates",
-                    studentsToAdd.Count, rowErrors.Count, duplicateStudentIds.Count);
+                _logger.LogInformation("Extracted {Count} valid courses from Excel file, {ErrorCount} rows with errors, {DuplicateCount} duplicates",
+                    coursesToAdd.Count, rowErrors.Count, duplicateCourses.Count);
 
                 // Build result message
                 var messages = new List<string>();
 
-                if (studentsToAdd.Any())
+                if (coursesToAdd.Any())
                 {
-                    _context.Student.AddRange(studentsToAdd);
+                    _context.Courses.AddRange(coursesToAdd);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Successfully added {Count} students from Excel file", studentsToAdd.Count);
-                    messages.Add($"✅ Successfully added {studentsToAdd.Count} student(s) from Excel file.");
+                    _logger.LogInformation("Successfully added {Count} courses from Excel file", coursesToAdd.Count);
+                    messages.Add($"✅ Successfully added {coursesToAdd.Count} course(s) from Excel file.");
                 }
 
-                if (duplicateStudentIds.Any())
+                if (duplicateCourses.Any())
                 {
-                    var duplicateList = string.Join(", ", duplicateStudentIds.Take(5));
-                    if (duplicateStudentIds.Count > 5)
+                    var duplicateList = string.Join(", ", duplicateCourses.Take(5));
+                    if (duplicateCourses.Count > 5)
                     {
-                        duplicateList += $" and {duplicateStudentIds.Count - 5} more";
+                        duplicateList += $" and {duplicateCourses.Count - 5} more";
                     }
-                    messages.Add($"ℹ️ {duplicateStudentIds.Count} student(s) skipped (already exist): {duplicateList}");
+                    messages.Add($"ℹ️ {duplicateCourses.Count} course(s) skipped (already exist): {duplicateList}");
                 }
 
                 if (rowErrors.Any())
@@ -575,15 +508,15 @@ namespace smart_feedback.Controllers
                     messages.Add($"❌ {rowErrors.Count} row(s) had validation errors:<br/>{errorList}");
                 }
 
-                if (!studentsToAdd.Any() && !duplicateStudentIds.Any())
+                if (!coursesToAdd.Any() && !duplicateCourses.Any())
                 {
-                    TempData["ErrorMessage"] = "No valid student records found in the Excel file. Please check the format and validation requirements.";
+                    TempData["ErrorMessage"] = "No valid course records found in the Excel file. Please check the format and validation requirements.";
                 }
                 else if (messages.Any())
                 {
-                    if (studentsToAdd.Any())
+                    if (coursesToAdd.Any())
                     {
-                        TempData["SuccessMessage"] = string.Join("<br/><br/>", messages);
+                        TempData["Success"] = string.Join("<br/><br/>", messages);
                     }
                     else
                     {
@@ -593,7 +526,7 @@ namespace smart_feedback.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing Excel file");
+                _logger.LogError(ex, "Error processing Excel file for courses upload");
                 TempData["ErrorMessage"] = $"An error occurred while processing the Excel file: {ex.Message}";
             }
 
@@ -624,26 +557,9 @@ namespace smart_feedback.Controllers
             }
         }
 
-        // Helper method to validate email format
-        private bool IsValidEmail(string email)
+        private bool CourseExists(int id)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
-
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool StudentExists(int id)
-        {
-            return _context.Student.Any(e => e.Id == id);
+            return _context.Courses.Any(e => e.Id == id);
         }
     }
 }

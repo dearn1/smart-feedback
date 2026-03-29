@@ -26,6 +26,52 @@
                         You can create and manage assessments for your courses.
                     </div>
                 }
+
+                @* Filter Section *@
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <form method="get" asp-controller="Home" asp-action="Index" class="row g-3" id="filterForm">
+                            <div class="col-md-4">
+                                <label for="year" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> Year
+                                </label>
+                                <select name="year" id="year" class="form-select">
+                                    @* <option value="">All Years</option> *@
+                                    @if (ViewBag.AvailableYears != null)
+                                    {
+                                        foreach (var year in (List<int>)ViewBag.AvailableYears)
+                                        {
+                                            <option value="@year" selected="@(ViewBag.SelectedYear == year)">@year</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="trimester" class="form-label">
+                                    <i class="fas fa-layer-group"></i> Trimester
+                                </label>
+                                <select name="trimester" id="trimester" class="form-select">
+                                    @* <option value="">All Trimesters</option> *@
+                                    @if (ViewBag.AvailableTrimesters != null)
+                                    {
+                                        foreach (var trimester in (List<int>)ViewBag.AvailableTrimesters)
+                                        {
+                                            <option value="@trimester" selected="@(ViewBag.SelectedTrimester == trimester)">Trimester @trimester</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i> Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -101,6 +147,16 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i> No courses found for the selected filters.
                 </div>
             </div>
         </div>
@@ -191,6 +247,16 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i> No lecturer courses found for the selected filters.
                 </div>
             </div>
         </div>

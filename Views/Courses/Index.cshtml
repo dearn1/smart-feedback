@@ -1,0 +1,243 @@
+@model IEnumerable<smart_feedback.Models.Course>
+
+@{
+    ViewData["Title"] = "Course List Management";
+}
+
+<!-- Success/Error Messages -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Html.Raw(TempData["Success"])
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @Html.Raw(TempData["ErrorMessage"])
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @Html.Raw(TempData["WarningMessage"])
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Course List</h3>
+                <div class="card-tools">
+                    <a asp-action="Create" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add New Course
+                    </a>
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadExcelModal">
+                        <i class="fas fa-file-excel"></i> Upload Excel
+                    </button>
+                    <a asp-action="DownloadTemplate" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search and Filter Form -->
+                <form asp-action="Index" method="get" class="mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <input type="text" 
+                                       name="searchString" 
+                                       value="@ViewData["CurrentFilter"]" 
+                                       class="form-control" 
+                                       placeholder="Search by code or name...">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="programme" class="form-control form-control-sm">
+                                <option value="">-- All Programmes --</option>
+                                @foreach (var prog in ViewBag.Programmes as SelectList)
+                                {
+                                    <option value="@prog.Text" selected="@(prog.Text == ViewData["CurrentProgramme"]?.ToString())">
+                                        @prog.Text
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="btn-group btn-group-sm">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()) || 
+                                     !string.IsNullOrEmpty(ViewData["CurrentProgramme"]?.ToString()))
+                                {
+                                    <a asp-action="Index" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Clear
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Courses Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Programme</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Any())
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@item.CourseCode</td>
+                                        <td>@item.CourseName</td>
+                                        <td>@item.Programme</td>
+                                        <td>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-info" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()) || 
+                                             !string.IsNullOrEmpty(ViewData["CurrentProgramme"]?.ToString()))
+                                        {
+                                            <p class="mb-0">No courses found matching your search criteria.</p>
+                                            <a asp-action="Index" class="btn btn-sm btn-primary mt-2">
+                                                <i class="fas fa-times"></i> Clear Filters
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <p class="mb-0">No courses available. <a asp-action="Create">Add a new course</a></p>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Excel Modal -->
+<div class="modal fade" id="uploadExcelModal" tabindex="-1" role="dialog" aria-labelledby="uploadExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="uploadExcelModalLabel">
+                    <i class="fas fa-file-excel"></i> Upload Courses from Excel
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form asp-action="UploadExcel" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Upload an Excel file (.xlsx or .xls)</li>
+                            <li><strong>Column A:</strong> Course Code (required, max 20 characters, must be unique)</li>
+                            <li><strong>Column B:</strong> Course Name (required)</li>
+                            <li><strong>Column C:</strong> Programme (required, max 100 characters)</li>
+                            <li>Download the template for correct format with sample data</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Validation:</strong><br>
+                        All fields are required. Duplicate Course Codes and rows with missing/invalid data will be skipped.
+                    </div>
+
+                    <div class="form-group">
+                        <label for="excelFile">Select Excel File:</label>
+                        <input type="file" class="form-control-file" id="excelFile" name="excelFile" accept=".xlsx,.xls" required />
+                        <small class="form-text text-muted">Maximum file size: 5MB</small>
+                    </div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-table"></i> Expected Excel Format:</h6>
+                            <table class="table table-sm table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>A</th>
+                                        <th>B</th>
+                                        <th>C</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-secondary">
+                                        <td><small>Course Code</small></td>
+                                        <td><small>Course Name</small></td>
+                                        <td><small>Programme</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td><small>CS101</small></td>
+                                        <td><small>Introduction to Programming</small></td>
+                                        <td><small>Bachelor of Computer Science</small></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success mt-2">
+                        <i class="fas fa-check-circle"></i> Courses with duplicate codes will be automatically skipped.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Courses
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-lg {
+        max-width: 800px;
+    }
+</style>

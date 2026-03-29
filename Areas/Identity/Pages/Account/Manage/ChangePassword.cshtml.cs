@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using smart_feedback.Models;
+using smart_feedback.Services;
 
 namespace smart_feedback.Areas.Identity.Pages.Account.Manage
 {
@@ -18,15 +19,18 @@ namespace smart_feedback.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<ChangePasswordModel> _logger;
+        private readonly IEmailService _emailService;
 
         public ChangePasswordModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            ILogger<ChangePasswordModel> logger)
+            ILogger<ChangePasswordModel> logger,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -108,6 +112,9 @@ namespace smart_feedback.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            _logger.LogInformation("User {Email} (ID: {UserId}) is changing password",
+                user.Email, user.Id);
+
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
             if (!changePasswordResult.Succeeded)
             {
@@ -119,7 +126,21 @@ namespace smart_feedback.Areas.Identity.Pages.Account.Manage
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            _logger.LogInformation("User changed their password successfully.");
+            _logger.LogInformation("User {Email} (ID: {UserId}) changed their password successfully",
+                user.Email, user.Id);
+
+            // Send email notification
+            try
+            {
+                await _emailService.SendPasswordChangeConfirmationEmailAsync(user.Email, user.FullName ?? user.Email);
+                _logger.LogInformation("Password change confirmation email sent to {Email}", user.Email);
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogError(emailEx, "Failed to send password change confirmation email to {Email}", user.Email);
+                // Don't fail the password change if email fails
+            }
+
             StatusMessage = "Your password has been changed.";
 
             return RedirectToPage();

@@ -4,7 +4,6 @@ using smart_feedback.Data;
 using Serilog;
 using smart_feedback.Services;
 using smart_feedback.Models;
-using smart_feedback.Models.Configuration;
 using QuestPDF.Infrastructure; 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,9 +31,6 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 // Configure email settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-
-// Configure application settings
-builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection("ApplicationSettings"));
 
 // Register email service
 builder.Services.AddScoped<IEmailService, UserEmailService>();

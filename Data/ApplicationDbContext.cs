@@ -22,5 +22,7 @@ namespace smart_feedback.Data
         public DbSet<smart_feedback.Models.StudentOverallFeedback> StudentOverallFeedback { get; set; } = default!;
         public DbSet<smart_feedback.Models.StudentTaskScore> StudentTaskScores { get; set; } = default!;
         public DbSet<smart_feedback.Models.StudentOverallScore> StudentOverallScores { get; set; } = default!;
+        public DbSet<smart_feedback.Models.Course> Courses { get; set; } = default!;
+        public DbSet<smart_feedback.Models.Programme> Programmes { get; set; } = default!;
     }
 }
