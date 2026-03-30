@@ -108,9 +108,23 @@
                                 <tbody>
                                     @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses)
                                     {
-                                        <tr>
+                                        <tr class="@(course.NeedsSetup ? "table-warning" : "")">
                                             <td>@course.CourseCode</td>
-                                            <td>@course.CourseName</td>
+                                            <td>
+                                                @course.CourseName
+                                                @if (!course.HasRubrics)
+                                                {
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="fas fa-exclamation-triangle"></i> No Rubrics
+                                                    </span>
+                                                }
+                                                @if (!course.HasStudents)
+                                                {
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="fas fa-user-slash"></i> No Students
+                                                    </span>
+                                                }
+                                            </td>
                                             <td>@course.Year</td>
                                             <td>@course.Trimester</td>
                                             <td>@course.Programme</td>
@@ -121,16 +135,32 @@
                                                     <a asp-controller="Rubrics" asp-action="AssessmentManagement" 
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Admin"
-                                                       class="btn btn-outline-primary btn-sm" 
+                                                       class="@(!course.HasRubrics ? "btn btn-danger btn-sm" : "btn btn-outline-primary btn-sm")" 
                                                        title="Manage Assessment Rubrics">
-                                                        <i class="fas fa-list me-1"></i> Rubrics
+                                                        <i class="fas fa-list me-1"></i>
+                                                        @if (!course.HasRubrics)
+                                                        {
+                                                            <span class="fw-bold">Rubrics <i class="fas fa-exclamation-triangle"></i></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Rubrics</span>
+                                                        }
                                                     </a>
                                                     <a asp-controller="CourseStudents" asp-action="Manage"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Admin"
-                                                       class="btn btn-outline-info btn-sm"
+                                                       class="@(!course.HasStudents ? "btn btn-danger btn-sm" : "btn btn-outline-info btn-sm")"
                                                        title="Manage Students">
-                                                        <i class="fas fa-users me-1"></i> Students
+                                                        <i class="fas fa-users me-1"></i>
+                                                        @if (!course.HasStudents)
+                                                        {
+                                                            <span class="fw-bold">Students <i class="fas fa-exclamation-triangle"></i></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Students (@course.StudentCount)</span>
+                                                        }
                                                     </a>
                                                     <a asp-controller="StudentAssessments" asp-action="Index"
                                                        asp-route-courseId="@course.CourseRolesId"
@@ -193,7 +223,8 @@
                                 <tbody>
                                     @foreach (var course in (List<smart_feedback.Models.ViewModels.CourseRolesViewModel>)ViewBag.LecturerCourses)
                                     {
-                                        <tr class="@(course.HasFinalReview ? "table-warning" : "")">
+                                        var rowClass = course.HasFinalReview ? "table-warning" : (course.NeedsSetup ? "table-warning" : "");
+                                        <tr class="@rowClass">
                                             <td>@course.CourseCode</td>
                                             <td>
                                                 @course.CourseName
@@ -201,6 +232,18 @@
                                                 {
                                                     <span class="badge bg-warning text-dark ms-2">
                                                         <i class="fas fa-exclamation-circle"></i> @course.FinalReviewCount Final Review
+                                                    </span>
+                                                }
+                                                @if (!course.HasRubrics)
+                                                {
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="fas fa-exclamation-triangle"></i> No Rubrics
+                                                    </span>
+                                                }
+                                                @if (!course.HasStudents)
+                                                {
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="fas fa-user-slash"></i> No Students
                                                     </span>
                                                 }
                                             </td>
@@ -213,16 +256,32 @@
                                                     <a asp-controller="Rubrics" asp-action="AssessmentManagement"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Lecturer"
-                                                       class="btn btn-outline-primary btn-sm"
+                                                       class="@(!course.HasRubrics ? "btn btn-danger btn-sm" : "btn btn-outline-primary btn-sm")"
                                                        title="Manage Assessment Rubrics">
-                                                        <i class="fas fa-list me-1"></i> Rubrics
+                                                        <i class="fas fa-list me-1"></i>
+                                                        @if (!course.HasRubrics)
+                                                        {
+                                                            <span class="fw-bold">Rubrics <i class="fas fa-exclamation-triangle"></i></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Rubrics</span>
+                                                        }
                                                     </a>
                                                     <a asp-controller="CourseStudents" asp-action="Manage"
                                                        asp-route-courseId="@course.CourseRolesId"
                                                        asp-route-role="Lecturer"
-                                                       class="btn btn-outline-info btn-sm"
+                                                       class="@(!course.HasStudents ? "btn btn-danger btn-sm" : "btn btn-outline-info btn-sm")"
                                                        title="Manage Students">
-                                                        <i class="fas fa-users me-1"></i> Students
+                                                        <i class="fas fa-users me-1"></i>
+                                                        @if (!course.HasStudents)
+                                                        {
+                                                            <span class="fw-bold">Students <i class="fas fa-exclamation-triangle"></i></span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>Students (@course.StudentCount)</span>
+                                                        }
                                                     </a>
                                                     <a asp-controller="StudentAssessments" asp-action="Index"
                                                        asp-route-courseId="@course.CourseRolesId"
@@ -355,9 +414,15 @@
         border-left: 4px solid #17a2b8;
     }
     
+    .table-danger {
+        background-color: #f8d7da !important;
+        border-left: 4px solid #dc3545;
+    }
+    
     /* Pulse animation for action buttons */
     .btn-warning.btn-sm,
-    .btn-info.btn-sm {
+    .btn-info.btn-sm,
+    .btn-danger.btn-sm {
         animation: pulse-shadow 2s infinite;
     }
     
@@ -389,11 +454,31 @@
         }
     }
     
+    .table-danger .btn-danger.btn-sm {
+        animation: pulse-shadow-danger 2s infinite;
+    }
+    
+    @@keyframes pulse-shadow-danger {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+    
     .badge.bg-warning {
         color: #000 !important;
     }
     
     .badge.bg-info {
         color: #000 !important;
+    }
+    
+    .badge.bg-danger {
+        color: #fff !important;
     }
 </style>

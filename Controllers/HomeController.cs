@@ -189,7 +189,7 @@ public class HomeController : Controller
                     viewModel.ModeratorFullName = moderator?.FullName ?? course.RoleModerator;
                 }
 
-                // NEW: Get assessment status counts for this course
+                // Get assessment status counts for this course
                 var assessmentStatusCounts = await _context.Assessments
                     .Where(a => a.CourseCode == course.CourseCode && 
                                a.Year == course.Year && 
@@ -203,6 +203,18 @@ public class HomeController : Controller
                 
                 viewModel.ModerationCount = assessmentStatusCounts
                     .FirstOrDefault(s => s.Status == "Moderation")?.Count ?? 0;
+
+                // NEW: Check if course has rubrics (at least one assessment with a rubric)
+                viewModel.HasRubrics = await _context.Assessments
+                    .AnyAsync(a => a.CourseCode == course.CourseCode && 
+                                  a.Year == course.Year && 
+                                  a.Trimester == course.Trimester &&
+                                  a.RubricsId > 0);
+
+                // NEW: Get student count for this course
+                viewModel.StudentCount = await _context.CourseStudent
+                    .Where(cs => cs.CourseRolesId == course.CourseRolesId)
+                    .CountAsync();
 
                 viewModels.Add(viewModel);
             }
