@@ -19,5 +19,11 @@ namespace smart_feedback.Models.ViewModels
         public int ModerationCount { get; set; }
         public bool HasFinalReview => FinalReviewCount > 0;
         public bool HasModeration => ModerationCount > 0;
+        
+        // NEW: Course setup status
+        public bool HasRubrics { get; set; }
+        public int StudentCount { get; set; }
+        public bool HasStudents => StudentCount > 0;
+        public bool NeedsSetup => !HasRubrics || !HasStudents;
     }
 }

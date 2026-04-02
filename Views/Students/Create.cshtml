@@ -1,59 +1,118 @@
 ﻿@model smart_feedback.Models.Student
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Student";
 }
 
-<h4>Student Data</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="StudentId" class="control-label">Student Id</label>
-                <input asp-for="StudentId" class="form-control" />
-                <span asp-validation-for="StudentId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Programme" class="control-label"></label>
-                <input asp-for="Programme" class="form-control" />
-                <span asp-validation-for="Programme" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="YearEnrolled" class="control-label">Year Enrolled</label>
-                <input asp-for="YearEnrolled" class="form-control" />
-                <span asp-validation-for="YearEnrolled" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TrimesterEnrolled" class="control-label">Trimester Enrolled</label>
-                <select asp-for="TrimesterEnrolled" class="form-control">
-                    <option value="">-- Select Trimester --</option>
-                    <option value="1">Trimester 1</option>
-                    <option value="2">Trimester 2</option>
-                    <option value="3">Trimester 3</option>
-                </select>
-                <span asp-validation-for="TrimesterEnrolled" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-user-plus me-2"></i>Create New Student
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="StudentId" class="form-label fw-semibold">
+                                <i class="fas fa-id-card text-primary me-1"></i>Student ID
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="StudentId" class="form-control" placeholder="e.g., 20250001" />
+                            <span asp-validation-for="StudentId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold">
+                                <i class="fas fa-user text-success me-1"></i>Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g., John Doe" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope text-info me-1"></i>Email
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Email" class="form-control" type="email" placeholder="student@ess.ais.ac.nz" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Programme" class="form-label fw-semibold">
+                                <i class="fas fa-graduation-cap text-success me-1"></i>Programme
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Programme" class="form-select" asp-items="ViewBag.Programmes">
+                                <option value="">-- Select Programme --</option>
+                            </select>
+                            <span asp-validation-for="Programme" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="YearEnrolled" class="form-label fw-semibold">
+                                <i class="fas fa-calendar text-info me-1"></i>Year Enrolled
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="YearEnrolled" type="number" class="form-control" min="1900" max="2100" placeholder="@DateTime.Now.Year" />
+                            <span asp-validation-for="YearEnrolled" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="TrimesterEnrolled" class="form-label fw-semibold">
+                                <i class="fas fa-calendar-alt text-warning me-1"></i>Trimester Enrolled
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="TrimesterEnrolled" class="form-select">
+                                <option value="">-- Select Trimester --</option>
+                                <option value="1">Trimester 1</option>
+                                <option value="2">Trimester 2</option>
+                                <option value="3">Trimester 3</option>
+                            </select>
+                            <span asp-validation-for="TrimesterEnrolled" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-1"></i>Create Student
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-link">
+        <i class="fas fa-arrow-left me-1"></i>Back to List
+    </a>
 </div>
 
 @section Scripts {

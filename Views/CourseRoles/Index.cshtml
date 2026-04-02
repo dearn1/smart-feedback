@@ -30,7 +30,7 @@
                             Year
                         </label>
                         <select class="form-select form-select-sm" id="yearFilter" name="year">
-                            <option value="">-- All Years --</option>
+                            @* <option value="">-- All Years --</option> *@
                             @foreach (var year in ViewBag.Years as SelectList)
                             {
                                 <option value="@year.Text" selected="@(year.Text == ViewBag.CurrentYear?.ToString())">@year.Text</option>
@@ -47,7 +47,7 @@
                             Trimester
                         </label>
                         <select class="form-select form-select-sm" id="trimesterFilter" name="trimester">
-                            <option value="">-- All Trimesters --</option>
+                            @* <option value="">-- All Trimesters --</option> *@
                             @foreach (var trimester in ViewBag.Trimesters as SelectList)
                             {
                                 <option value="@trimester.Text" selected="@(trimester.Text == ViewBag.CurrentTrimester?.ToString())">@trimester.Text</option>
@@ -92,6 +92,16 @@
         </form>
     </div>
 </div>
+
+@if (ViewData["IsDefaultFilter"] as bool? == true)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Default Filter Applied:</strong> Showing courses for current year (@ViewData["CurrentYearFilter"]) and trimester (@ViewData["CurrentTrimesterFilter"]). 
+        You can change the filters above to view other periods.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <!-- Action Buttons -->
 <div class="d-flex justify-content-between gap-2 mb-3">

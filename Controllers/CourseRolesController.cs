@@ -8,24 +8,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using smart_feedback.Data;
 using smart_feedback.Models;
-using smart_feedback.Models.Configuration;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using NPOI.HSSF.UserModel;
-    
+
 namespace smart_feedback.Controllers
 {
     public class CourseRolesController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<CourseRolesController> _logger;
-        private readonly ApplicationSettings _appSettings;
 
-        public CourseRolesController(ApplicationDbContext context, ILogger<CourseRolesController> logger, IOptions<ApplicationSettings> appSettings)
+        public CourseRolesController(ApplicationDbContext context, ILogger<CourseRolesController> logger)
         {
             _context = context;
             _logger = logger;
-            _appSettings = appSettings.Value;
         }
 
         // GET: CourseRoles
@@ -33,6 +30,25 @@ namespace smart_feedback.Controllers
         {
             try
             {
+                // Apply default filters if not provided
+                bool isDefaultFilter = false;
+                if (!year.HasValue && !trimester.HasValue && string.IsNullOrEmpty(programme))
+                {
+                    isDefaultFilter = true;
+                    year = DateTime.Now.Year;
+
+                    // Calculate current trimester based on month
+                    int currentMonth = DateTime.Now.Month;
+                    if (currentMonth >= 1 && currentMonth <= 4)
+                        trimester = 1;
+                    else if (currentMonth >= 5 && currentMonth <= 8)
+                        trimester = 2;
+                    else
+                        trimester = 3;
+
+                    _logger.LogInformation("Applying default filters - Year: {Year}, Trimester: {Trimester}", year, trimester);
+                }
+
                 _logger.LogInformation("CourseRoles Index called with filters - Year: {Year}, Trimester: {Trimester}, Programme: {Programme}, SortOrder: {SortOrder}",
                     year, trimester, programme, sortOrder);
 
@@ -50,9 +66,25 @@ namespace smart_feedback.Controllers
                 ViewData["CurrentYearFilter"] = year;
                 ViewData["CurrentTrimesterFilter"] = trimester;
                 ViewData["CurrentProgrammeFilter"] = programme;
+                ViewData["IsDefaultFilter"] = isDefaultFilter;
 
                 // Prepare programme dropdown options
-                ViewBag.ProgrammeOptions = _appSettings.GetProgrammeSelectList(programme);
+                var programmes = await _context.Programmes
+                    .OrderBy(p => p.ProgrammeName)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.ProgrammeName,
+                        Text = p.ProgrammeName
+                    })
+                    .ToListAsync();
+
+                var programmeOptions = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "-- Select Programme --" },
+                    new SelectListItem { Value = "ALL", Text = "All Programmes" }
+                };
+                programmeOptions.AddRange(programmes);
+                ViewBag.ProgrammeOptions = programmeOptions;
 
                 // Get distinct years and trimesters for dropdowns
                 ViewBag.Years = new SelectList(await _context.CourseRoles
@@ -142,8 +174,8 @@ namespace smart_feedback.Controllers
 
                 var courseRoles = await courseRolesQuery.ToListAsync();
 
-                _logger.LogInformation("Successfully retrieved {Count} course roles (filtered: Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Programme={HasProgrammeFilter})",
-                    courseRoles.Count, year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(programme));
+                _logger.LogInformation("Successfully retrieved {Count} course roles (filtered: Year={HasYearFilter}, Trimester={HasTrimesterFilter}, Programme={HasProgrammeFilter}, DefaultFilter={IsDefaultFilter})",
+                    courseRoles.Count, year.HasValue, trimester.HasValue, !string.IsNullOrEmpty(programme), isDefaultFilter);
 
                 return View(courseRoles);
             }
@@ -186,14 +218,22 @@ namespace smart_feedback.Controllers
         }
 
         // GET: CourseRoles/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            // Get all programmes
+            var programmes = await _context.Programmes
+                .OrderBy(p => p.ProgrammeName)
+                .ToListAsync();
+
+            ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName");
+
             var model = new CourseRoles
             {
                 Institution = "Auckland Institute of Studies",
                 Year = DateTime.Now.Year,
                 Status = "Active"
             };
+
             return View(model);
         }
 
@@ -226,11 +266,11 @@ namespace smart_feedback.Controllers
                     throw;
                 }
             }
-            
+
             _logger.LogWarning("Course role creation failed - ModelState is invalid. Course: {CourseCode}, Errors: {Errors}",
                 courseRoles?.CourseCode,
                 string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
-                        
+
             return View(courseRoles);
         }
 
@@ -252,8 +292,24 @@ namespace smart_feedback.Controllers
                     return NotFound();
                 }
 
+                // Get all programmes
+                var programmes = await _context.Programmes
+                    .OrderBy(p => p.ProgrammeName)
+                    .ToListAsync();
+
+                ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName", courseRoles.Programme);
+
+                // Get courses for the selected programme
+                var courses = await _context.Courses
+                    .Where(c => c.Programme == courseRoles.Programme)
+                    .OrderBy(c => c.CourseCode)
+                    .ToListAsync();
+
+                ViewBag.Courses = new SelectList(courses, "CourseCode", "CourseCode", courseRoles.CourseCode);
+
                 _logger.LogInformation("Successfully retrieved course role for editing - ID: {Id}, Course: {CourseCode}",
                     id, courseRoles.CourseCode);
+
                 return View(courseRoles);
             }
             catch (Exception ex)
@@ -357,10 +413,10 @@ namespace smart_feedback.Controllers
                 {
                     _context.CourseRoles.Remove(courseRoles);
                     await _context.SaveChangesAsync();
-                    
+
                     _logger.LogInformation("Successfully deleted course role - ID: {Id}, Course: {CourseCode}",
                         id, courseRoles.CourseCode);
-                    
+
                     TempData["SuccessMessage"] = $"Course role '{courseRoles.CourseCode}' has been successfully deleted.";
                 }
                 else
@@ -452,8 +508,8 @@ namespace smart_feedback.Controllers
         {
             try
             {
-                _logger.LogInformation("BulkArchive called with {Count} IDs: {Ids}", 
-                    selectedIds?.Count ?? 0, 
+                _logger.LogInformation("BulkArchive called with {Count} IDs: {Ids}",
+                    selectedIds?.Count ?? 0,
                     selectedIds != null ? string.Join(", ", selectedIds) : "null");
 
                 if (selectedIds == null || !selectedIds.Any())
@@ -496,7 +552,7 @@ namespace smart_feedback.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        
+
         // GET: CourseRoles/Upload
         public IActionResult Upload()
         {
@@ -975,7 +1031,7 @@ namespace smart_feedback.Controllers
                 foreach (var courseRole in courseRoles)
                 {
                     IRow dataRow = worksheet.CreateRow(rowIndex);
-                    
+
                     dataRow.CreateCell(0).SetCellValue(courseRole.CourseCode ?? "");
                     dataRow.CreateCell(1).SetCellValue(courseRole.CourseName ?? "");
                     dataRow.CreateCell(2).SetCellValue(courseRole.Year);
@@ -999,18 +1055,18 @@ namespace smart_feedback.Controllers
                 using (var stream = new MemoryStream())
                 {
                     workbook.Write(stream);
-                    
+
                     // Build filename with filter information
                     var filterInfo = new List<string>();
                     if (year.HasValue) filterInfo.Add($"Year{year}");
                     if (trimester.HasValue) filterInfo.Add($"T{trimester}");
                     if (!string.IsNullOrEmpty(programme)) filterInfo.Add(programme.Replace(" ", ""));
-                    
+
                     var filterSuffix = filterInfo.Any() ? "_" + string.Join("_", filterInfo) : "";
                     var fileName = $"CourseRoles{filterSuffix}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                    
+
                     _logger.LogInformation("Successfully generated Excel file: {FileName} with {Count} records", fileName, courseRoles.Count);
-                    
+
                     return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
             }
@@ -1046,7 +1102,24 @@ namespace smart_feedback.Controllers
 
                 ViewBag.Years = new SelectList(years);
                 ViewBag.Trimesters = new SelectList(trimesters);
-                ViewBag.ProgrammeOptions = _appSettings.GetProgrammeSelectList(null);
+
+                // Load programmes from database instead of ApplicationSettings
+                var programmes = await _context.Programmes
+                    .OrderBy(p => p.ProgrammeName)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.ProgrammeName,
+                        Text = p.ProgrammeName
+                    })
+                    .ToListAsync();
+
+                var programmeOptions = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "-- Select Programme --" },
+                    new SelectListItem { Value = "ALL", Text = "All Programmes" }
+                };
+                programmeOptions.AddRange(programmes);
+                ViewBag.ProgrammeOptions = programmeOptions;
 
                 // Set default destination year and trimester
                 ViewBag.DefaultDestYear = DateTime.Now.Year;
@@ -1245,6 +1318,37 @@ namespace smart_feedback.Controllers
                 _logger.LogError(ex, "Error copying course roles to new trimester");
                 TempData["ErrorMessage"] = "An error occurred while copying course roles. Please try again.";
                 return RedirectToAction(nameof(CopyToTrimester));
+            }
+        }
+
+        // GET: CourseRoles/GetCoursesByProgramme
+        [HttpGet]
+        public async Task<IActionResult> GetCoursesByProgramme(string programme)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(programme))
+                {
+                    return Json(new List<object>());
+                }
+
+                var courses = await _context.Courses
+                    .Where(c => c.Programme == programme)
+                    .OrderBy(c => c.CourseCode)
+                    .Select(c => new
+                    {
+                        id = c.Id,
+                        courseCode = c.CourseCode,
+                        courseName = c.CourseName
+                    })
+                    .ToListAsync();
+
+                return Json(courses);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving courses for programme: {Programme}", programme);
+                return Json(new List<object>());
             }
         }
 

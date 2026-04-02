@@ -5,7 +5,10 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DefaultConnection": "Data Source=20242885-ENDRA;Initial Catalog=safs_db2;Integrated Security=True;Encrypt=True;Trust Server Certificate=True"
+        "DefaultConnection": "Data Source=20242885-ENDRA;Initial Catalog=safs_db2;Integrated Security=True;Encrypt=True;Trust Server Certificate=True",
+        "EmailSettings__SmtpServer": "smtp.gmail.com",
+        "EmailSettings__SenderEmail": "safs.mailbot@gmail.com",
+        "EmailSettings__SenderPassword": "mfch wbbx vxan ohpt"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5287"
@@ -15,7 +18,10 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DefaultConnection": "Data Source=20242885-ENDRA;Initial Catalog=safs_db2;Integrated Security=True;Encrypt=True;Trust Server Certificate=True"
+        "DefaultConnection": "Data Source=20242885-ENDRA;Initial Catalog=safs_db2;Integrated Security=True;Encrypt=True;Trust Server Certificate=True",
+        "EmailSettings__SmtpServer": "smtp.gmail.com",
+        "EmailSettings__SenderEmail": "safs.mailbot@gmail.com",
+        "EmailSettings__SenderPassword": "mfch wbbx vxan ohpt"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7266;http://localhost:5287"

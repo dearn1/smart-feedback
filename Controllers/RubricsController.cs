@@ -265,15 +265,25 @@ namespace smart_feedback.Controllers
                         ViewBag.Institution = course.Institution;
                         ViewBag.CourseId = courseid;
                         ViewBag.CurrentUserRole = role;
+
+                        // Get courses for the selected programme
+                        var courses = await _context.Courses
+                            .Where(c => c.Programme == course.Programme)
+                            .OrderBy(c => c.CourseCode)
+                            .ToListAsync();
+
+                        ViewBag.Courses = new SelectList(courses, "CourseCode", "CourseCode", course.CourseCode);
                     }
                 }
 
                 // Set default Institution
                 ViewBag.DefaultInstitution = "Auckland Institute of Studies";
 
-                // Load programmes from configuration
-                var programmes = _configuration.GetSection("ApplicationSettings:Programmes").Get<List<ProgrammeOption>>();
-                ViewBag.Programmes = new SelectList(programmes ?? new List<ProgrammeOption>(), "Value", "Text");
+                // Load programmes from database
+                var programmes = await _context.Programmes
+                    .OrderBy(p => p.ProgrammeName)
+                    .ToListAsync();
+                ViewBag.Programmes = new SelectList(programmes, "ProgrammeName", "ProgrammeName");
 
                 // Generate year dropdown (current year back to 10 years ago)
                 var currentYear = DateTime.Now.Year;
@@ -2208,6 +2218,37 @@ namespace smart_feedback.Controllers
                 _logger.LogError(ex, "Error in AssessmentManagement POST action for course ID: {CourseId}", model.CourseRolesId);
                 ModelState.AddModelError("", "An error occurred while saving the assessment assignments.");
                 return View(model);
+            }
+        }
+
+        // GET: Rubrics/GetCoursesByProgramme
+        [HttpGet]
+        public async Task<IActionResult> GetCoursesByProgramme(string programme)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(programme))
+                {
+                    return Json(new List<object>());
+                }
+
+                var courses = await _context.Courses
+                    .Where(c => c.Programme == programme)
+                    .OrderBy(c => c.CourseCode)
+                    .Select(c => new
+                    {
+                        id = c.Id,
+                        courseCode = c.CourseCode,
+                        courseName = c.CourseName
+                    })
+                    .ToListAsync();
+
+                return Json(courses);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving courses for programme: {Programme}", programme);
+                return Json(new List<object>());
             }
         }
     }

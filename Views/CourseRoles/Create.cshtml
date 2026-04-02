@@ -4,162 +4,231 @@
     ViewData["Title"] = "Create Course Role";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-plus-circle me-2"></i>Create New Course Role
-                    </h4>
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-plus-circle me-2"></i>Create New Course Role
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <!-- Institution and Programme -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Institution" class="form-label fw-semibold">
+                                <i class="fas fa-university text-primary me-1"></i>Institution
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Institution" class="form-control" placeholder="e.g., Auckland Institute of Studies" />
+                            <span asp-validation-for="Institution" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Programme" class="form-label fw-semibold">
+                                <i class="fas fa-graduation-cap text-success me-1"></i>Programme
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Programme" id="programmeSelect" class="form-select" asp-items="ViewBag.Programmes">
+                                <option value="">-- Select Programme --</option>
+                            </select>
+                            <span asp-validation-for="Programme" class="text-danger"></span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="CourseCode" class="form-label fw-semibold">
-                                        <i class="fas fa-code text-primary me-1"></i>Course Code
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="CourseCode" class="form-control" placeholder="e.g., CS101" />
-                                    <span asp-validation-for="CourseCode" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="CourseName" class="form-label fw-semibold">
-                                        <i class="fas fa-book text-success me-1"></i>Course Name
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="CourseName" class="form-control" placeholder="e.g., Introduction to Programming" />
-                                    <span asp-validation-for="CourseName" class="text-danger"></span>
-                                </div>
-                            </div>
+                <!-- Course Code and Course Name -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="CourseCode" class="form-label fw-semibold">
+                                <i class="fas fa-code text-primary me-1"></i>Course Code
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="CourseCode" id="courseCodeSelect" class="form-select" disabled>
+                                <option value="">-- Select Programme First --</option>
+                            </select>
+                            <span asp-validation-for="CourseCode" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Year" class="form-label fw-semibold">
-                                        <i class="fas fa-calendar text-info me-1"></i>Year
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="Year" type="number" class="form-control" min="1900" max="2100" placeholder="@DateTime.Now.Year" />
-                                    <span asp-validation-for="Year" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Trimester" class="form-label fw-semibold">
-                                        <i class="fas fa-calendar-alt text-warning me-1"></i>Trimester
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <select asp-for="Trimester" class="form-select">
-                                        <option value="">-- Select Trimester --</option>
-                                        <option value="1">Trimester 1</option>
-                                        <option value="2">Trimester 2</option>
-                                        <option value="3">Trimester 3</option>
-                                    </select>
-                                    <span asp-validation-for="Trimester" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label asp-for="TotalAssessment" class="form-label fw-semibold">
-                                        <i class="fas fa-tasks text-secondary me-1"></i>Total Assessment
-                                    </label>
-                                    <input asp-for="TotalAssessment" type="number" class="form-control" min="0" value="0" />
-                                    <span asp-validation-for="TotalAssessment" class="text-danger"></span>
-                                </div>
-                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="CourseName" class="form-label fw-semibold">
+                                <i class="fas fa-book text-success me-1"></i>Course Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="CourseName" id="courseNameInput" class="form-control" readonly placeholder="Will be filled automatically" />
+                            <span asp-validation-for="CourseName" class="text-danger"></span>
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Programme" class="form-label fw-semibold">
-                                        <i class="fas fa-graduation-cap text-success me-1"></i>Programme
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="Programme" class="form-control" placeholder="e.g., Bachelor of Computer Science" />
-                                    <span asp-validation-for="Programme" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Institution" class="form-label fw-semibold">
-                                        <i class="fas fa-university text-primary me-1"></i>Institution
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="Institution" class="form-control" placeholder="e.g., Auckland Institute of Studies" />
-                                    <span asp-validation-for="Institution" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="RoleLecturer" class="form-label fw-semibold">
-                                        <i class="fas fa-chalkboard-teacher text-info me-1"></i>Role Lecturer
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="RoleLecturer" class="form-control" type="email" placeholder="lecturer@ais.ac.nz" />
-                                    <span asp-validation-for="RoleLecturer" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="RoleModerator" class="form-label fw-semibold">
-                                        <i class="fas fa-user-tie text-warning me-1"></i>Role Moderator
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input asp-for="RoleModerator" class="form-control" type="email" placeholder="moderator@ais.ac.nz" />
-                                    <span asp-validation-for="RoleModerator" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group mb-3">
-                                    <label asp-for="Status" class="form-label fw-semibold">
-                                        <i class="fas fa-toggle-on text-success me-1"></i>Status
-                                    </label>
-                                    <select asp-for="Status" class="form-select">
-                                        <option value="Active" selected>Active</option>
-                                        <option value="Archived">Archived</option>
-                                    </select>
-                                    <span asp-validation-for="Status" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4" />
-
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Create Course Role
-                            </button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-1"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Year, Trimester, and Total Assessment -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="Year" class="form-label fw-semibold">
+                                <i class="fas fa-calendar text-info me-1"></i>Year
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Year" type="number" class="form-control" min="1900" max="2100" placeholder="@DateTime.Now.Year" />
+                            <span asp-validation-for="Year" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="Trimester" class="form-label fw-semibold">
+                                <i class="fas fa-calendar-alt text-warning me-1"></i>Trimester
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Trimester" class="form-select">
+                                <option value="">-- Select Trimester --</option>
+                                <option value="1">Trimester 1</option>
+                                <option value="2">Trimester 2</option>
+                                <option value="3">Trimester 3</option>
+                            </select>
+                            <span asp-validation-for="Trimester" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label asp-for="TotalAssessment" class="form-label fw-semibold">
+                                <i class="fas fa-tasks text-secondary me-1"></i>Total Assessment
+                            </label>
+                            <input asp-for="TotalAssessment" type="number" class="form-control" min="0" value="0" />
+                            <span asp-validation-for="TotalAssessment" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Lecturer and Role Moderator -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="RoleLecturer" class="form-label fw-semibold">
+                                <i class="fas fa-chalkboard-teacher text-info me-1"></i>Role Lecturer
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RoleLecturer" class="form-control" type="email" placeholder="lecturer@ais.ac.nz" />
+                            <span asp-validation-for="RoleLecturer" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="RoleModerator" class="form-label fw-semibold">
+                                <i class="fas fa-user-tie text-warning me-1"></i>Role Moderator
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RoleModerator" class="form-control" type="email" placeholder="moderator@ais.ac.nz" />
+                            <span asp-validation-for="RoleModerator" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group mb-3">
+                            <label asp-for="Status" class="form-label fw-semibold">
+                                <i class="fas fa-toggle-on text-success me-1"></i>Status
+                            </label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active" selected>Active</option>
+                                <option value="Archived">Archived</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-1"></i>Create Course Role
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            const programmeSelect = $('#programmeSelect');
+            const courseCodeSelect = $('#courseCodeSelect');
+            const courseNameInput = $('#courseNameInput');
+
+            // Handle programme selection change
+            programmeSelect.on('change', function() {
+                const selectedProgramme = $(this).val();
+                
+                // Reset course code and course name
+                courseCodeSelect.html('<option value="">-- Loading... --</option>').prop('disabled', true);
+                courseNameInput.val('');
+
+                if (selectedProgramme) {
+                    // Fetch courses for selected programme
+                    $.ajax({
+                        url: '@Url.Action("GetCoursesByProgramme", "CourseRoles")',
+                        type: 'GET',
+                        data: { programme: selectedProgramme },
+                        success: function(courses) {
+                            courseCodeSelect.html('<option value="">-- Select Course Code --</option>');
+                            
+                            if (courses && courses.length > 0) {
+                                $.each(courses, function(index, course) {
+                                    courseCodeSelect.append(
+                                        $('<option></option>')
+                                            .val(course.courseCode)
+                                            .text(course.courseCode)
+                                            .data('courseName', course.courseName)
+                                    );
+                                });
+                                courseCodeSelect.prop('disabled', false);
+                            } else {
+                                courseCodeSelect.html('<option value="">-- No Courses Available --</option>');
+                                courseCodeSelect.prop('disabled', true);
+                            }
+                        },
+                        error: function() {
+                            courseCodeSelect.html('<option value="">-- Error Loading Courses --</option>');
+                            courseCodeSelect.prop('disabled', true);
+                            alert('Failed to load courses. Please try again.');
+                        }
+                    });
+                } else {
+                    courseCodeSelect.html('<option value="">-- Select Programme First --</option>');
+                    courseCodeSelect.prop('disabled', true);
+                }
+            });
+
+            // Handle course code selection change
+            courseCodeSelect.on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const courseName = selectedOption.data('courseName');
+                
+                if (courseName) {
+                    courseNameInput.val(courseName);
+                } else {
+                    courseNameInput.val('');
+                }
+            });
+        });
+    </script>
 }

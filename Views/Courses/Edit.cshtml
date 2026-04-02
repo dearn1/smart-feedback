@@ -1,0 +1,54 @@
+@model smart_feedback.Models.Course
+
+@{
+    ViewData["Title"] = "Edit Course";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">Edit Course Information</h3>
+            </div>
+            <form asp-action="Edit" method="post">
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+                    
+                    <div class="form-group">
+                        <label asp-for="CourseCode" class="control-label"></label>
+                        <input asp-for="CourseCode" class="form-control" />
+                        <span asp-validation-for="CourseCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CourseName" class="control-label"></label>
+                        <input asp-for="CourseName" class="form-control" />
+                        <span asp-validation-for="CourseName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Programme" class="control-label"></label>
+                        <select asp-for="Programme" class="form-control" asp-items="ViewBag.Programmes">
+                            <option value="">-- Select Programme --</option>
+                        </select>
+                        <span asp-validation-for="Programme" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save"></i> Update
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,52 @@
+@model smart_feedback.Models.Course
+
+@{
+    ViewData["Title"] = "Delete Course";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card card-danger">
+            <div class="card-header">
+                <h3 class="card-title">Delete Course</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="icon fas fa-exclamation-triangle"></i>
+                    Are you sure you want to delete this course?
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-3">
+                        @Html.DisplayNameFor(model => model.CourseCode)
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Html.DisplayFor(model => model.CourseCode)
+                    </dd>
+                    <dt class="col-sm-3">
+                        @Html.DisplayNameFor(model => model.CourseName)
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Html.DisplayFor(model => model.CourseName)
+                    </dd>
+                    <dt class="col-sm-3">
+                        @Html.DisplayNameFor(model => model.Programme)
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Html.DisplayFor(model => model.Programme)
+                    </dd>
+                </dl>
+
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

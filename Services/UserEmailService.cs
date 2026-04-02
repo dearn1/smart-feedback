@@ -106,6 +106,32 @@ namespace smart_feedback.Services
             }
         }
 
+        public async Task SendPasswordChangeConfirmationEmailAsync(string toEmail, string fullName)
+        {
+            try
+            {
+                var subject = "Smart Feedback System - Password Changed Successfully";
+                var body = GeneratePasswordChangeConfirmationEmailBody(fullName);
+
+                // Use test email in development if configured
+                var finalToEmail = _environment.IsDevelopment() && _emailSettings.UseTestEmail && !string.IsNullOrEmpty(_emailSettings.DefaultTestEmail)
+                    ? _emailSettings.DefaultTestEmail
+                    : toEmail;
+
+                _logger.LogInformation("Sending password change confirmation email to {Email} (Original: {OriginalEmail}) for user {FullName}",
+                    finalToEmail, toEmail, fullName);
+
+                await SendEmailAsync(finalToEmail, subject, body);
+
+                _logger.LogInformation("Password change confirmation email sent successfully to {Email} for user {FullName}", finalToEmail, fullName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send password change confirmation email to {Email} for user {FullName}", toEmail, fullName);
+                throw;
+            }
+        }
+
         public async Task SendAssessmentStatusChangeEmailAsync(string toEmail, string fullName, string assessmentName, string courseCode, string courseName, string oldStatus, string newStatus)
         {
             try
@@ -286,6 +312,66 @@ namespace smart_feedback.Services
         </div>
         <div class='footer'>
             This is an automated message. Please do not reply to this email.
+        </div>
+    </div>
+</body>
+</html>";
+        }
+
+        private string GeneratePasswordChangeConfirmationEmailBody(string fullName)
+        {
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #28a745; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
+        .content {{ background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px; }}
+        .info-box {{ background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }}
+        .warning {{ color: #dc3545; font-weight: bold; }}
+        .footer {{ margin-top: 30px; font-size: 12px; color: #666; text-align: center; }}
+        .timestamp {{ background-color: #e9ecef; padding: 10px; border-radius: 5px; margin: 20px 0; font-size: 14px; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>✓ Password Changed Successfully</h1>
+        </div>
+        <div class='content'>
+            <h2>Hello {fullName},</h2>
+            
+            <div class='info-box'>
+                <p><strong>Your password has been changed successfully.</strong></p>
+            </div>
+            
+            <div class='timestamp'>
+                <strong>Change Date & Time:</strong> {DateTime.Now:MMMM dd, yyyy 'at' HH:mm}
+            </div>
+            
+            <p>This email confirms that your Smart Feedback System account password was recently changed.</p>
+            
+            <p class='warning'>⚠️ Security Alert:</p>
+            <ul>
+                <li>If you made this change, no further action is required</li>
+                <li>If you did NOT change your password, please contact the administrator immediately</li>
+                <li>Your account may have been compromised - take action to secure it</li>
+            </ul>
+            
+            <p><strong>What to do if you didn't make this change:</strong></p>
+            <ol>
+                <li>Contact your system administrator immediately</li>
+                <li>Request a password reset from the login page</li>
+                <li>Review your account activity for any suspicious actions</li>
+            </ol>
+            
+            <p>Best regards,<br>Smart Feedback System Team</p>
+        </div>
+        <div class='footer'>
+            This is an automated security notification. Please do not reply to this email.<br>
+            If you have concerns about your account security, contact your administrator.
         </div>
     </div>
 </body>

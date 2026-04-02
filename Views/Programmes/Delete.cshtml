@@ -1,0 +1,67 @@
+@model smart_feedback.Models.Programme
+
+@{
+    ViewData["Title"] = ViewData["Title"];
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @ViewData["Title"]
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning!</strong> Are you sure you want to delete this programme?
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-3">
+                            <i class="fas fa-graduation-cap me-1"></i>
+                            Programme Name:
+                        </dt>
+                        <dd class="col-sm-9">
+                            <strong class="fs-5">@Html.DisplayFor(model => model.ProgrammeName)</strong>
+                        </dd>
+                    </dl>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This programme cannot be deleted if it's currently being used by course roles, students, or courses.
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>
+                                Delete Programme
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.IsInRole("Admin"))
+{
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Programmes" asp-action="Index">
+            <i class="fas fa-graduation-cap me-1"></i>
+            Programme List Management
+        </a>
+    </li>
+}

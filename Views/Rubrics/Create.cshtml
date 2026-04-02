@@ -1,11 +1,11 @@
 ﻿@model smart_feedback.Models.Rubrics
 
 @{
-    ViewData["Title"] = "Rubrics";
+    ViewData["Title"] = "Create Rubric";
     var courseCode = ViewBag.CourseCode as string;
     var courseName = ViewBag.CourseName as string;
-    var courseYear = ViewBag.CourseYear as string;
-    var courseTrimester = ViewBag.CourseTrimester as string;
+    var courseYear = ViewBag.CourseYear as int?;
+    var courseTrimester = ViewBag.CourseTrimester as int?;
     var programme = ViewBag.Programme as string;
     var institution = ViewBag.Institution as string;
     var courseId = ViewBag.CourseId as string;
@@ -13,88 +13,223 @@
     var defaultInstitution = ViewBag.DefaultInstitution as string ?? "Auckland Institute of Studies";
 }
 
-<h4>Create</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">      
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" name="courseId" value="@courseId" />
-            <input type="hidden" name="role" value="@userRole" />
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-plus-circle me-2"></i>Create New Rubric
+            </h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" name="courseId" value="@courseId" />
+                <input type="hidden" name="role" value="@userRole" />
 
-            <div class="form-group">
-                <label>Institution</label>
-                <input asp-for="Institution" class="form-control" value="@(institution ?? defaultInstitution)" />
-                <span asp-validation-for="Institution" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Programme</label>
-                <select asp-for="Programme" class="form-control" asp-items="ViewBag.Programmes">
-                    <option value="">-- Select Programme --</option>
-                </select>
-                <span asp-validation-for="Programme" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Course Code</label>
-                <input asp-for="CourseCode" class="form-control" value="@courseCode" />
-                <span asp-validation-for="CourseCode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Course Name</label>
-                <input asp-for="CourseName" class="form-control" value="@courseName" />
-                <span asp-validation-for="CourseName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Year</label>
-                <select asp-for="Year" class="form-control" asp-items="ViewBag.Years">
-                    <option value="">-- Select Year --</option>
-                </select>
-                <span asp-validation-for="Year" class="text-danger"></span>
-            </div>
+                <!-- Institution and Programme -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Institution" class="form-label fw-semibold">
+                                <i class="fas fa-university text-primary me-1"></i>Institution
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Institution" class="form-control" value="@(institution ?? defaultInstitution)" placeholder="e.g., Auckland Institute of Studies" />
+                            <span asp-validation-for="Institution" class="text-danger"></span>
+                        </div>
+                    </div>
 
-            <div class="form-group">
-                <label>Trimester</label>
-                <select asp-for="Trimester" class="form-control" asp-items="ViewBag.Trimesters">
-                    <option value="">-- Select Trimester --</option>
-                </select>
-                <span asp-validation-for="Trimester" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label>Rubric Name</label>
-                <input asp-for="RubricName" class="form-control" />
-                <span asp-validation-for="RubricName" class="text-danger"></span>
-            </div>
-            <div class="d-flex gap-2 mb-3">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Programme" class="form-label fw-semibold">
+                                <i class="fas fa-graduation-cap text-success me-1"></i>Programme
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Programme" id="programmeSelect" class="form-select" asp-items="ViewBag.Programmes">
+                                <option value="">-- Select Programme --</option>
+                            </select>
+                            <span asp-validation-for="Programme" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
-                <a asp-action="Management"
-                   asp-controller="Rubrics"
-                   class="btn btn-secondary btn-sm">
-                    Cancel
-                </a>
-            </div>
-        </form>
+                <!-- Course Code and Course Name -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="CourseCode" class="form-label fw-semibold">
+                                <i class="fas fa-code text-primary me-1"></i>Course Code
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="CourseCode" id="courseCodeSelect" class="form-select" asp-items="ViewBag.Courses">
+                                <option value="">-- Select Programme First --</option>
+                            </select>
+                            <span asp-validation-for="CourseCode" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="CourseName" class="form-label fw-semibold">
+                                <i class="fas fa-book text-success me-1"></i>Course Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="CourseName" id="courseNameInput" class="form-control" readonly placeholder="Will be filled automatically" value="@courseName" />
+                            <span asp-validation-for="CourseName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Year and Trimester -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Year" class="form-label fw-semibold">
+                                <i class="fas fa-calendar text-info me-1"></i>Year
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Year" class="form-select" asp-items="ViewBag.Years">
+                                <option value="">-- Select Year --</option>
+                            </select>
+                            <span asp-validation-for="Year" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Trimester" class="form-label fw-semibold">
+                                <i class="fas fa-calendar-alt text-warning me-1"></i>Trimester
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Trimester" class="form-select" asp-items="ViewBag.Trimesters">
+                                <option value="">-- Select Trimester --</option>
+                            </select>
+                            <span asp-validation-for="Trimester" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rubric Name (Full Width) -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <label asp-for="RubricName" class="form-label fw-semibold">
+                                <i class="fas fa-file-alt text-secondary me-1"></i>Rubric Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RubricName" class="form-control" placeholder="e.g., Assignment 1 Rubric" />
+                            <span asp-validation-for="RubricName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-1"></i>Create Rubric
+                    </button>
+                    <a asp-action="Management" asp-controller="Rubrics" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
     <script>
-        // Pre-select values if they exist from ViewBag
         $(document).ready(function() {
-            var programme = '@programme';
-            var year = '@courseYear';
-            var trimester = '@courseTrimester';
+            const programmeSelect = $('#programmeSelect');
+            const courseCodeSelect = $('#courseCodeSelect');
+            const courseNameInput = $('#courseNameInput');
             
-            if (programme) {
-                $('#Programme').val(programme);
+            // Store initial values from ViewBag
+            const initialProgramme = '@programme';
+            const initialCourseCode = '@courseCode';
+            const initialCourseName = '@courseName';
+            const initialYear = '@courseYear';
+            const initialTrimester = '@courseTrimester';
+
+            // Function to load courses for a programme
+            function loadCourses(programme, selectedCourseCode) {
+                if (!programme) {
+                    courseCodeSelect.html('<option value="">-- Select Programme First --</option>').prop('disabled', true);
+                    courseNameInput.val('');
+                    return;
+                }
+
+                courseCodeSelect.html('<option value="">-- Loading... --</option>').prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("GetCoursesByProgramme", "Rubrics")',
+                    type: 'GET',
+                    data: { programme: programme },
+                    success: function(courses) {
+                        courseCodeSelect.html('<option value="">-- Select Course Code --</option>');
+                        
+                        if (courses && courses.length > 0) {
+                            $.each(courses, function(index, course) {
+                                const option = $('<option></option>')
+                                    .val(course.courseCode)
+                                    .text(course.courseCode)
+                                    .data('courseName', course.courseName);
+                                
+                                // Pre-select the course code if it matches
+                                if (course.courseCode === selectedCourseCode) {
+                                    option.prop('selected', true);
+                                    courseNameInput.val(course.courseName);
+                                }
+                                
+                                courseCodeSelect.append(option);
+                            });
+                            courseCodeSelect.prop('disabled', false);
+                        } else {
+                            courseCodeSelect.html('<option value="">-- No Courses Available --</option>');
+                            courseCodeSelect.prop('disabled', true);
+                        }
+                    },
+                    error: function() {
+                        courseCodeSelect.html('<option value="">-- Error Loading Courses --</option>');
+                        courseCodeSelect.prop('disabled', true);
+                        alert('Failed to load courses. Please try again.');
+                    }
+                });
             }
-            if (year) {
-                $('#Year').val(year);
+
+            // Pre-select values if they exist from ViewBag
+            if (initialProgramme) {
+                programmeSelect.val(initialProgramme);
+                loadCourses(initialProgramme, initialCourseCode);
             }
-            if (trimester) {
-                $('#Trimester').val(trimester);
+            if (initialYear) {
+                $('#Year').val(initialYear);
             }
+            if (initialTrimester) {
+                $('#Trimester').val(initialTrimester);
+            }
+
+            // Handle programme selection change
+            programmeSelect.on('change', function() {
+                const selectedProgramme = $(this).val();
+                courseNameInput.val('');
+                loadCourses(selectedProgramme, null);
+            });
+
+            // Handle course code selection change
+            courseCodeSelect.on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const courseName = selectedOption.data('courseName');
+                
+                if (courseName) {
+                    courseNameInput.val(courseName);
+                } else {
+                    courseNameInput.val('');
+                }
+            });
         });
     </script>
 }
