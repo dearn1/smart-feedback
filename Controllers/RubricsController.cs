@@ -2090,15 +2090,13 @@ namespace smart_feedback.Controllers
                 // Get available rubrics filtered by Programme and Course Code
                 viewModel.AvailableRubrics = await _context.Rubrics
                     .Where(r => r.Programme == course.Programme && 
-                               r.CourseCode == course.CourseCode &&
-                               r.Year == course.Year &&
-                               r.Trimester == course.Trimester)
+                               r.CourseCode == course.CourseCode)
                     .OrderBy(r => r.RubricName)
                     .ToListAsync();
 
                 // Get all rubrics for optional selection
                 viewModel.AllRubrics = await _context.Rubrics
-                    .Where(r => r.Year == course.Year && r.Trimester == course.Trimester)
+                    //.Where(r => r.Year == course.Year && r.Trimester == course.Trimester)
                     .OrderBy(r => r.Programme)
                     .ThenBy(r => r.CourseCode)
                     .ThenBy(r => r.RubricName)
