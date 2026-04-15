@@ -366,8 +366,55 @@ namespace smart_feedback.Controllers
 
             List<Student> allStudents;
 
+            // *** NEW: For Moderation status, show only 3 representative students if more than 3 enrolled ***
+            if (assessment.Status == "Moderation")
+            {
+                var students = await allStudentsQuery.OrderBy(s => s.StudentId).ToListAsync();
+
+                if (students.Count > 3)
+                {
+                    // Get overall scores for all students
+                    var studentScoresModeration = new Dictionary<int, double>();
+                    
+                    foreach (var student in students)
+                    {
+                        var overallScore = await _context.StudentOverallScores
+                            .FirstOrDefaultAsync(sos => sos.AssessmentId == id && sos.StudentId == student.Id);
+                        
+                        studentScoresModeration[student.Id] = overallScore?.TotalActualScore ?? 0;
+                    }
+
+                    // Order students by score
+                    var orderedStudents = students
+                        .OrderByDescending(s => studentScoresModeration[s.Id])
+                        .ToList();
+
+                    var totalStudents = orderedStudents.Count;
+
+                    // Select representative students
+                    var upperStudent = orderedStudents.First(); // Highest score
+                    var middleStudent = orderedStudents[totalStudents / 2]; // Middle score
+                    var lowerStudent = orderedStudents.Last(); // Lowest score
+
+                    // Randomly shuffle if there are ties, but for now just pick these 3
+                    allStudents = new List<Student> { upperStudent, middleStudent, lowerStudent };
+
+                    _logger.LogInformation("Moderation mode for assessment {AssessmentId}: Showing 3 representative students out of {TotalCount} enrolled",
+                        id, totalStudents);
+                    
+                    // Store original count for display purposes
+                    ViewBag.TotalEnrolledStudents = totalStudents;
+                    ViewBag.IsModerationSample = true;
+                }
+                else
+                {
+                    // 3 or fewer students - show all
+                    allStudents = students;
+                    ViewBag.IsModerationSample = false;
+                }
+            }
             // *** NEW: Order students - unmarked first, then marked (only for Marking and ReMark statuses) ***
-            if (assessment.Status == "Marking" || assessment.Status == "ReMark")
+            else if (assessment.Status == "Marking" || assessment.Status == "ReMark")
             {
                 // Get student IDs that have scores saved
                 var markedStudentIds = await _context.StudentAssessmentScores
@@ -395,11 +442,14 @@ namespace smart_feedback.Controllers
 
                 _logger.LogInformation("Ordered students for assessment {AssessmentId}: {UnmarkedCount} unmarked, {MarkedCount} marked",
                     id, unmarkedStudents.Count, markedStudents.Count);
+                
+                ViewBag.IsModerationSample = false;
             }
             else
             {
                 // For other statuses, just use default alphabetical ordering
                 allStudents = await allStudentsQuery.OrderBy(s => s.StudentId).ToListAsync();
+                ViewBag.IsModerationSample = false;
             }
 
             // Handle pagination
@@ -1695,13 +1745,13 @@ private async Task CalculateAndSaveOverallScoreAsync(int assessmentId, int stude
 
                 // BATCH MODE with pagination
                 var currentIndex = studentIndex ?? 0;
-
+                
                 // Ensure index is valid
                 if (currentIndex < 0 || currentIndex >= students.Count)
                     currentIndex = 0;
 
                 var currentStudent = students[currentIndex];
-
+                
                 _logger.LogInformation("Generating final report - Student {CurrentIndex} of {TotalStudents} in course {CourseCode}",
                     currentIndex + 1, students.Count, course.CourseCode);
 
