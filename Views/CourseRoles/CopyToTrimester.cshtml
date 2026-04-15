@@ -59,7 +59,7 @@
                         </label>
                         <select class="form-select" id="sourceProgramme" name="sourceProgramme" required>
                             <option value="">-- Select Programme --</option>
-                            <option value="ALL">All Programmes</option>
+@*                             <option value="ALL">All Programmes</option> *@
                             @foreach (var option in (List<SelectListItem>)ViewBag.ProgrammeOptions)
                             {
                                 @if (!string.IsNullOrEmpty(option.Value))
@@ -435,7 +435,7 @@
             const blankLecturer = document.getElementById('blankLecturer').checked;
             const blankModerator = document.getElementById('blankModerator').checked;
             
-            let confirmMsg = `Are you sure you want to copy ${count} course role(s) to ${destinationYear} - Trimester ${destinationTrimester}?`;
+            let confirmMsg = `Are you sure you want to copy ${count} course role(s) to ${destinationYear} - Trimester ${destinationTrimester}? This action cannot be undone!`;
             
             if (blankLecturer || blankModerator) {
                 confirmMsg += '\n\nThe following fields will be blanked out:';

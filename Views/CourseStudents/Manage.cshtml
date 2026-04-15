@@ -54,7 +54,7 @@
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="card-title mb-0">
-                                        <i class="fas fa-user-plus"></i> Available Students (@Model.AvailableStudents.Count)
+                                        <i class="fas fa-user-plus"></i> Available Students (<span id="availableCount">@Model.AvailableStudents.Count</span>)
                                     </h5>
                                 </div>
                                 <div class="card-body" style="max-height: 500px; overflow-y: auto;">
@@ -73,6 +73,25 @@
                                             <input type="text" id="searchAvailable" class="form-control form-control-sm" placeholder="Search students..." />
                                         </div>
 
+                                        <!-- Filter Controls -->
+                                        <div class="row mb-2">
+                                            <div class="col-md-4">
+                                                <select id="filterProgramme" class="form-control form-control-sm">
+                                                    <option value="">All Programmes</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select id="filterYear" class="form-control form-control-sm">
+                                                    <option value="">All Years</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select id="filterTrimester" class="form-control form-control-sm">
+                                                    <option value="">All Trimesters</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
                                         <div class="table-responsive">
                                             <table class="table table-sm table-hover" id="availableStudentsTable">
                                                 <thead class="table-light">
@@ -89,7 +108,10 @@
                                                 <tbody>
                                                     @foreach (var student in Model.AvailableStudents)
                                                     {
-                                                        <tr class="student-row">
+                                                        <tr class="student-row" 
+                                                            data-programme="@student.Programme" 
+                                                            data-year="@student.YearEnrolled" 
+                                                            data-trimester="@student.TrimesterEnrolled">
                                                             <td>
                                                                 <input type="checkbox" class="student-checkbox" value="@student.Id" />
                                                             </td>
@@ -129,7 +151,7 @@
                             <div class="card">
                                 <div class="card-header bg-success text-white">
                                     <h5 class="card-title mb-0">
-                                        <i class="fas fa-user-check"></i> Enrolled Students (@Model.EnrolledStudents.Count)
+                                        <i class="fas fa-user-check"></i> Enrolled Students (@Model.EnrolledStudents.Count)  - @Model.CourseCode @Model.CourseName (Trimester @Model.Trimester @Model.Year)
                                     </h5>
                                 </div>
                                 <div class="card-body" style="max-height: 500px; overflow-y: auto;">
@@ -342,17 +364,89 @@
 
 @section Scripts {
     <script>
-        // Search functionality for available students
-        $('#searchAvailable').on('keyup', function() {
-            var value = $(this).val().toLowerCase();
-            $('#availableStudentsTable tbody tr').filter(function() {
-                $(this).toggle(
-                    $(this).find('.student-id').text().toLowerCase().indexOf(value) > -1 ||
-                    $(this).find('.student-name').text().toLowerCase().indexOf(value) > -1 ||
-                    $(this).find('.student-email').text().toLowerCase().indexOf(value) > -1
-                );
-            });
+        // Populate filter dropdowns
+        $(document).ready(function() {
+            populateFilters();
         });
+
+        function populateFilters() {
+            var programmes = new Set();
+            var years = new Set();
+            var trimesters = new Set();
+
+            // Collect unique values from table rows
+            $('#availableStudentsTable tbody tr').each(function() {
+                var programme = $(this).data('programme');
+                var year = $(this).data('year');
+                var trimester = $(this).data('trimester');
+
+                if (programme) programmes.add(programme);
+                if (year) years.add(year);
+                if (trimester) trimesters.add(trimester);
+            });
+
+            // Populate Programme dropdown
+            programmes.forEach(function(programme) {
+                $('#filterProgramme').append(`<option value="${programme}">${programme}</option>`);
+            });
+
+            // Populate Year dropdown (sorted)
+            Array.from(years).sort().forEach(function(year) {
+                $('#filterYear').append(`<option value="${year}">${year}</option>`);
+            });
+
+            // Populate Trimester dropdown (sorted)
+            Array.from(trimesters).sort().forEach(function(trimester) {
+                $('#filterTrimester').append(`<option value="${trimester}">Trimester ${trimester}</option>`);
+            });
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            var searchValue = $('#searchAvailable').val().toLowerCase();
+            var selectedProgramme = $('#filterProgramme').val();
+            var selectedYear = $('#filterYear').val();
+            var selectedTrimester = $('#filterTrimester').val();
+            var visibleCount = 0;
+
+            $('#availableStudentsTable tbody tr').each(function() {
+                var row = $(this);
+                var programme = row.data('programme') || '';
+                var year = row.data('year') ? row.data('year').toString() : '';
+                var trimester = row.data('trimester') ? row.data('trimester').toString() : '';
+                
+                var studentId = row.find('.student-id').text().toLowerCase();
+                var studentName = row.find('.student-name').text().toLowerCase();
+                var studentEmail = row.find('.student-email').text().toLowerCase();
+
+                var matchesSearch = studentId.indexOf(searchValue) > -1 || 
+                                   studentName.indexOf(searchValue) > -1 || 
+                                   studentEmail.indexOf(searchValue) > -1;
+                var matchesProgramme = !selectedProgramme || programme === selectedProgramme;
+                var matchesYear = !selectedYear || year === selectedYear;
+                var matchesTrimester = !selectedTrimester || trimester === selectedTrimester;
+
+                if (matchesSearch && matchesProgramme && matchesYear && matchesTrimester) {
+                    row.show();
+                    visibleCount++;
+                } else {
+                    row.hide();
+                    row.find('.student-checkbox').prop('checked', false);
+                }
+            });
+
+            // Update count
+            $('#availableCount').text(visibleCount);
+            
+            // Reset select all checkbox
+            $('#selectAllAvailable').prop('checked', false);
+        }
+
+        // Search functionality for available students
+        $('#searchAvailable').on('keyup', applyFilters);
+
+        // Filter change events
+        $('#filterProgramme, #filterYear, #filterTrimester').on('change', applyFilters);
 
         // Search functionality for enrolled students
         $('#searchEnrolled').on('keyup', function() {
@@ -365,7 +459,7 @@
             });
         });
 
-        // Select all checkbox functionality
+        // Select all checkbox functionality (only visible rows)
         $('#selectAllAvailable').on('change', function() {
             $('.student-checkbox:visible').prop('checked', $(this).prop('checked'));
         });
@@ -389,22 +483,22 @@
             $('#bulkAddForm').submit();
         }
 
-        // Add all students
+        // Add all students (only visible/filtered students)
         function addAllStudents() {
-            var allIds = $('.student-checkbox').map(function() {
+            var allVisibleIds = $('#availableStudentsTable tbody tr:visible .student-checkbox').map(function() {
                 return parseInt($(this).val());
             }).get();
 
-            if (allIds.length === 0) {
+            if (allVisibleIds.length === 0) {
                 alert('No students available to add.');
                 return;
             }
 
-            if (!confirm(`Add all ${allIds.length} student(s) to this course?`)) {
+            if (!confirm(`Add all ${allVisibleIds.length} visible student(s) to this course?`)) {
                 return;
             }
 
-            $('#bulkStudentIds').val(allIds.join(','));
+            $('#bulkStudentIds').val(allVisibleIds.join(','));
             $('#bulkAddForm').submit();
         }
     </script>
