@@ -25,7 +25,7 @@ namespace smart_feedback.Middleware
                         !context.Request.Path.StartsWithSegments("/Identity/Account/ForcePasswordChange") &&
                         !context.Request.Path.StartsWithSegments("/Identity/Account/Logout"))
                     {
-                        context.Response.Redirect("/Identity/Account/ForcePasswordChange");
+                        context.Response.Redirect(context.Request.PathBase + "/Identity/Account/ForcePasswordChange");
                         return;
                     }
                 }

@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-smart_feedback-d1f267b5-9fa0-4f5e-ab4f-d682830a8796</UserSecretsId>
     <RootNamespace>smart_feedback</RootNamespace>
+	<RazorCompileOnPublish>true</RazorCompileOnPublish>
+    <MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+    
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,7 +34,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
-    <Folder Include="wwwroot\uploads\rubrics\" />
   </ItemGroup>
+  
 
 </Project>

@@ -38,6 +38,7 @@ builder.Services.AddScoped<IEmailService, UserEmailService>();
 // Register PDF Generation Service
 builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages(); // ? Make this explicit
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 builder.Services.AddScoped<IFeedbackGenerationService, MLFeedbackGenerationService>();
 builder.Services.AddScoped<MLModelTrainer>();
@@ -85,7 +86,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages();
+app.MapRazorPages(); // ? Already present
 
 try
 {
