@@ -459,6 +459,10 @@
 </div>
 
 @section Scripts {
+    @{
+        var baseUrl = Url.Action("Index", "StudentAssessments");
+    }
+
     <script>
         $(document).ready(function() {
             var canEditScores = @Json.Serialize(canEditScores);
@@ -639,8 +643,10 @@
                                     alert('Success: ' + response.message);
                                 }
                                 setTimeout(function() {
-                                    window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
-                                }, 1500);
+                                    //window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
+                                    window.location.href = '@baseUrl' + '?courseId=' + courseId + '&role=' + role;
+                                   },1500); 
+                                    
                             } else {
                                 // Re-enable button on failure
                                 $btn.prop('disabled', false).html('<i class="fas fa-undo"></i> Send to Marking');
@@ -728,7 +734,8 @@
                                     alert('Success: ' + response.message);
                                 }
                                 setTimeout(function() {
-                                    window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
+                                    //window.location.href = '/StudentAssessments/Index?courseId=' + courseId + '&role=' + role;
+                                    window.location.href = '@baseUrl' + '?courseId=' + courseId + '&role=' + role;
                                 }, 1500);
                             } else {
                                 // Re-enable button on failure
